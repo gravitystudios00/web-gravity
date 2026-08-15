@@ -1,0 +1,219 @@
+---
+import '../styles/global.css';
+import { site, analytics } from '../data/site';
+
+interface Props {
+  title?: string;
+  description?: string;
+  /** Las variantes /hl1…/hl5 no deben indexarse: son la misma página. */
+  noindex?: boolean;
+}
+
+const {
+  title = site.title,
+  description = site.description,
+  // Todo el sitio va noindex mientras esté en preview (Cloudflare Pages).
+  // Sacar este default a false recién cuando el sitio esté listo para lanzar.
+  noindex = true,
+} = Astro.props;
+
+const canonical = new URL(Astro.url.pathname, site.url).href;
+---
+
+<!doctype html>
+<html lang="es-AR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonical} />
+    {noindex && <meta name="robots" content="noindex, follow" />}
+
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Gravity Studios" />
+    <meta property="og:locale" content={site.locale} />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:image" content={new URL(site.ogImage, site.url).href} />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={new URL(site.ogImage, site.url).href} />
+
+    <link rel="icon" href="/favicon-32.png" sizes="32x32" type="image/png" />
+    <link rel="icon" href="/favicon-16.png" sizes="16x16" type="image/png" />
+    <link rel="apple-touch-icon" href="/favicon-180.png" />
+    <link rel="icon" href="/favicon-512.png" sizes="512x512" type="image/png" />
+
+    {/* Las dos únicas fuentes que se ven en el primer viewport. */}
+    <link
+      rel="preload"
+      href="/fonts/baloo-da-2-600-latin.woff2"
+      as="font"
+      type="font/woff2"
+      crossorigin
+    />
+    <link
+      rel="preload"
+      href="/fonts/baloo-bhaina-2-400-latin.woff2"
+      as="font"
+      type="font/woff2"
+      crossorigin
+    />
+
+    {/* GA4 */}
+    {
+      analytics.ga4 && (
+        <>
+          <script
+            async
+            src={`https://www.googletagmanager.com/gtag/js?id=${analytics.ga4}`}
+          />
+          <script is:inline define:vars={{ id: analytics.ga4 }}>
+            window.dataLayer = window.dataLayer || [];
+            function gtag() {
+              dataLayer.push(arguments);
+            }
+            window.gtag = gtag;
+            gtag('js', new Date());
+            gtag('config', id);
+          </script>
+        </>
+      )
+    }
+
+    {/* Meta Pixel — se activa solo cuando cargues el ID en src/data/site.ts */}
+    {
+      analytics.metaPixel && (
+        <script is:inline define:vars={{ pid: analytics.metaPixel }}>
+          !(function (f, b, e, v, n, t, s) {
+            if (f.fbq) return;
+            n = f.fbq = function () {
+              n.callMethod
+                ? n.callMethod.apply(n, arguments)
+                : n.queue.push(arguments);
+            };
+            if (!f._fbq) f._fbq = n;
+            n.push = n;
+            n.loaded = !0;
+            n.version = '2.0';
+            n.queue = [];
+            t = b.createElement(e);
+            t.async = !0;
+            t.src = v;
+            s = b.getElementsByTagName(e)[0];
+            s.parentNode.insertBefore(t, s);
+          })(
+            window,
+            document,
+            'script',
+            'https://connect.facebook.net/en_US/fbevents.js'
+          );
+          fbq('init', pid);
+          fbq('track', 'PageView');
+        </script>
+      )
+    }
+  </head>
+
+  <body>
+    <div class="grain" aria-hidden="true"></div>
+    <slot />
+
+    {/* Spotlight: el halo de las tarjetas sigue al cursor. Solo con mouse. */}
+    <script is:inline>
+      if (
+        matchMedia('(hover: hover) and (pointer: fine)').matches &&
+        !matchMedia('(prefers-reduced-motion: reduce)').matches
+      ) {
+        let frame = 0;
+        document.addEventListener(
+          'pointermove',
+          (e) => {
+            if (frame) return;
+            frame = requestAnimationFrame(() => {
+              frame = 0;
+              const card = e.target.closest('.spot');
+              if (!card) return;
+              const r = card.getBoundingClientRect();
+              card.style.setProperty(
+                '--spot-x',
+                `${((e.clientX - r.left) / r.width) * 100}%`
+              );
+              card.style.setProperty(
+                '--spot-y',
+                `${((e.clientY - r.top) / r.height) * 100}%`
+              );
+            });
+          },
+          { passive: true }
+        );
+      }
+    </script>
+
+    {/* Los titulares marcados se revelan palabra por palabra. */}
+    <script is:inline>
+      document.querySelectorAll('.reveal-words').forEach((el) => {
+        const walk = (node) => {
+          [...node.childNodes].forEach((n) => {
+            if (n.nodeType === 3) {
+              const frag = document.createDocumentFragment();
+              n.textContent.split(/(\s+)/).forEach((tok) => {
+                if (!tok.trim()) return frag.appendChild(document.createTextNode(tok));
+                const s = document.createElement('span');
+                s.className = 'word';
+                s.textContent = tok;
+                frag.appendChild(s);
+              });
+              n.replaceWith(frag);
+            } else if (n.nodeType === 1) {
+              walk(n);
+            }
+          });
+        };
+        walk(el);
+        el.querySelectorAll('.word').forEach((w, i) =>
+          w.style.setProperty('--w', String(i))
+        );
+      });
+    </script>
+
+    {/* Reveal al entrar en viewport. Un solo observer para toda la página. */}
+    <script is:inline>
+      (() => {
+        const els = document.querySelectorAll('[data-reveal]');
+        if (!('IntersectionObserver' in window)) {
+          els.forEach((el) => el.classList.add('is-visible'));
+          return;
+        }
+        const io = new IntersectionObserver(
+          (entries) => {
+            for (const e of entries) {
+              if (!e.isIntersecting) continue;
+              e.target.classList.add('is-visible');
+              io.unobserve(e.target);
+            }
+          },
+          { rootMargin: '0px 0px -12% 0px', threshold: 0.1 }
+        );
+        els.forEach((el) => io.observe(el));
+      })();
+    </script>
+
+    {/* Tracking de clics a WhatsApp y al calendario, en GA4 y Meta. */}
+    <script is:inline>
+      document.addEventListener('click', (e) => {
+        const a = e.target.closest('a[data-track]');
+        if (!a) return;
+        const [event, source] = a.dataset.track.split(':');
+        if (window.gtag) window.gtag('event', event, { source });
+        if (window.fbq)
+          window.fbq('track', event === 'whatsapp_click' ? 'Contact' : 'Lead', {
+            source,
+          });
+      });
+    </script>
+  </body>
+</html>

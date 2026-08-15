@@ -1,0 +1,74 @@
+---
+interface Props {
+  values: number[];
+  labels?: string[];
+}
+
+const { values, labels = [] } = Astro.props;
+const max = Math.max(...values);
+---
+
+<div class="bars" data-chart>
+  <div class="bars__row" role="img" aria-label="Ingresos por semana">
+    {
+      values.map((v, i) => (
+        <span
+          class="bar"
+          style={`--h:${Math.round((v / max) * 100)}%; --i:${i}`}
+        />
+      ))
+    }
+  </div>
+
+  {
+    labels.length === 2 && (
+      <div class="bars__labels">
+        <span>{labels[0]}</span>
+        <span>{labels[1]}</span>
+      </div>
+    )
+  }
+</div>
+
+<style>
+  .bars__row {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: var(--g-space-2);
+    height: 7.5rem;
+  }
+
+  .bar {
+    flex: 1;
+    height: 0;
+    border-radius: var(--g-radius-xs);
+    background: linear-gradient(
+      180deg,
+      var(--g-yellow-300),
+      var(--g-yellow-600)
+    );
+    box-shadow: 0 0 12px rgba(234, 190, 63, 0.25);
+    transition: height 700ms var(--g-ease-out);
+    transition-delay: calc(var(--i) * 60ms);
+  }
+
+  .bars.is-drawn .bar {
+    height: var(--h);
+  }
+
+  .bars__labels {
+    display: flex;
+    justify-content: space-between;
+    margin-top: var(--g-space-2);
+    font-size: var(--g-text-xs);
+    color: var(--g-text-subtle);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .bar {
+      height: var(--h);
+      transition: none;
+    }
+  }
+</style>

@@ -1,0 +1,72 @@
+/* ============================================================================
+ * Motion
+ * ----------------------------------------------------------------------------
+ * Todo el movimiento sale de los tokens del design system:
+ *   --g-duration-fast / base / slow   y   --g-ease-out
+ *
+ * El sitio actual no tiene ninguna animación de scroll ni de hover, así que
+ * esto es todo nuevo. La regla que seguimos: el movimiento acompaña la lectura,
+ * nunca la interrumpe. Nada entra desde muy lejos ni tarda más de 340ms.
+ * ========================================================================== */
+
+/* --- Reveal al entrar en viewport --------------------------------------- */
+
+[data-reveal] {
+  opacity: 0;
+  transform: translateY(16px);
+  transition:
+    opacity var(--g-duration-slow) var(--g-ease-out),
+    transform var(--g-duration-slow) var(--g-ease-out);
+  transition-delay: calc(var(--reveal-i, 0) * 70ms);
+}
+
+[data-reveal='left'] {
+  transform: translateX(-24px);
+}
+
+[data-reveal='right'] {
+  transform: translateX(24px);
+}
+
+[data-reveal].is-visible {
+  opacity: 1;
+  transform: none;
+}
+
+/* Sin JS, todo visible. */
+.no-js [data-reveal] {
+  opacity: 1;
+  transform: none;
+}
+
+/* --- Hover lift (tarjetas) ----------------------------------------------- */
+
+/* Solo el desplazamiento. La sombra y el borde en hover los maneja
+   `.surface` en polish.css, para que no se pisen. */
+.lift {
+  transition: transform var(--g-duration-base) var(--g-ease-out);
+}
+
+.lift:hover {
+  transform: translateY(-4px);
+}
+
+/* --- Accesibilidad -------------------------------------------------------
+ * El reset global ya reduce las duraciones; acá nos aseguramos además de que
+ * nada quede invisible ni desplazado si el usuario pidió menos movimiento.  */
+
+@media (prefers-reduced-motion: reduce) {
+  [data-reveal] {
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
+  }
+
+  .lift:hover {
+    transform: none;
+  }
+
+  .marquee__track {
+    animation: none !important;
+  }
+}

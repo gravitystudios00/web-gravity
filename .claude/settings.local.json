@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "mcp__5c5acddf-1ed3-46bf-9abf-181553594409__board_search_boards",
+      "mcp__5c5acddf-1ed3-46bf-9abf-181553594409__space_list",
+      "mcp__5c5acddf-1ed3-46bf-9abf-181553594409__user_who_am_i",
+      "mcp__5c5acddf-1ed3-46bf-9abf-181553594409__context_explore",
+      "PowerShell(node --version)",
+      "PowerShell(npm --version)"
+    ]
+  }
+}

@@ -1,0 +1,196 @@
+/* ============================================================================
+ * Gravity — design tokens
+ * Copiado desde el proyecto "Gravity Design System" en claude.ai/design
+ * (projectId 7e369ae6-5afa-4089-98c1-d9654202232f).
+ *
+ * NO editar a mano. Si el design system cambia, re-sincronizar este archivo.
+ *
+ *   1. PRIMITIVES (--g-yellow-500, --g-neutral-800, --g-space-4 …)
+ *   2. SEMANTIC   (--g-bg, --g-text, --g-accent, --g-border …)
+ * ========================================================================== */
+
+:root {
+  /* --- Brand yellow — 500 es el valor del brandbook: RGB 234 190 63 ------- */
+  --g-yellow-50: #fdf8ec;
+  --g-yellow-100: #faefcf;
+  --g-yellow-200: #f5e1a4;
+  --g-yellow-300: #f0d076;
+  --g-yellow-400: #edc556;
+  --g-yellow-500: #eabe3f;
+  --g-yellow-600: #d3a62c;
+  --g-yellow-700: #a87f20;
+  --g-yellow-800: #7a5b17;
+  --g-yellow-900: #4d390e;
+
+  /* --- Brand cream — 200 es el valor del brandbook: RGB 255 242 211 ------- */
+  --g-cream-100: #fff8e8;
+  --g-cream-200: #fff2d3;
+  --g-cream-300: #f7e6c0;
+  --g-cream-400: #ecd6a8;
+
+  /* --- Warm neutrals ----------------------------------------------------- */
+  --g-neutral-0: #ffffff;
+  --g-neutral-50: #f8f7f5;
+  --g-neutral-100: #efede9;
+  --g-neutral-200: #dedbd5;
+  --g-neutral-300: #c2beb6;
+  --g-neutral-400: #9b978f;
+  --g-neutral-500: #74716a;
+  --g-neutral-600: #565350;
+  --g-neutral-700: #3b3a37;
+  --g-neutral-800: #262523;
+  --g-neutral-900: #171614;
+  --g-neutral-950: #0d0d0c;
+  --g-neutral-1000: #000000;
+
+  /* --- Status ------------------------------------------------------------ */
+  --g-green-400: #58c98c;
+  --g-green-500: #3fa36b;
+  --g-green-600: #2f7d51;
+  --g-amber-400: #f0a63c;
+  --g-amber-500: #e08c1f;
+  --g-amber-600: #b56d14;
+  --g-red-400: #e8705f;
+  --g-red-500: #d9503f;
+  --g-red-600: #b03a2c;
+  --g-blue-400: #6ba3dd;
+  --g-blue-500: #4a87c9;
+  --g-blue-600: #366aa3;
+
+  /* --- Typography -------------------------------------------------------- */
+  --g-font-display: 'Baloo Da 2', 'Baloo Bhaina 2', system-ui, sans-serif;
+  --g-font-body: 'Baloo Bhaina 2', 'Baloo Da 2', system-ui, sans-serif;
+  --g-font-mono: ui-monospace, monospace;
+
+  --g-text-2xs: 0.6875rem;
+  --g-text-xs: 0.75rem;
+  --g-text-sm: 0.875rem;
+  --g-text-md: 1rem;
+  --g-text-lg: 1.125rem;
+  --g-text-xl: 1.375rem;
+  --g-text-2xl: 1.75rem;
+  --g-text-3xl: 2.25rem;
+  --g-text-4xl: 3rem;
+  --g-text-5xl: 3.75rem;
+
+  --g-leading-tight: 1.15;
+  --g-leading-snug: 1.3;
+  --g-leading-normal: 1.55;
+  --g-leading-relaxed: 1.75;
+
+  --g-weight-regular: 400;
+  --g-weight-medium: 500;
+  --g-weight-semibold: 600;
+  --g-weight-bold: 700;
+  --g-weight-extrabold: 800;
+
+  --g-tracking-tight: -0.015em;
+  --g-tracking-normal: 0;
+  --g-tracking-wide: 0.04em;
+  --g-tracking-wider: 0.12em;
+
+  /* --- Space — base 4px --------------------------------------------------- */
+  --g-space-0: 0;
+  --g-space-1: 0.25rem;
+  --g-space-2: 0.5rem;
+  --g-space-3: 0.75rem;
+  --g-space-4: 1rem;
+  --g-space-5: 1.25rem;
+  --g-space-6: 1.5rem;
+  --g-space-8: 2rem;
+  --g-space-10: 2.5rem;
+  --g-space-12: 3rem;
+  --g-space-16: 4rem;
+  --g-space-20: 5rem;
+  --g-space-24: 6rem;
+
+  /* --- Radius — nada tiene esquina 0px ------------------------------------ */
+  --g-radius-xs: 6px;
+  --g-radius-sm: 8px;
+  --g-radius-md: 12px;
+  --g-radius-lg: 18px;
+  --g-radius-xl: 26px;
+  --g-radius-2xl: 34px;
+  --g-radius-full: 999px;
+
+  /* --- Elevation --------------------------------------------------------- */
+  --g-shadow-xs: 0 1px 2px rgba(13, 13, 12, 0.16);
+  --g-shadow-sm: 0 2px 6px rgba(13, 13, 12, 0.18);
+  --g-shadow-md: 0 6px 18px rgba(13, 13, 12, 0.2);
+  --g-shadow-lg: 0 14px 36px rgba(13, 13, 12, 0.26);
+  --g-shadow-xl: 0 26px 64px rgba(13, 13, 12, 0.34);
+  --g-shadow-accent: 0 8px 24px rgba(234, 190, 63, 0.32);
+
+  /* --- Motion ------------------------------------------------------------ */
+  --g-duration-fast: 120ms;
+  --g-duration-base: 200ms;
+  --g-duration-slow: 340ms;
+  --g-ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --g-ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+
+  /* --- Layout ------------------------------------------------------------ */
+  --g-container-sm: 40rem;
+  --g-container-md: 56rem;
+  --g-container-lg: 72rem;
+  --g-container-xl: 88rem;
+  --g-border-width: 1px;
+  --g-focus-width: 3px;
+
+  /* --- Z-index ----------------------------------------------------------- */
+  --g-z-base: 0;
+  --g-z-sticky: 100;
+  --g-z-overlay: 400;
+  --g-z-modal: 500;
+  --g-z-toast: 600;
+  --g-z-tooltip: 700;
+}
+
+/* ============================================================================
+ * SEMANTIC — dark theme (la superficie insignia de la marca)
+ * ========================================================================== */
+
+[data-theme='dark'],
+:root:not([data-theme]) {
+  color-scheme: dark;
+
+  --g-bg: var(--g-neutral-1000);
+  --g-bg-subtle: var(--g-neutral-950);
+  --g-surface: var(--g-neutral-900);
+  --g-surface-raised: var(--g-neutral-800);
+  --g-surface-sunken: var(--g-neutral-1000);
+  --g-surface-hover: var(--g-neutral-800);
+  --g-overlay: rgba(0, 0, 0, 0.72);
+
+  --g-border: #2e2c29;
+  --g-border-strong: #464340;
+  --g-border-accent: var(--g-yellow-500);
+
+  --g-text: var(--g-cream-200);
+  --g-text-strong: var(--g-neutral-0);
+  --g-text-muted: #a8a49a;
+  --g-text-subtle: #77736c;
+  --g-text-inverse: var(--g-neutral-1000);
+  --g-text-accent: var(--g-yellow-500);
+
+  --g-accent: var(--g-yellow-500);
+  --g-accent-hover: var(--g-yellow-400);
+  --g-accent-active: var(--g-yellow-600);
+  --g-accent-subtle: rgba(234, 190, 63, 0.14);
+  --g-accent-border: rgba(234, 190, 63, 0.38);
+  --g-on-accent: var(--g-neutral-1000);
+
+  --g-focus-ring: rgba(234, 190, 63, 0.55);
+
+  --g-success: var(--g-green-400);
+  --g-success-bg: rgba(63, 163, 107, 0.16);
+  --g-success-border: rgba(63, 163, 107, 0.42);
+  --g-warning: var(--g-amber-400);
+  --g-warning-bg: rgba(224, 140, 31, 0.16);
+  --g-warning-border: rgba(224, 140, 31, 0.42);
+  --g-danger: var(--g-red-400);
+  --g-danger-bg: rgba(217, 80, 63, 0.16);
+  --g-danger-border: rgba(217, 80, 63, 0.42);
+  --g-info: var(--g-blue-400);
+  --g-info-bg: rgba(74, 135, 201, 0.16);
+  --g-info-border: rgba(74, 135, 201, 0.42);
+}

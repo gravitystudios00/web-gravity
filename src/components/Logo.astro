@@ -1,0 +1,43 @@
+---
+import { LOGO_RATIOS } from '../data/logoRatios';
+
+interface Props {
+  /** 'full' = isotipo + wordmark. 'icon' = solo la G. */
+  variant?: 'full' | 'icon';
+  /**
+   * Qué versión de color usar. Seguí la guía de marca:
+   *   yellow → lockup primario, sobre fondo negro (nav, footer)
+   *   black  → sobre fondos claros (la tarjeta crema del calendario)
+   *   cream  → sobre fotografía o color rico
+   */
+  tone?: 'yellow' | 'black' | 'cream';
+  /** Alto del logo. Por debajo de 1.5rem, usar variant="icon". */
+  height?: string;
+  class?: string;
+}
+
+const { variant = 'full', tone = 'yellow', height, class: className } = Astro.props;
+
+const kind = variant === 'full' ? 'wordmark' : 'icon';
+const key = `${kind}-${tone}` as keyof typeof LOGO_RATIOS;
+const ratio = LOGO_RATIOS[key];
+const h = height ?? (variant === 'full' ? '1.75rem' : '1.5rem');
+---
+
+<img
+  src={`/brand/${key}.webp`}
+  alt={variant === 'full' ? 'Gravity Studios' : ''}
+  aria-hidden={variant === 'icon' ? 'true' : undefined}
+  class:list={['g-logo', className]}
+  style={`--g-logo-h:${h}; --g-logo-ratio:${ratio}`}
+/>
+
+<style>
+  .g-logo {
+    display: block;
+    height: var(--g-logo-h);
+    width: calc(var(--g-logo-h) * var(--g-logo-ratio));
+    aspect-ratio: var(--g-logo-ratio);
+    flex: none;
+  }
+</style>

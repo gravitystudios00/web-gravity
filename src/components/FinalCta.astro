@@ -1,0 +1,37 @@
+---
+import WhatsAppButton from './WhatsAppButton.astro';
+---
+
+<section class="section--tight">
+  <div class="container container--md">
+    <div class="final surface spot" data-reveal>
+      <h2 class="h2">¿Arrancamos?</h2>
+      <p class="lead">
+        Escribinos por WhatsApp y te decimos en la misma conversación si tu
+        clínica es un buen fit para el sistema.
+      </p>
+      <div class="btn-row btn-row--center">
+        <WhatsAppButton source="cta-final" label="Escribinos por WhatsApp" size="lg" />
+        <a class="btn btn--primary btn--lg" href="#agenda" data-track="calendar_click:cta-final">
+          Ver el calendario
+        </a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+  .final {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--g-space-5);
+    text-align: center;
+    padding: clamp(var(--g-space-10), 6vw, var(--g-space-16));
+    border-radius: var(--g-radius-2xl);
+  }
+
+  .final.surface {
+    border-color: var(--g-accent-border);
+  }
+</style>

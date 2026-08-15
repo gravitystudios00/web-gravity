@@ -1,0 +1,127 @@
+---
+import Logo from './Logo.astro';
+import { gravityPoints, agencyPoints } from '../data/site';
+---
+
+<section class="section" id="por-que-elegirnos">
+  <div class="container">
+    <h2 class="h2 center" data-reveal>¿Por qué elegirnos?</h2>
+
+    <div class="cmp">
+      <div class="cmp__col cmp__col--us surface spot" data-reveal="left">
+        <h3 class="cmp__title">
+          <Logo tone="yellow" height="1.35rem" />
+        </h3>
+        <ul class="cmp__list">
+          {
+            gravityPoints.map((p, i) => (
+              <li data-reveal="left" style={`--reveal-i:${i + 1}`}>
+                <svg class="ico ico--yes" viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M20 6L9 17l-5-5" />
+                </svg>
+                {p}
+              </li>
+            ))
+          }
+        </ul>
+      </div>
+
+      <div class="cmp__col surface" data-reveal="right">
+        <h3 class="cmp__title cmp__title--them">
+          Agencias de publicidad para clínicas
+        </h3>
+        <ul class="cmp__list">
+          {
+            agencyPoints.map((p, i) => (
+              <li data-reveal="right" style={`--reveal-i:${i + 1}`}>
+                <svg class="ico ico--no" viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M18 6L6 18M6 6l12 12" />
+                </svg>
+                {p}
+              </li>
+            ))
+          }
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+  .cmp {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(19rem, 1fr));
+    gap: var(--g-space-6);
+    margin-top: var(--g-space-12);
+  }
+
+  .cmp__col {
+    padding: var(--g-space-8);
+    border-radius: var(--g-radius-xl);
+  }
+
+  /* La columna nuestra se despega: borde ámbar y un halo cálido propio. */
+  .cmp__col--us.surface {
+    border-color: var(--g-accent-border);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.08),
+      0 0 0 1px rgba(234, 190, 63, 0.06),
+      var(--g-shadow-md);
+  }
+
+  .cmp__title {
+    display: flex;
+    align-items: center;
+    gap: var(--g-space-3);
+    font-size: var(--g-text-xl);
+    color: var(--g-text-strong);
+    margin-bottom: var(--g-space-6);
+  }
+
+  .cmp__title--them {
+    color: var(--g-text-subtle);
+  }
+
+  .cmp__list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--g-space-4);
+    list-style: none;
+    padding: 0;
+  }
+
+  .cmp__list li {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--g-space-3);
+    line-height: var(--g-leading-normal);
+    text-wrap: pretty;
+  }
+
+  .cmp__col--us li {
+    color: var(--g-text);
+  }
+
+  .cmp__col:not(.cmp__col--us) li {
+    color: var(--g-text-muted);
+  }
+
+  .ico {
+    width: 1.25rem;
+    height: 1.25rem;
+    flex: none;
+    margin-top: 0.2rem;
+    fill: none;
+    stroke-width: 2.5;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  .ico--yes {
+    stroke: var(--g-accent);
+  }
+
+  .ico--no {
+    stroke: var(--g-text-subtle);
+  }
+</style>

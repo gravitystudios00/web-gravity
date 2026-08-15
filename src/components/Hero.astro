@@ -1,0 +1,105 @@
+---
+import Vsl from './Vsl.astro';
+import WhatsAppButton from './WhatsAppButton.astro';
+import type { Headline } from '../data/site';
+
+interface Props {
+  headline: Headline;
+}
+
+const { headline } = Astro.props;
+---
+
+<section class="hero" id="hero">
+  <div class="container hero__inner">
+    <p class="eyebrow" data-reveal style="--reveal-i:0">{headline.eyebrow}</p>
+
+    <h1 class="h1 center reveal-words" data-reveal style="--reveal-i:1">
+      {
+        headline.parts.map((p) =>
+          p.accent ? <span class="accent">{p.text}</span> : <span>{p.text}</span>
+        )
+      }
+    </h1>
+
+    <div class="hero__video" data-reveal style="--reveal-i:2">
+      <Vsl />
+    </div>
+
+    <div class="btn-row btn-row--center" data-reveal style="--reveal-i:3">
+      <a
+        class="btn btn--primary btn--lg"
+        href="#agenda"
+        data-track="calendar_click:hero"
+      >
+        Agendá tu auditoría
+      </a>
+      <WhatsAppButton source="hero" size="lg" />
+    </div>
+  </div>
+</section>
+
+<style>
+  .hero {
+    position: relative;
+    background: var(--g-bg);
+    padding-block: clamp(var(--g-space-12), 8vw, var(--g-space-20));
+    overflow: hidden;
+  }
+
+  /* Halo ámbar muy tenue detrás del video. Es el único adorno de la sección:
+     el brandbook dice que el amarillo es acento, no superficie. */
+  .hero::before {
+    content: '';
+    position: absolute;
+    top: -20%;
+    left: 50%;
+    width: min(58rem, 120%);
+    aspect-ratio: 1;
+    transform: translateX(-50%);
+    background: radial-gradient(
+      circle,
+      rgba(234, 190, 63, 0.09) 0%,
+      transparent 62%
+    );
+    pointer-events: none;
+    /* Respira muy lento: el fondo nunca queda del todo quieto. */
+    animation: breathe 14s var(--g-ease-in-out) infinite alternate;
+  }
+
+  @keyframes breathe {
+    from {
+      opacity: 0.65;
+      transform: translateX(-50%) scale(0.94);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(-50%) scale(1.06);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .hero::before {
+      animation: none;
+    }
+  }
+
+  .hero__inner {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--g-space-6);
+    text-align: center;
+  }
+
+  .hero .h1 {
+    max-width: 22ch;
+  }
+
+  .hero__video {
+    width: 100%;
+    max-width: 46rem;
+    margin-top: var(--g-space-2);
+  }
+</style>

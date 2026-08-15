@@ -1,0 +1,22 @@
+---
+import Base from '../layouts/Base.astro';
+import Landing from '../components/Landing.astro';
+import { headlines } from '../data/site';
+
+/**
+ * Genera /hl1, /hl2, /hl3… desde `headlines` en src/data/site.ts.
+ * En Framer cada variante era una página duplicada a mano: cambiar una línea
+ * de copy costaba cinco ediciones. Acá es una.
+ */
+export function getStaticPaths() {
+  return headlines
+    .filter((h) => h.slug !== 'index')
+    .map((h) => ({ params: { variant: h.slug }, props: { headline: h } }));
+}
+
+const { headline } = Astro.props;
+---
+
+<Base noindex>
+  <Landing headline={headline} short />
+</Base>

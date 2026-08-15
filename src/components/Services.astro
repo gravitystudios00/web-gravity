@@ -1,0 +1,62 @@
+---
+import { services } from '../data/site';
+---
+
+<section class="section" id="que-hacemos">
+  <div class="container">
+    <div class="center stack" style="gap: var(--g-space-4)">
+      <h2 class="h2" data-reveal>Qué hacemos</h2>
+      <p class="lead" data-reveal style="--reveal-i:1">
+        Las agencias de publicidad para clínicas solo traen mensajes, sin
+        preocuparse por que realmente vendas ni por los procesos de agenda de tu
+        clínica. Nosotros nos enfocamos en lo que nadie más se enfoca.
+      </p>
+    </div>
+
+    <div class="cards">
+      {
+        services.map((s, i) => (
+          <article class="card surface spot lift" data-reveal style={`--reveal-i:${i}`}>
+            <span class="card__n" aria-hidden="true">
+              {String(i + 1).padStart(2, '0')}
+            </span>
+            <h3 class="h3">{s.title}</h3>
+            <p class="muted">{s.text}</p>
+          </article>
+        ))
+      }
+    </div>
+  </div>
+</section>
+
+<style>
+  .cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(17rem, 1fr));
+    gap: var(--g-space-6);
+    margin-top: var(--g-space-12);
+  }
+
+  .card {
+    display: flex;
+    flex-direction: column;
+    gap: var(--g-space-3);
+    padding: var(--g-space-8);
+    border-radius: var(--g-radius-xl);
+  }
+
+  /* Los tres pasos son una secuencia real (contenido → filtro → sistema),
+     así que numerarlos dice algo. */
+  .card__n {
+    font-family: var(--g-font-display);
+    font-size: var(--g-text-sm);
+    font-weight: var(--g-weight-bold);
+    letter-spacing: var(--g-tracking-wide);
+    color: var(--g-accent);
+  }
+
+  .card p {
+    line-height: var(--g-leading-normal);
+    text-wrap: pretty;
+  }
+</style>

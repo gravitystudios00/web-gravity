@@ -1,0 +1,44 @@
+---
+interface Props {
+  rating: number;
+  size?: 'sm' | 'md';
+}
+
+const { rating, size = 'sm' } = Astro.props;
+---
+
+<span
+  class:list={['stars', size === 'md' && 'stars--md']}
+  role="img"
+  aria-label={`${rating} de 5 estrellas`}
+>
+  {
+    Array.from({ length: 5 }, (_, i) => (
+      <svg viewBox="0 0 24 24" aria-hidden="true" class={i < rating ? 'on' : ''}>
+        <path d="M12 2.6l2.9 5.9 6.5.95-4.7 4.58 1.11 6.47L12 17.45 6.19 20.5 7.3 14.03 2.6 9.45l6.5-.95L12 2.6z" />
+      </svg>
+    ))
+  }
+</span>
+
+<style>
+  .stars {
+    display: inline-flex;
+    gap: 2px;
+  }
+
+  .stars svg {
+    width: 0.95rem;
+    height: 0.95rem;
+    fill: var(--g-border-strong);
+  }
+
+  .stars svg.on {
+    fill: var(--g-accent);
+  }
+
+  .stars--md svg {
+    width: 1.15rem;
+    height: 1.15rem;
+  }
+</style>

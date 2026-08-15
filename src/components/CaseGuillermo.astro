@@ -1,0 +1,677 @@
+---
+import Gauge from './charts/Gauge.astro';
+import AreaChart from './charts/AreaChart.astro';
+import BarChart from './charts/BarChart.astro';
+import WhatsAppButton from './WhatsAppButton.astro';
+import { caso, metrics, points, profile, chat } from '../data/casoGuillermo';
+
+const { ia, followers, revenue } = metrics;
+
+const chatShots = chat.images.length ? chat.images : ['', '', '', ''];
+---
+
+{/*
+  Sección de scroll horizontal, según la técnica de
+  scroll-driven-animations.style/demos/horizontal-section
+
+  El patrón importante es la degradación: por defecto esto es un carrusel de
+  scroll nativo con snap, que funciona en cualquier navegador y con teclado.
+  Solo si el navegador soporta `animation-timeline` (y estamos en desktop, y
+  el usuario no pidió menos movimiento) la sección se "pinea" y el avance
+  horizontal pasa a estar atado al scroll vertical.
+*/}
+<section class="hcase" id="casos-de-exito" aria-label="Caso de éxito: Dr. Guillermo Cienfuegos">
+  <div class="hcase__sticky">
+    <div class="hcase__track">
+      {/* --- 1. Tesis -------------------------------------------------- */}
+      <article class="hpanel hpanel--intro">
+        <p class="eyebrow">{caso.eyebrow}</p>
+        <h2 class="h2">{caso.title}</h2>
+        {caso.lead.map((p) => <p class="lead">{p}</p>)}
+        <p class="hcase__hint" aria-hidden="true">
+          <span>Seguí bajando</span>
+          <svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
+        </p>
+      </article>
+
+      {/* --- 2. Las tres métricas -------------------------------------- */}
+      <article class="hpanel hpanel--metrics">
+        <div class="mcard surface spot">
+          <header class="mcard__head">
+            <p class="mcard__kicker">{ia.kicker}</p>
+            <p class="mcard__sub">{ia.sub}</p>
+          </header>
+          <div class="mcard__chart">
+            <Gauge percent={ia.percent} label={`${ia.percent}% del contenido`} />
+          </div>
+          <p class="mcard__value">{ia.percent}%</p>
+          <h3 class="h3">{ia.title}</h3>
+          <p class="muted">{ia.text}</p>
+        </div>
+
+        <div class="mcard surface spot">
+          <header class="mcard__head">
+            <p class="mcard__kicker">{followers.kicker}</p>
+            <p class="mcard__sub">{followers.sub}</p>
+          </header>
+          <div class="mcard__chart">
+            <AreaChart id="followers" values={followers.series} labels={followers.labels} />
+          </div>
+          <p class="mcard__value">{followers.display}</p>
+          <h3 class="h3">{followers.title}</h3>
+          <p class="muted">{followers.text}</p>
+        </div>
+
+        <div class="mcard surface spot">
+          <header class="mcard__head">
+            <p class="mcard__kicker">{revenue.kicker}</p>
+            <p class="mcard__sub">{revenue.sub}</p>
+          </header>
+          <div class="mcard__chart">
+            <BarChart values={revenue.series} labels={revenue.labels} />
+          </div>
+          <p class="mcard__value">{revenue.display}</p>
+          <h3 class="h3">{revenue.title}</h3>
+          <p class="muted">{revenue.text}</p>
+        </div>
+      </article>
+
+      {/* --- 3. Los tres puntos ---------------------------------------- */}
+      <article class="hpanel hpanel--points">
+        <ul>
+          {
+            points.map((p) => (
+              <li>
+                <span class="tick" aria-hidden="true">
+                  <svg viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5" /></svg>
+                </span>
+                <div>
+                  <p class="caso__point-title">{p.title}</p>
+                  <p class="muted">{p.text}</p>
+                </div>
+              </li>
+            ))
+          }
+        </ul>
+      </article>
+
+      {/* --- 4. El perfil ---------------------------------------------- */}
+      <article class="hpanel hpanel--profile">
+        <div class="caso__copy">
+          <h3 class="h3">{profile.title}</h3>
+          <p class="muted">{profile.text}</p>
+          <dl class="pstats">
+            {
+              profile.stats.map((s) => (
+                <div>
+                  <dt>{s.value}</dt>
+                  <dd>{s.label}</dd>
+                </div>
+              ))
+            }
+          </dl>
+        </div>
+        <div class="shot surface">
+          {
+            profile.image ? (
+              <img
+                src={profile.image}
+                alt="Perfil de Instagram del Dr. Guillermo Cienfuegos: 190 publicaciones, 27.5K seguidores"
+                loading="lazy"
+                width="1080"
+                height="830"
+              />
+            ) : (
+              <p class="ph">Captura del perfil<br /><code>public/casos/guillermo/perfil.webp</code></p>
+            )
+          }
+        </div>
+      </article>
+
+      {/* --- 5. Las conversaciones ------------------------------------- */}
+      <article class="hpanel hpanel--chat">
+        <div class="hpanel__head">
+          <h3 class="h3">{chat.title}</h3>
+          <p class="muted">{chat.text}</p>
+        </div>
+        <div class="shots">
+          {
+            chatShots.map((src, i) =>
+              src ? (
+                <figure class="phone surface">
+                  <img src={src} alt={`Conversación automatizada, paso ${i + 1}`} loading="lazy" />
+                </figure>
+              ) : (
+                <figure class="phone surface">
+                  <p class="ph">Chat {i + 1}<br /><code>chat-{i + 1}.webp</code></p>
+                </figure>
+              )
+            )
+          }
+        </div>
+      </article>
+
+      {/* --- 6. Cierre -------------------------------------------------- */}
+      <article class="hpanel hpanel--close">
+        <div class="caso__close surface spot">
+          <p class="caso__quote">{caso.closing}</p>
+          <WhatsAppButton source="caso-guillermo" label="Quiero un sistema así" size="lg" />
+        </div>
+      </article>
+    </div>
+
+    <span class="hcase__progress" aria-hidden="true"></span>
+  </div>
+</section>
+
+<style>
+  /* ======================================================================
+   * BASE — carrusel de scroll nativo.
+   * Es lo que ve cualquier navegador sin scroll-driven animations, y lo que
+   * se usa siempre en mobile. Funciona con swipe, rueda y teclado.
+   * ==================================================================== */
+
+  .hcase {
+    position: relative;
+    background: var(--g-bg);
+    padding-block: clamp(var(--g-space-12), 7vw, var(--g-space-20));
+  }
+
+  .hcase__sticky {
+    overflow-x: auto;
+    overflow-y: hidden;
+    scroll-snap-type: x mandatory;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .hcase__sticky::-webkit-scrollbar {
+    display: none;
+  }
+
+  .hcase__track {
+    display: flex;
+    align-items: center;
+    gap: clamp(var(--g-space-8), 5vw, var(--g-space-20));
+    width: max-content;
+    padding-inline: clamp(var(--g-space-6), 8vw, var(--g-space-24));
+  }
+
+  .hpanel {
+    flex: none;
+    scroll-snap-align: center;
+  }
+
+  .hcase__progress {
+    display: none;
+  }
+
+  /* ======================================================================
+   * PANELES
+   * ==================================================================== */
+
+  .hpanel--intro {
+    display: flex;
+    flex-direction: column;
+    gap: var(--g-space-4);
+    width: min(40rem, 84vw);
+  }
+
+  .hpanel--intro .h2 {
+    max-width: 18ch;
+  }
+
+  .hcase__hint {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--g-space-2);
+    margin-top: var(--g-space-2);
+    font-size: var(--g-text-sm);
+    color: var(--g-text-subtle);
+  }
+
+  .hcase__hint svg {
+    width: 1.1rem;
+    height: 1.1rem;
+    fill: none;
+    stroke: var(--g-accent);
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    animation: nudge 1.8s var(--g-ease-in-out) infinite;
+  }
+
+  @keyframes nudge {
+    0%,
+    100% {
+      transform: translateX(0);
+    }
+    50% {
+      transform: translateX(4px);
+    }
+  }
+
+  /* --- Métricas ---------------------------------------------------- */
+
+  .hpanel--metrics {
+    display: flex;
+    gap: var(--g-space-6);
+  }
+
+  .mcard {
+    display: flex;
+    flex-direction: column;
+    gap: var(--g-space-3);
+    width: 21rem;
+    padding: var(--g-space-8);
+    border-radius: var(--g-radius-xl);
+  }
+
+  .mcard__head {
+    margin-bottom: var(--g-space-4);
+  }
+
+  .mcard__kicker {
+    font-family: var(--g-font-display);
+    font-weight: var(--g-weight-semibold);
+    color: var(--g-text-strong);
+    line-height: var(--g-leading-snug);
+  }
+
+  .mcard__sub {
+    font-size: var(--g-text-sm);
+    color: var(--g-text-subtle);
+  }
+
+  /* Altura fija para que el número grande caiga a la misma altura en las
+     tres tarjetas, aunque cada gráfico tenga una forma distinta. */
+  .mcard__chart {
+    height: 9.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .mcard__chart > :global(*) {
+    width: 100%;
+  }
+
+  .mcard__chart > :global(.gauge) {
+    max-width: 72%;
+  }
+
+  .mcard__value {
+    font-family: var(--g-font-display);
+    font-size: var(--g-text-4xl);
+    font-weight: var(--g-weight-bold);
+    line-height: var(--g-leading-tight);
+    color: var(--g-text-strong);
+    text-align: center;
+    font-variant-numeric: tabular-nums;
+    margin-block: var(--g-space-2) var(--g-space-4);
+  }
+
+  .mcard p.muted {
+    line-height: var(--g-leading-normal);
+    text-wrap: pretty;
+  }
+
+  /* --- Puntos ------------------------------------------------------ */
+
+  .hpanel--points {
+    width: min(34rem, 84vw);
+  }
+
+  .hpanel--points ul {
+    display: flex;
+    flex-direction: column;
+    gap: var(--g-space-8);
+    list-style: none;
+    padding: 0;
+  }
+
+  .hpanel--points li {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--g-space-4);
+  }
+
+  .tick {
+    flex: none;
+    display: grid;
+    place-items: center;
+    width: 1.8rem;
+    height: 1.8rem;
+    margin-top: 0.1rem;
+    border-radius: var(--g-radius-full);
+    background: var(--g-accent);
+    box-shadow: 0 0 14px rgba(234, 190, 63, 0.4);
+  }
+
+  .tick svg {
+    width: 1rem;
+    height: 1rem;
+    fill: none;
+    stroke: var(--g-on-accent);
+    stroke-width: 3;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  .caso__point-title {
+    font-family: var(--g-font-display);
+    font-size: var(--g-text-lg);
+    font-weight: var(--g-weight-semibold);
+    color: var(--g-text-strong);
+    line-height: var(--g-leading-snug);
+  }
+
+  /* --- Perfil ------------------------------------------------------ */
+
+  .hpanel--profile {
+    display: grid;
+    grid-template-columns: minmax(0, 0.9fr) minmax(0, 1fr);
+    align-items: center;
+    gap: clamp(var(--g-space-6), 4vw, var(--g-space-12));
+    width: min(58rem, 88vw);
+  }
+
+  .caso__copy {
+    display: flex;
+    flex-direction: column;
+    gap: var(--g-space-3);
+  }
+
+  .pstats {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--g-space-6);
+    margin-top: var(--g-space-4);
+  }
+
+  .pstats dt {
+    font-family: var(--g-font-display);
+    font-size: var(--g-text-2xl);
+    font-weight: var(--g-weight-bold);
+    color: var(--g-text-accent);
+    font-variant-numeric: tabular-nums;
+    line-height: var(--g-leading-tight);
+    text-shadow: 0 0 22px rgba(234, 190, 63, 0.25);
+  }
+
+  .pstats dd {
+    margin: 0;
+    font-size: var(--g-text-sm);
+    color: var(--g-text-subtle);
+  }
+
+  .shot {
+    border-radius: var(--g-radius-xl);
+    overflow: hidden;
+    padding: var(--g-space-2);
+    display: grid;
+    place-items: center;
+    min-height: 10rem;
+  }
+
+  .shot img {
+    width: 100%;
+    height: auto;
+    border-radius: var(--g-radius-lg);
+  }
+
+  /* --- Chats ------------------------------------------------------- */
+
+  .hpanel--chat {
+    display: flex;
+    flex-direction: column;
+    gap: var(--g-space-6);
+    width: min(62rem, 90vw);
+  }
+
+  .hpanel__head {
+    max-width: 46ch;
+  }
+
+  .shots {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: var(--g-space-4);
+  }
+
+  .phone {
+    margin: 0;
+    padding: var(--g-space-2);
+    border-radius: var(--g-radius-xl);
+    overflow: hidden;
+    aspect-ratio: 9 / 16;
+    display: grid;
+    place-items: center;
+  }
+
+  .phone img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: top;
+    border-radius: var(--g-radius-lg);
+  }
+
+  .ph {
+    text-align: center;
+    font-size: var(--g-text-xs);
+    color: var(--g-text-subtle);
+    line-height: var(--g-leading-normal);
+  }
+
+  .ph code {
+    font-family: var(--g-font-mono);
+    font-size: var(--g-text-2xs);
+    color: var(--g-text-accent);
+  }
+
+  /* --- Cierre ------------------------------------------------------ */
+
+  .hpanel--close {
+    width: min(34rem, 84vw);
+  }
+
+  .caso__close {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--g-space-6);
+    text-align: center;
+    padding: clamp(var(--g-space-8), 4vw, var(--g-space-12));
+    border-radius: var(--g-radius-2xl);
+  }
+
+  .caso__quote {
+    font-family: var(--g-font-display);
+    font-size: clamp(var(--g-text-xl), 2.4vw, var(--g-text-2xl));
+    font-weight: var(--g-weight-semibold);
+    line-height: var(--g-leading-snug);
+    color: var(--g-text-strong);
+    text-wrap: balance;
+  }
+
+  /* ======================================================================
+   * MEJORA — sección pineada con avance atado al scroll.
+   *
+   * Solo en desktop: en mobile el swipe horizontal nativo es mejor que
+   * secuestrar el scroll vertical. Y solo si el usuario no pidió menos
+   * movimiento.
+   * ==================================================================== */
+
+  /* El script agrega .is-pinned solo cuando corresponde. El alto de la
+     sección lo fija también el script, en píxeles, calculado a partir del
+     recorrido real de la pista: así la relación entre lo que scrolleás y lo
+     que se desplaza queda 1:1 en cualquier pantalla, en vez de depender de
+     un `vh` fijo que se descalibra al cambiar el viewport. */
+  .hcase.is-pinned {
+    padding-block: 0;
+  }
+
+  .hcase.is-pinned .hcase__sticky {
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    display: flex;
+    align-items: center;
+    overflow-x: hidden;
+    scroll-snap-type: none;
+  }
+
+  .hcase.is-pinned .hcase__progress {
+    display: block;
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    height: 2px;
+    width: 100%;
+    transform-origin: left;
+    transform: scaleX(0);
+    background: linear-gradient(
+      90deg,
+      var(--g-accent-active),
+      var(--g-accent),
+      var(--g-yellow-300)
+    );
+  }
+
+  /* La barra de avance ya cuenta la historia; la flecha sobra. */
+  .hcase.is-pinned .hcase__hint {
+    display: none;
+  }
+
+  /* ======================================================================
+   * Mobile
+   * ==================================================================== */
+
+  @media (max-width: 720px) {
+    .hpanel--metrics {
+      flex-direction: column;
+    }
+
+    .mcard {
+      width: min(21rem, 84vw);
+    }
+
+    .hpanel--profile {
+      grid-template-columns: 1fr;
+    }
+
+    .shots {
+      grid-template-columns: repeat(2, 1fr);
+    }
+
+    .hpanel--chat {
+      width: min(28rem, 88vw);
+    }
+  }
+</style>
+
+<script>
+  const section = document.querySelector<HTMLElement>('.hcase');
+  const sticky = document.querySelector<HTMLElement>('.hcase__sticky');
+  const track = document.querySelector<HTMLElement>('.hcase__track');
+  const progress = document.querySelector<HTMLElement>('.hcase__progress');
+
+  /* ---------------------------------------------------------------------
+   * Scroll horizontal atado al scroll vertical.
+   *
+   * Va por WAAPI en vez de `animation-timeline` en CSS por dos ventajas
+   * concretas, no porque el CSS no funcione:
+   *
+   *   1. El recorrido se mide en píxeles reales (`scrollWidth - clientWidth`).
+   *      En CSS habría que escribirlo como `calc(-100% + 100vw)`, y `100vw`
+   *      incluye el ancho de la barra de scroll vertical, así que el último
+   *      panel queda cortado unos píxeles.
+   *   2. El alto de la sección se calcula a partir de ese recorrido, de modo
+   *      que la relación entre scroll y desplazamiento queda 1:1 en cualquier
+   *      pantalla. Con un `height: Xvh` fijo, esa relación se descalibra
+   *      cuando cambia el viewport o el contenido.
+   *
+   * Si el navegador no soporta scroll-driven animations, nada de esto corre
+   * y la sección queda como el carrusel de scroll nativo que ya es por CSS.
+   * ------------------------------------------------------------------- */
+  if (section && sticky && track && CSS.supports('animation-timeline: view()')) {
+    const wide = matchMedia('(min-width: 1000px)');
+    const reduce = matchMedia('(prefers-reduced-motion: reduce)');
+
+    let anims: Animation[] = [];
+
+    const teardown = () => {
+      anims.forEach((a) => a.cancel());
+      anims = [];
+      section.classList.remove('is-pinned');
+      section.style.height = '';
+    };
+
+    const setup = () => {
+      teardown();
+      if (!wide.matches || reduce.matches) return;
+
+      section.classList.add('is-pinned');
+
+      const travel = track.scrollWidth - sticky.clientWidth;
+      if (travel <= 0) {
+        section.classList.remove('is-pinned');
+        return;
+      }
+
+      // Viewport + recorrido = avance 1:1 entre scroll y desplazamiento.
+      section.style.height = `${window.innerHeight + travel}px`;
+
+      const timeline = new ViewTimeline({ subject: section, axis: 'block' });
+      const opts = {
+        timeline,
+        fill: 'both' as const,
+        rangeStart: 'contain 0%',
+        rangeEnd: 'contain 100%',
+      };
+
+      anims.push(
+        track.animate({ translate: ['0 0', `${-travel}px 0`] }, opts)
+      );
+
+      if (progress) {
+        anims.push(
+          progress.animate({ transform: ['scaleX(0)', 'scaleX(1)'] }, opts)
+        );
+      }
+    };
+
+    setup();
+
+    let t: number;
+    addEventListener('resize', () => {
+      clearTimeout(t);
+      t = setTimeout(setup, 150);
+    });
+    wide.addEventListener('change', setup);
+    reduce.addEventListener('change', setup);
+  }
+
+  /* ---------------------------------------------------------------------
+   * Los gráficos se dibujan cuando el panel entra en la parte visible.
+   * El root del observer es el contenedor sticky, no el viewport: con la
+   * pista desplazada, un panel puede estar dentro del viewport pero fuera
+   * de la ventana visible. Con root = sticky la intersección respeta el
+   * desplazamiento y cada gráfico arranca cuando de verdad se ve.
+   * ------------------------------------------------------------------- */
+  const charts = document.querySelectorAll('[data-chart]');
+  if (charts.length) {
+    const io = new IntersectionObserver(
+      (entries) => {
+        for (const e of entries) {
+          if (!e.isIntersecting) continue;
+          e.target.classList.add('is-drawn');
+          io.unobserve(e.target);
+        }
+      },
+      { root: sticky, threshold: 0.6 }
+    );
+    charts.forEach((c) => io.observe(c));
+  }
+</script>

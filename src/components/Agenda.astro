@@ -1,0 +1,115 @@
+---
+import WhatsAppButton from './WhatsAppButton.astro';
+import { calendly } from '../data/site';
+---
+
+<section class="section" id="agenda">
+  <div class="container container--md center stack" style="gap: var(--g-space-4)">
+    <h2 class="h2" data-reveal>Agendá tu auditoría</h2>
+    <p class="lead" data-reveal style="--reveal-i:1">
+      Elegí un horario en el calendario, o escribinos por WhatsApp si preferís
+      arrancar la conversación ahí.
+    </p>
+    <div class="btn-row btn-row--center" data-reveal style="--reveal-i:2">
+      <WhatsAppButton source="agenda" label="Prefiero WhatsApp" />
+    </div>
+  </div>
+
+  <div class="container agenda__cal" data-reveal>
+    {/* El iframe se inyecta recién cuando la sección se acerca al viewport.
+        En el sitio actual Calendly carga siempre: ~500 KB para todos. */}
+    <div class="agenda__slot" data-calendly={calendly.url}>
+      <div class="agenda__loading" aria-live="polite">Cargando calendario…</div>
+    </div>
+  </div>
+</section>
+
+<style>
+  .agenda__cal {
+    margin-top: var(--g-space-10);
+  }
+
+  /* Calendly ignora los parámetros de color salvo en plan pago, así que el
+     embed siempre viene blanco. En vez de dejar un agujero blanco sobre negro,
+     lo enmarcamos en una tarjeta crema: el tema light del design system. Así
+     el cambio de superficie se lee como una decisión y no como un error. */
+  .agenda__slot {
+    position: relative;
+    min-height: 42rem;
+    padding: var(--g-space-3);
+    border: var(--g-border-width) solid var(--g-cream-400);
+    border-radius: var(--g-radius-2xl);
+    overflow: hidden;
+    background: var(--g-cream-100);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.6),
+      var(--g-shadow-xl);
+  }
+
+  .agenda__slot :global(iframe) {
+    width: 100%;
+    height: 40rem;
+    border: 0;
+    border-radius: var(--g-radius-xl);
+    background: var(--g-neutral-0);
+  }
+
+  /* Halo cálido detrás de la tarjeta para que no aterrice en el vacío. */
+  .agenda__cal {
+    position: relative;
+  }
+
+  .agenda__cal::before {
+    content: '';
+    position: absolute;
+    inset: -8% -4%;
+    background: radial-gradient(
+      ellipse at center,
+      rgba(234, 190, 63, 0.07),
+      transparent 65%
+    );
+    pointer-events: none;
+  }
+
+  .agenda__loading {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    color: var(--g-neutral-500);
+    font-size: var(--g-text-sm);
+  }
+</style>
+
+<script>
+  const slot = document.querySelector<HTMLElement>('[data-calendly]');
+  if (slot) {
+    const load = () => {
+      const url = new URL(slot.dataset.calendly!);
+      url.searchParams.set('embed_domain', location.hostname);
+      url.searchParams.set('embed_type', 'Inline');
+      url.searchParams.set('hide_landing_page_details', '1');
+      url.searchParams.set('hide_gdpr_banner', '1');
+      url.searchParams.set('background_color', '000000');
+      url.searchParams.set('text_color', 'fff2d3');
+      url.searchParams.set('primary_color', 'eabe3f');
+
+      const iframe = document.createElement('iframe');
+      iframe.src = url.href;
+      iframe.title = 'Calendario para agendar la auditoría';
+      iframe.loading = 'lazy';
+      slot.replaceChildren(iframe);
+    };
+
+    const io = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((e) => e.isIntersecting)) {
+          load();
+          io.disconnect();
+        }
+      },
+      { rootMargin: '600px' }
+    );
+    io.observe(slot);
+  }
+</script>

@@ -1,0 +1,132 @@
+---
+import { caseStudy } from '../data/site';
+---
+
+<section class="section" id="casos-de-exito">
+  <div class="container">
+    <div class="center stack" style="gap: var(--g-space-4)">
+      <p class="eyebrow" data-reveal>Casos de éxito</p>
+      <h2 class="h2" data-reveal style="--reveal-i:1">{caseStudy.title}</h2>
+      <p class="lead" data-reveal style="--reveal-i:2">{caseStudy.text}</p>
+    </div>
+
+    <div class="case__media" data-reveal>
+      {
+        caseStudy.videoSrc ? (
+          <video controls preload="metadata" playsinline>
+            <source src={caseStudy.videoSrc} type="video/mp4" />
+          </video>
+        ) : (
+          /* Provisorio: sigue apuntando a Drive hasta que tengamos el archivo.
+             Ver docs/analisis-y-plan.md, mejora #4. */
+          <iframe
+            src={`https://drive.google.com/file/d/${caseStudy.driveFallbackId}/preview`}
+            title="Congreso Mundial de estética — Gravity Studios"
+            allow="autoplay; encrypted-media"
+            loading="lazy"
+            allowfullscreen
+          />
+        )
+      }
+    </div>
+
+    <dl class="stats">
+      {
+        caseStudy.stats.map((s, i) => (
+          <div class="stat surface spot" data-reveal style={`--reveal-i:${i}`}>
+            <dt class="stat__v" data-count={s.value} data-prefix={s.prefix ?? ''} data-suffix={s.suffix}>
+              {s.prefix ?? ''}0{s.suffix}
+            </dt>
+            <dd class="stat__l">{s.label}</dd>
+          </div>
+        ))
+      }
+    </dl>
+  </div>
+</section>
+
+<style>
+  .case__media {
+    margin-top: var(--g-space-10);
+    aspect-ratio: 16 / 9;
+    border: var(--g-border-width) solid var(--g-border);
+    border-radius: var(--g-radius-lg);
+    overflow: hidden;
+    background: var(--g-surface);
+    box-shadow: var(--g-shadow-lg);
+  }
+
+  .case__media :global(iframe),
+  .case__media :global(video) {
+    width: 100%;
+    height: 100%;
+    border: 0;
+  }
+
+  .stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
+    gap: var(--g-space-6);
+    margin-top: var(--g-space-10);
+    margin-block-end: 0;
+  }
+
+  .stat {
+    text-align: center;
+    padding: var(--g-space-6);
+    border-radius: var(--g-radius-lg);
+  }
+
+  .stat__v {
+    font-family: var(--g-font-display);
+    font-size: var(--g-text-3xl);
+    font-weight: var(--g-weight-bold);
+    color: var(--g-accent);
+    font-variant-numeric: tabular-nums;
+    line-height: var(--g-leading-tight);
+    /* El número es lo único que emite luz propia en la sección. */
+    text-shadow: 0 0 28px rgba(234, 190, 63, 0.28);
+  }
+
+  .stat__l {
+    margin: 0;
+    font-size: var(--g-text-sm);
+    color: var(--g-text-muted);
+  }
+</style>
+
+<script>
+  /* Los números suben cuando la tarjeta entra en pantalla. */
+  const nodes = document.querySelectorAll<HTMLElement>('[data-count]');
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  const render = (el: HTMLElement, n: number) => {
+    el.textContent = `${el.dataset.prefix ?? ''}${n.toLocaleString('es-AR')}${el.dataset.suffix ?? ''}`;
+  };
+
+  const run = (el: HTMLElement) => {
+    const target = Number(el.dataset.count);
+    if (reduced) return render(el, target);
+    const t0 = performance.now();
+    const dur = 1100;
+    const tick = (t: number) => {
+      const p = Math.min((t - t0) / dur, 1);
+      // easeOutCubic
+      render(el, Math.round(target * (1 - Math.pow(1 - p, 3))));
+      if (p < 1) requestAnimationFrame(tick);
+    };
+    requestAnimationFrame(tick);
+  };
+
+  const io = new IntersectionObserver(
+    (entries) => {
+      for (const e of entries) {
+        if (!e.isIntersecting) continue;
+        run(e.target as HTMLElement);
+        io.unobserve(e.target);
+      }
+    },
+    { threshold: 0.6 }
+  );
+  nodes.forEach((n) => io.observe(n));
+</script>

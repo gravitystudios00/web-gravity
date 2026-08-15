@@ -1,0 +1,11 @@
+---
+import Base from '../layouts/Base.astro';
+import Landing from '../components/Landing.astro';
+import { headlines } from '../data/site';
+
+const headline = headlines.find((h) => h.slug === 'index')!;
+---
+
+<Base>
+  <Landing headline={headline} />
+</Base>

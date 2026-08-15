@@ -1,0 +1,8 @@
+node_modules/
+dist/
+.astro/
+
+# Capturas originales del caso Guillermo: contienen datos de pacientes sin
+# tapar (caras, comprobantes). No se versionan ni se publican — solo viajan
+# las .webp ya procesadas que están en public/.
+_originales/

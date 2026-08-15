@@ -1,0 +1,177 @@
+---
+import { waLink } from '../data/site';
+import Logo from './Logo.astro';
+
+const links = [
+  { label: 'Casos de éxito', href: '#casos-de-exito' },
+  { label: 'Qué hacemos', href: '#que-hacemos' },
+  { label: 'Quiénes somos', href: '#quienes-somos' },
+];
+---
+
+<header class="nav" id="nav">
+  <div class="container container--xl nav__inner">
+    <a class="nav__brand" href="/" aria-label="Gravity Studios — inicio">
+      <Logo tone="yellow" />
+    </a>
+
+    <nav class="nav__links" aria-label="Secciones">
+      {links.map((l) => <a href={l.href}>{l.label}</a>)}
+    </nav>
+
+    <div class="nav__actions">
+      <a
+        class="nav__wa"
+        href={waLink('nav')}
+        target="_blank"
+        rel="noopener"
+        data-track="whatsapp_click:nav"
+      >
+        WhatsApp
+      </a>
+      <a class="btn btn--primary" href="#agenda" data-track="calendar_click:nav">
+        Agendar auditoría
+      </a>
+    </div>
+  </div>
+  <span class="nav__progress" aria-hidden="true"></span>
+</header>
+
+<style>
+  .nav {
+    position: sticky;
+    top: 0;
+    z-index: var(--g-z-sticky);
+    background: transparent;
+    border-bottom: var(--g-border-width) solid transparent;
+    transition:
+      background var(--g-duration-base) var(--g-ease-out),
+      border-color var(--g-duration-base) var(--g-ease-out),
+      backdrop-filter var(--g-duration-base) var(--g-ease-out);
+    /* Entrada: baja desde arriba, como el sitio actual. */
+    animation: nav-in var(--g-duration-slow) var(--g-ease-out) both;
+  }
+
+  @keyframes nav-in {
+    from {
+      opacity: 0;
+      transform: translateY(-100%);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+
+  .nav.is-scrolled {
+    background: rgba(0, 0, 0, 0.72);
+    backdrop-filter: blur(12px);
+    border-bottom-color: var(--g-border);
+  }
+
+  .nav__inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--g-space-6);
+    padding-block: var(--g-space-4);
+    transition: padding var(--g-duration-base) var(--g-ease-out);
+  }
+
+  .nav.is-scrolled .nav__inner {
+    padding-block: var(--g-space-2);
+  }
+
+  .nav__brand {
+    display: inline-flex;
+    align-items: center;
+    text-decoration: none;
+    flex: none;
+  }
+
+  /* El alto por defecto del <Logo> viene fijado inline (para que el <img>
+     tenga tamaño intrínseco y no salte el layout); lo ajustamos acá con
+     !important, que es el único modo de pisar un estilo inline desde CSS
+     externo — es un override de tamaño a propósito, no un parche. */
+  .nav__brand :global(.g-logo) {
+    height: 1.6rem !important;
+  }
+
+  .nav__links {
+    display: flex;
+    gap: var(--g-space-6);
+  }
+
+  .nav__links a {
+    font-size: var(--g-text-sm);
+    color: var(--g-text-muted);
+    text-decoration: none;
+    transition: color var(--g-duration-fast) var(--g-ease-out);
+  }
+
+  .nav__links a:hover {
+    color: var(--g-text-accent);
+  }
+
+  .nav__actions {
+    display: flex;
+    align-items: center;
+    gap: var(--g-space-4);
+    flex: none;
+  }
+
+  .nav__actions .btn {
+    padding: var(--g-space-2) var(--g-space-6);
+    font-size: var(--g-text-sm);
+  }
+
+  .nav__wa {
+    font-size: var(--g-text-sm);
+    color: var(--g-text-muted);
+    text-decoration: none;
+    transition: color var(--g-duration-fast) var(--g-ease-out);
+  }
+
+  .nav__wa:hover {
+    color: var(--g-success);
+  }
+
+  @media (max-width: 900px) {
+    .nav__links {
+      display: none;
+    }
+  }
+
+  @media (max-width: 560px) {
+    .nav__wa {
+      display: none;
+    }
+
+    .nav__brand :global(.g-logo) {
+      height: 1.3rem !important;
+    }
+  }
+</style>
+
+<script>
+  const nav = document.getElementById('nav');
+  let frame = 0;
+
+  const onScroll = () => {
+    if (frame) return;
+    frame = requestAnimationFrame(() => {
+      frame = 0;
+      if (!nav) return;
+      nav.classList.toggle('is-scrolled', window.scrollY > 24);
+      const max = document.documentElement.scrollHeight - window.innerHeight;
+      nav.style.setProperty(
+        '--progress',
+        String(max > 0 ? Math.min(window.scrollY / max, 1) : 0)
+      );
+    });
+  };
+
+  onScroll();
+  window.addEventListener('scroll', onScroll, { passive: true });
+  window.addEventListener('resize', onScroll, { passive: true });
+</script>

@@ -1,0 +1,36 @@
+---
+import Nav from './Nav.astro';
+import Hero from './Hero.astro';
+import CaseGuillermo from './CaseGuillermo.astro';
+import Services from './Services.astro';
+import About from './About.astro';
+import Comparison from './Comparison.astro';
+import Agenda from './Agenda.astro';
+import FinalCta from './FinalCta.astro';
+import Footer from './Footer.astro';
+import FloatingWhatsApp from './FloatingWhatsApp.astro';
+import type { Headline } from '../data/site';
+
+interface Props {
+  headline: Headline;
+  /** Las variantes de ads muestran solo hero + calendario + comparación. */
+  short?: boolean;
+}
+
+const { headline, short = false } = Astro.props;
+---
+
+<Nav />
+<main>
+  <Hero headline={headline} />
+  {/* El calendario va acá arriba, en el lugar donde estaba el carrusel de
+      reseñas: es lo primero que ve alguien que ya viene decidido del anuncio. */}
+  <Agenda />
+  {!short && <CaseGuillermo />}
+  {!short && <Services />}
+  {!short && <About />}
+  <Comparison />
+  <FinalCta />
+</main>
+<Footer />
+<FloatingWhatsApp />
