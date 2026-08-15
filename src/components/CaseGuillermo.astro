@@ -28,8 +28,11 @@ const chatShots = chat.images.length ? chat.images : ['', '', '', ''];
         <p class="eyebrow">{caso.eyebrow}</p>
         <h2 class="h2">{caso.title}</h2>
         {caso.lead.map((p) => <p class="lead">{p}</p>)}
+        {/* Solo se ve en el modo carrusel (sin pin), donde se avanza
+            deslizando de costado. Cuando la sección se pinea, el avance lo
+            comunica la barra de progreso y esto se oculta. */}
         <p class="hcase__hint" aria-hidden="true">
-          <span>Seguí bajando</span>
+          <span>Deslizá para ver el caso</span>
           <svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
         </p>
       </article>
@@ -642,15 +645,35 @@ const chatShots = chat.images.length ? chat.images : ['', '', '', ''];
       }
     };
 
-    setup();
-
     let t: number;
-    addEventListener('resize', () => {
+    const recalcular = () => {
       clearTimeout(t);
       t = setTimeout(setup, 150);
-    });
+    };
+
+    setup();
+
+    /* El recorrido se mide sobre el ancho de la pista, que depende de
+       contenido que todavía no cargó cuando corre este script: las capturas
+       del caso, las fuentes y el iframe del calendario. Si no se recalcula,
+       el alto de la sección queda fijado a partir de una medición vieja y el
+       último panel nunca termina de entrar. */
+    addEventListener('load', recalcular);
+    addEventListener('resize', recalcular);
     wide.addEventListener('change', setup);
     reduce.addEventListener('change', setup);
+
+    if ('ResizeObserver' in window) {
+      // Ignora el primer disparo, que es el de la observación inicial.
+      let primera = true;
+      new ResizeObserver(() => {
+        if (primera) {
+          primera = false;
+          return;
+        }
+        recalcular();
+      }).observe(track);
+    }
   }
 
   /* ---------------------------------------------------------------------
