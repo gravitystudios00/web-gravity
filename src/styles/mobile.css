@@ -1,0 +1,147 @@
+/* ============================================================================
+ * Mobile
+ * ----------------------------------------------------------------------------
+ * Objetivo: que cada sección entre completa en la pantalla de un teléfono.
+ * Referencia de trabajo: iPhone 16 (393×852) y Galaxy S20 Ultra (412×915),
+ * descontando la barra del navegador — o sea ~390×760 de alto útil real.
+ *
+ * NO se toca el contenido, solo tamaño y disposición.
+ * NO se toca el desktop: todo vive dentro de media queries.
+ *
+ * La palanca principal es redefinir los tokens de escala del design system.
+ * Como todo el sitio dimensiona con var(--g-text-*) y var(--g-space-*),
+ * cambiarlos acá encoge la página entera de forma proporcional, sin pelear
+ * con la especificidad de los estilos scopeados de cada componente.
+ * ========================================================================== */
+
+@media (max-width: 768px) {
+  :root {
+    /* --- Tipografía: mismos saltos, ~0,82× ----------------------------- */
+    --g-text-2xs: 0.625rem;
+    --g-text-xs: 0.6875rem;
+    --g-text-sm: 0.8125rem;
+    --g-text-md: 0.9375rem;
+    --g-text-lg: 1rem;
+    --g-text-xl: 1.125rem;
+    --g-text-2xl: 1.375rem;
+    --g-text-3xl: 1.75rem;
+    --g-text-4xl: 2.125rem;
+    --g-text-5xl: 2.5rem;
+
+    /* --- Espaciado: los tramos grandes bajan bastante más -------------- */
+    --g-space-6: 1.125rem;
+    --g-space-8: 1.25rem;
+    --g-space-10: 1.5rem;
+    --g-space-12: 1.75rem;
+    --g-space-16: 2rem;
+    --g-space-20: 2.25rem;
+    --g-space-24: 2.5rem;
+
+    /* Interlineado más ajustado: en columnas angostas, 1.55 desperdicia
+       mucho alto sin ganar legibilidad. */
+    --g-leading-normal: 1.45;
+    --g-leading-relaxed: 1.55;
+  }
+
+  /* --- Ritmo vertical de las secciones -------------------------------- */
+
+  .section {
+    padding-block: var(--g-space-12);
+  }
+
+  .section--tight {
+    padding-block: var(--g-space-10);
+  }
+
+  .container {
+    padding-inline: var(--g-space-5);
+  }
+
+  /* --- Titulares ------------------------------------------------------- */
+
+  .h1 {
+    font-size: clamp(1.5rem, 7.2vw, 2rem);
+    line-height: 1.18;
+  }
+
+  .h2 {
+    font-size: clamp(1.35rem, 6vw, 1.75rem);
+  }
+
+  .lead {
+    font-size: var(--g-text-md);
+  }
+
+  .eyebrow {
+    font-size: var(--g-text-xs);
+    letter-spacing: 0.09em;
+  }
+
+  /* --- Botones --------------------------------------------------------- */
+
+  .btn {
+    padding: var(--g-space-3) var(--g-space-6);
+    font-size: var(--g-text-md);
+  }
+
+  .btn--lg {
+    padding: var(--g-space-3) var(--g-space-8);
+    font-size: var(--g-text-md);
+  }
+
+  /* En pantalla angosta dos botones lado a lado quedan apretados; van
+     apilados y a todo el ancho, que además es más fácil de tocar. */
+  .btn-row {
+    flex-direction: column;
+    align-items: stretch;
+    width: 100%;
+    gap: var(--g-space-3);
+  }
+
+  .btn-row .btn {
+    width: 100%;
+  }
+}
+
+/* ============================================================================
+ * Pantallas bajas (iPhone SE, o cualquiera con la barra del navegador
+ * ocupando mucho). Un apretón extra para que las secciones sigan entrando.
+ * ========================================================================== */
+
+@media (max-width: 768px) and (max-height: 740px) {
+  :root {
+    --g-text-sm: 0.78125rem;
+    --g-text-md: 0.875rem;
+    --g-text-lg: 0.9375rem;
+    --g-text-xl: 1.0625rem;
+    --g-text-2xl: 1.25rem;
+    --g-text-3xl: 1.5rem;
+    --g-text-4xl: 1.875rem;
+
+    --g-space-5: 1rem;
+    --g-space-6: 1rem;
+    --g-space-8: 1rem;
+    --g-space-10: 1.25rem;
+    --g-space-12: 1.5rem;
+    --g-space-16: 1.75rem;
+    --g-space-20: 2rem;
+    --g-space-24: 2.25rem;
+
+    --g-leading-normal: 1.38;
+    --g-leading-relaxed: 1.45;
+  }
+
+  .section {
+    padding-block: 1rem;
+  }
+
+  .h2 {
+    font-size: clamp(1.2rem, 5.4vw, 1.5rem);
+  }
+
+  /* Las listas de "por qué elegirnos" y los párrafos de "quiénes somos" son
+     lo que más alto ocupa; acá se ajusta el ritmo sin tocar el texto. */
+  .lead {
+    font-size: var(--g-text-sm);
+  }
+}
