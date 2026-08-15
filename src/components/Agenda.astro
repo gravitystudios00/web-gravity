@@ -79,6 +79,28 @@ import { calendly } from '../data/site';
     color: var(--g-neutral-500);
     font-size: var(--g-text-sm);
   }
+
+  /* En mobile el iframe fijo de 40rem empujaba la sección a 1,03 pantallas.
+     Atado al alto del viewport entra completa, y Calendly hace su propio
+     scroll interno, que es su comportamiento normal en teléfono. */
+  @media (max-width: 768px) {
+    .agenda__cal {
+      margin-top: var(--g-space-6);
+    }
+
+    /* El min-height tiene que igualar el alto del iframe: reserva el espacio
+       antes de que monte y evita el salto de layout cuando aparece. */
+    .agenda__slot {
+      min-height: max(24rem, 58vh);
+      padding: var(--g-space-2);
+      border-radius: var(--g-radius-xl);
+    }
+
+    .agenda__slot :global(iframe) {
+      height: max(24rem, 58vh);
+      border-radius: var(--g-radius-lg);
+    }
+  }
 </style>
 
 <script>

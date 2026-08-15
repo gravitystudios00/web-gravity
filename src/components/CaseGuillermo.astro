@@ -28,13 +28,6 @@ const chatShots = chat.images.length ? chat.images : ['', '', '', ''];
         <p class="eyebrow">{caso.eyebrow}</p>
         <h2 class="h2">{caso.title}</h2>
         {caso.lead.map((p) => <p class="lead">{p}</p>)}
-        {/* Solo se ve en el modo carrusel (sin pin), donde se avanza
-            deslizando de costado. Cuando la sección se pinea, el avance lo
-            comunica la barra de progreso y esto se oculta. */}
-        <p class="hcase__hint" aria-hidden="true">
-          <span>Deslizá para ver el caso</span>
-          <svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
-        </p>
       </article>
 
       {/* --- 2. Las tres métricas -------------------------------------- */}
@@ -169,9 +162,11 @@ const chatShots = chat.images.length ? chat.images : ['', '', '', ''];
 
 <style>
   /* ======================================================================
-   * BASE — carrusel de scroll nativo.
-   * Es lo que ve cualquier navegador sin scroll-driven animations, y lo que
-   * se usa siempre en mobile. Funciona con swipe, rueda y teclado.
+   * BASE — apilado vertical.
+   * Es lo que ve mobile y cualquier navegador sin scroll-driven animations.
+   * El desplazamiento horizontal es una mejora que solo se activa con .is-pinned
+   * (ver más abajo): en pantalla de teléfono secuestrar el scroll vertical
+   * para mover contenido de costado se siente mal y rompe el gesto esperado.
    * ==================================================================== */
 
   .hcase {
@@ -180,29 +175,13 @@ const chatShots = chat.images.length ? chat.images : ['', '', '', ''];
     padding-block: clamp(var(--g-space-12), 7vw, var(--g-space-20));
   }
 
-  .hcase__sticky {
-    overflow-x: auto;
-    overflow-y: hidden;
-    scroll-snap-type: x mandatory;
-    scrollbar-width: none;
-    -webkit-overflow-scrolling: touch;
-  }
-
-  .hcase__sticky::-webkit-scrollbar {
-    display: none;
-  }
-
   .hcase__track {
     display: flex;
-    align-items: center;
-    gap: clamp(var(--g-space-8), 5vw, var(--g-space-20));
-    width: max-content;
-    padding-inline: clamp(var(--g-space-6), 8vw, var(--g-space-24));
-  }
-
-  .hpanel {
-    flex: none;
-    scroll-snap-align: center;
+    flex-direction: column;
+    gap: clamp(var(--g-space-12), 8vw, var(--g-space-20));
+    padding-inline: clamp(var(--g-space-5), 6vw, var(--g-space-24));
+    max-width: var(--g-container-lg);
+    margin-inline: auto;
   }
 
   .hcase__progress {
@@ -213,61 +192,69 @@ const chatShots = chat.images.length ? chat.images : ['', '', '', ''];
    * PANELES
    * ==================================================================== */
 
+  /* En vertical los paneles ocupan el ancho de la columna; los anchos fijos
+     son solo del modo pineado, donde cada panel es una "pantalla" horizontal. */
+  .hpanel {
+    width: 100%;
+  }
+
+  /* Al pinear hay que soltar ese 100%: dentro de una pista `max-content` un
+     porcentaje se resuelve de forma circular e infla el panel (el de métricas
+     duplicaba el recorrido). Cada panel se dimensiona por su contenido salvo
+     los que fijan un ancho explícito abajo. */
+  .hcase.is-pinned .hpanel {
+    width: auto;
+  }
+
+  .hcase.is-pinned .hpanel--intro {
+    width: min(40rem, 84vw);
+  }
+
+  .hcase.is-pinned .hpanel--points,
+  .hcase.is-pinned .hpanel--close {
+    width: min(34rem, 84vw);
+  }
+
+  .hcase.is-pinned .hpanel--profile {
+    width: min(58rem, 88vw);
+  }
+
+  .hcase.is-pinned .hpanel--chat {
+    width: min(62rem, 90vw);
+  }
+
   .hpanel--intro {
     display: flex;
     flex-direction: column;
     gap: var(--g-space-4);
-    width: min(40rem, 84vw);
   }
 
   .hpanel--intro .h2 {
     max-width: 18ch;
   }
 
-  .hcase__hint {
-    display: inline-flex;
-    align-items: center;
-    gap: var(--g-space-2);
-    margin-top: var(--g-space-2);
-    font-size: var(--g-text-sm);
-    color: var(--g-text-subtle);
-  }
-
-  .hcase__hint svg {
-    width: 1.1rem;
-    height: 1.1rem;
-    fill: none;
-    stroke: var(--g-accent);
-    stroke-width: 2;
-    stroke-linecap: round;
-    stroke-linejoin: round;
-    animation: nudge 1.8s var(--g-ease-in-out) infinite;
-  }
-
-  @keyframes nudge {
-    0%,
-    100% {
-      transform: translateX(0);
-    }
-    50% {
-      transform: translateX(4px);
-    }
-  }
-
   /* --- Métricas ---------------------------------------------------- */
 
   .hpanel--metrics {
-    display: flex;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(17rem, 1fr));
     gap: var(--g-space-6);
+  }
+
+  .hcase.is-pinned .hpanel--metrics {
+    display: flex;
   }
 
   .mcard {
     display: flex;
     flex-direction: column;
     gap: var(--g-space-3);
-    width: 21rem;
     padding: var(--g-space-8);
     border-radius: var(--g-radius-xl);
+  }
+
+  .hcase.is-pinned .mcard {
+    width: 21rem;
   }
 
   .mcard__head {
@@ -522,7 +509,21 @@ const chatShots = chat.images.length ? chat.images : ['', '', '', ''];
     display: flex;
     align-items: center;
     overflow-x: hidden;
-    scroll-snap-type: none;
+  }
+
+  /* Al pinear, la pista pasa de columna a fila. */
+  .hcase.is-pinned .hcase__track {
+    flex-direction: row;
+    align-items: center;
+    gap: clamp(var(--g-space-8), 5vw, var(--g-space-20));
+    width: max-content;
+    max-width: none;
+    margin-inline: 0;
+    padding-inline: clamp(var(--g-space-6), 8vw, var(--g-space-24));
+  }
+
+  .hcase.is-pinned .hpanel {
+    flex: none;
   }
 
   .hcase.is-pinned .hcase__progress {
@@ -551,25 +552,127 @@ const chatShots = chat.images.length ? chat.images : ['', '', '', ''];
    * Mobile
    * ==================================================================== */
 
-  @media (max-width: 720px) {
+  @media (max-width: 768px) {
+    /* Las tres métricas apiladas en formato vertical ocupaban ~1200px y no
+       entraban ni de cerca. Acá cada tarjeta pasa a horizontal: el gráfico
+       chico a la izquierda y el texto a la derecha. Las tres juntas quedan
+       en una pantalla. */
     .hpanel--metrics {
-      flex-direction: column;
+      grid-template-columns: 1fr;
+      gap: var(--g-space-4);
     }
 
+    /* Columna angosta a la izquierda con el gráfico y, debajo, el número:
+       es la lectura rápida. El texto va a la derecha. Todo con áreas de
+       grilla reales — nada posicionado con transform, que se desbordaba. */
     .mcard {
-      width: min(21rem, 84vw);
+      display: grid;
+      grid-template-columns: 6.25rem minmax(0, 1fr);
+      grid-template-areas:
+        'chart head'
+        'value title'
+        'value text';
+      align-items: start;
+      column-gap: var(--g-space-4);
+      row-gap: var(--g-space-2);
+      padding: var(--g-space-5);
     }
+
+    .mcard__head {
+      grid-area: head;
+      margin-bottom: 0;
+    }
+
+    .mcard__chart {
+      grid-area: chart;
+      height: auto;
+    }
+
+    /* Los tres gráficos tienen alturas naturales distintas (el de barras
+       trae 7,5rem fijos). Acá se emparejan para que las tarjetas queden
+       parecidas y la columna angosta no se desbalancee. */
+    .mcard__chart :global(.bars__row) {
+      height: 3.5rem;
+    }
+
+    .mcard__chart :global(.bars__labels),
+    .mcard__chart :global(.area__labels) {
+      font-size: 0.5625rem;
+      margin-top: var(--g-space-1);
+    }
+
+    .mcard__value {
+      grid-area: value;
+      align-self: start;
+      text-align: center;
+      font-size: var(--g-text-xl);
+      margin: 0;
+    }
+
+    .mcard__chart > :global(.gauge) {
+      max-width: 100%;
+    }
+
+    .mcard .h3 {
+      grid-area: title;
+      font-size: var(--g-text-md);
+    }
+
+    .mcard p.muted {
+      grid-area: text;
+      font-size: var(--g-text-xs);
+    }
+
+    /* --- Perfil ---------------------------------------------------- */
 
     .hpanel--profile {
       grid-template-columns: 1fr;
+      gap: var(--g-space-5);
     }
 
+    .pstats {
+      gap: var(--g-space-5);
+      margin-top: var(--g-space-2);
+    }
+
+    .pstats dt {
+      font-size: var(--g-text-xl);
+    }
+
+    /* --- Chats ------------------------------------------------------ */
+
+    /* Cuatro capturas en fila entran bien y se leen: es la sección que ya
+       funcionaba, así que se mantiene la grilla de 4. */
     .shots {
-      grid-template-columns: repeat(2, 1fr);
+      gap: var(--g-space-2);
     }
 
-    .hpanel--chat {
-      width: min(28rem, 88vw);
+    .phone {
+      padding: 3px;
+      border-radius: var(--g-radius-md);
+    }
+
+    .phone img {
+      border-radius: var(--g-radius-sm);
+    }
+
+    /* --- Puntos ----------------------------------------------------- */
+
+    .hpanel--points ul {
+      gap: var(--g-space-5);
+    }
+
+    .tick {
+      width: 1.5rem;
+      height: 1.5rem;
+    }
+
+    .caso__point-title {
+      font-size: var(--g-text-md);
+    }
+
+    .hpanel--points .muted {
+      font-size: var(--g-text-sm);
     }
   }
 </style>

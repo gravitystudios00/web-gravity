@@ -2,6 +2,8 @@
 @import './motion.css';
 @import './polish.css';
 @import '/fonts/fonts.css';
+/* Último: la capa mobile redefine tokens y tiene que ganar. */
+@import './mobile.css';
 
 /* ============================================================================
  * Reset mínimo

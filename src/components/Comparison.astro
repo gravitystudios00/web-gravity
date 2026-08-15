@@ -124,4 +124,34 @@ import { gravityPoints, agencyPoints } from '../data/site';
   .ico--no {
     stroke: var(--g-text-subtle);
   }
+
+  /* Es la sección con más ítems (5 + 5) y la que peor entraba en pantallas
+     cortas. Se ajusta el ritmo de la lista, no el texto. */
+  @media (max-width: 768px) and (max-height: 740px) {
+    .cmp {
+      gap: 0.75rem;
+      margin-top: var(--g-space-6);
+    }
+
+    .cmp__col {
+      padding: 0.875rem 1rem;
+    }
+
+    .cmp__list {
+      gap: 0.625rem;
+    }
+
+    .cmp__title {
+      margin-bottom: 0.75rem;
+    }
+
+    .cmp__list li {
+      gap: var(--g-space-2);
+    }
+
+    .ico {
+      width: 1rem;
+      height: 1rem;
+    }
+  }
 </style>

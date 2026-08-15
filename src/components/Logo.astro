@@ -33,10 +33,14 @@ const h = height ?? (variant === 'full' ? '1.75rem' : '1.5rem');
 />
 
 <style>
+  /* El ancho sale del `aspect-ratio`, no de un `calc()` sobre --g-logo-h.
+     Con el calc, cualquier regla que pisara `height` (por ejemplo el tamaño
+     reducido del nav en mobile) dejaba el ancho atado a la altura vieja y el
+     logo salía estirado: ratio 5,55 en vez de 4,12. */
   .g-logo {
     display: block;
     height: var(--g-logo-h);
-    width: calc(var(--g-logo-h) * var(--g-logo-ratio));
+    width: auto;
     aspect-ratio: var(--g-logo-ratio);
     flex: none;
   }
