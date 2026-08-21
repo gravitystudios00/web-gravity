@@ -1,8 +1,15 @@
 node_modules/
 dist/
 .astro/
+.wrangler/
 
 # Capturas originales del caso Guillermo: contienen datos de pacientes sin
 # tapar (caras, comprobantes). No se versionan ni se publican — solo viajan
 # las .webp ya procesadas que están en public/.
 _originales/
+
+# El VSL (115 MB) supera el límite de Cloudflare Pages (25 MiB por archivo
+# estático) y el de GitHub para push normal (100 MB). Vive en R2
+# (bucket web-gravity-assets) y site.ts lo referencia por URL absoluta.
+# Esta carpeta es solo la copia de trabajo local.
+_local-media/
