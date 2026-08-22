@@ -8,10 +8,20 @@ import { vsl } from '../data/site';
  * scripts/process-vsl.mjs, así que la fachada además evita que el navegador
  * empiece a descargar los MB del video en el primer paint.
  */
+
+interface Props {
+  /**
+   * Texto arriba del video. En las páginas de post-agenda se pasa null:
+   * ahí el titular ya dice que el video dura 4 minutos y repetirlo sobra.
+   */
+  kicker?: string | null;
+}
+
+const { kicker = vsl.kicker } = Astro.props;
 ---
 
 <div class="vsl">
-  <p class="vsl__kicker">{vsl.kicker}</p>
+  {kicker && <p class="vsl__kicker">{kicker}</p>}
   <button
     class="vsl__frame"
     type="button"

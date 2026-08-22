@@ -15,10 +15,12 @@ export default defineConfig({
 
   integrations: [
     sitemap({
-      // Las variantes de headline llevan noindex en el HTML. Incluirlas en el
-      // sitemap sería contradictorio: le estaríamos pidiendo a Google que
-      // indexe justo lo que la página le dice que no indexe.
-      filter: (page) => !/\/hl\d+\/?$/.test(page),
+      // Fuera del sitemap todo lo que lleva noindex en el HTML: incluirlo
+      // sería contradictorio, le pediríamos a Google que indexe justo lo que
+      // la página le dice que no indexe.
+      //   /hl1…/hl3  → variantes de headline, casi iguales a la home
+      //   /video-t, /video-j → post-agenda, no tienen sentido fuera del embudo
+      filter: (page) => !/\/(hl\d+|video-[tj])\/?$/.test(page),
     }),
   ],
 });

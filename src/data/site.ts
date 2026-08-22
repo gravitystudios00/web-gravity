@@ -53,12 +53,66 @@ export const whatsapp = {
 /**
  * Arma el link de WhatsApp con mensaje pre-cargado.
  * El `source` sirve para saber desde qué sección abrió la conversación.
+ * `text` permite pisar el mensaje: las páginas de post-agenda mandan
+ * "VISTO" en vez del pedido de auditoría.
  */
-export function waLink(source: string, who: 'juan' | 'tomas' = whatsapp.primary) {
+export function waLink(
+  source: string,
+  who: 'juan' | 'tomas' = whatsapp.primary,
+  text?: string
+) {
   const phone = whatsapp[who].phone;
-  const text = `Hola! Vengo de la web (${source}) y quiero hacer la auditoría para mi clínica.`;
-  return `https://wa.me/${phone}?text=${encodeURIComponent(text)}`;
+  const mensaje =
+    text ?? `Hola! Vengo de la web (${source}) y quiero hacer la auditoría para mi clínica.`;
+  return `https://wa.me/${phone}?text=${encodeURIComponent(mensaje)}`;
 }
+
+/* ---------------------------------------------------------------------------
+ * Páginas de post-agenda (/video-t y /video-j)
+ *
+ * Adonde cae alguien que ACABA de reservar la llamada. Las dos son idénticas
+ * salvo a quién le manda el "VISTO" por WhatsApp: /video-t a Tomás,
+ * /video-j a Juan. No se indexan — no tienen sentido fuera del embudo.
+ * ------------------------------------------------------------------------- */
+export const videoPage = {
+  /** `accent: true` pinta la parte de ámbar, igual que en los headlines. */
+  headline: [
+    { text: 'Si tu ' },
+    { text: 'agenda', accent: true },
+    { text: ' depende del ' },
+    { text: 'azar', accent: true },
+    { text: ', este video de 4 minutos es el ' },
+    { text: 'primer paso', accent: true },
+    { text: ' para ' },
+    { text: 'cambiarlo', accent: true },
+  ],
+  intro: [
+    { text: 'Acabás de ' },
+    { text: 'agendar', accent: true },
+    { text: ' una llamada de ' },
+    { text: 'diagnóstico', accent: true },
+    { text: ' con nosotros. Mirá este video donde vas a ver:' },
+  ],
+  /** Los mismos tres primeros puntos que "¿Por qué elegirnos?". */
+  points: [
+    'Diseñamos tu oferta para vender tratamientos, no para sumar "likes"',
+    'Creamos contenido y anuncios con IA sin que grabes 20 videos al mes',
+    'Automatizamos Instagram y WhatsApp para filtrar curiosos y solo agendar pacientes serios',
+  ],
+  urgency: [
+    { text: 'Verlo ' },
+    { text: 'ahora', accent: true },
+    { text: ' hace que la reunión sea mucho más concreta y ' },
+    { text: 'enfocada en TU CLÍNICA', accent: true },
+  ],
+  afterVideo: [
+    { text: 'Cuando lo veas completo, mandanos ' },
+    { text: '"VISTO"', accent: true },
+    { text: ' por WhatsApp.' },
+  ],
+  /** El mensaje que queda pre-cargado en el chat. */
+  waText: 'VISTO',
+};
 
 /* ---------------------------------------------------------------------------
  * Calendly
