@@ -12,9 +12,10 @@ interface Props {
 const {
   title = site.title,
   description = site.description,
-  // Todo el sitio va noindex mientras esté en preview (Cloudflare Pages).
-  // Sacar este default a false recién cuando el sitio esté listo para lanzar.
-  noindex = true,
+  // El sitio ya está publicado, así que por default se indexa.
+  // Las variantes de headline lo pasan en true a mano: son casi idénticas a
+  // la home y, indexadas, competirían contra ella por las mismas búsquedas.
+  noindex = false,
 } = Astro.props;
 
 const canonical = new URL(Astro.url.pathname, site.url).href;

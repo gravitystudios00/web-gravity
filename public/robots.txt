@@ -1,2 +1,10 @@
 User-agent: *
-Disallow: /
+Allow: /
+
+# Las variantes de headline (/hl1, /hl2, /hl3) NO se bloquean acá a propósito.
+# Llevan <meta name="robots" content="noindex"> en el HTML, y para que Google
+# lea esa etiqueta primero tiene que poder entrar a la página. Bloquearlas por
+# robots.txt sería contraproducente: al no poder rastrearlas, Google no ve el
+# noindex y puede terminar listando la URL igual si la encuentra enlazada.
+
+Sitemap: https://gravity-studios.com/sitemap-index.xml
