@@ -22,13 +22,19 @@ export const analytics = {
 };
 
 /* ---------------------------------------------------------------------------
- * VSL — cambiar el id cuando Juan pase el video nuevo
+ * VSL — el video pesa 115 MB (1080p) y Cloudflare Pages rechaza cualquier
+ * asset estático de más de 25 MiB, así que no puede vivir en public/ ni en
+ * el repo (GitHub tampoco acepta un push de +100 MB). Vive en un bucket R2
+ * público (web-gravity-assets) y se referencia por URL absoluta.
+ *
+ * Para reemplazarlo:
+ *   node scripts/process-vsl.mjs "C:\ruta\al\video-nuevo.mp4"
+ * El script comprime, regenera el poster y sube el resultado a R2 — no hay
+ * que tocar esta URL de nuevo salvo que cambie el nombre del bucket.
  * ------------------------------------------------------------------------- */
 export const vsl = {
-  /** ID de YouTube. El actual es el que está hoy en producción. */
-  youtubeId: 'ygHrlIzxOt0',
-  /** Poster propio (opcional). Si queda vacío usa el thumbnail de YouTube. */
-  poster: '',
+  src: 'https://pub-f92130ee84a64f4189eee960be4dc120.r2.dev/video/vsl.mp4',
+  poster: '/video/vsl-poster.webp',
   kicker: 'En 4 minutos te explicamos nuestro método',
 };
 

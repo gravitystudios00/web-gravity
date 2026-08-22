@@ -2,12 +2,12 @@
 import { vsl } from '../data/site';
 
 /**
- * Fachada del VSL: muestra el poster y recién al hacer clic inyecta el iframe
- * de YouTube. Evita cargar ~700 KB de JS de YouTube en el primer paint y
- * elimina el autoplay bloqueado por el navegador que tiene el sitio actual.
+ * Fachada del VSL: muestra el poster y recién al hacer clic inyecta el
+ * <video>. Antes esto cargaba un iframe de YouTube (~700 KB de JS antes del
+ * primer clic); ahora es el archivo propio, comprimido con
+ * scripts/process-vsl.mjs, así que la fachada además evita que el navegador
+ * empiece a descargar los MB del video en el primer paint.
  */
-const poster =
-  vsl.poster || `https://i.ytimg.com/vi/${vsl.youtubeId}/maxresdefault.jpg`;
 ---
 
 <div class="vsl">
@@ -15,10 +15,10 @@ const poster =
   <button
     class="vsl__frame"
     type="button"
-    data-yt={vsl.youtubeId}
+    data-src={vsl.src}
     aria-label="Reproducir el video"
   >
-    <img src={poster} alt="" width="1280" height="720" loading="eager" />
+    <img src={vsl.poster} alt="" width="1280" height="720" loading="eager" />
     <span class="vsl__play" aria-hidden="true">
       <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"></path></svg>
     </span>
@@ -55,7 +55,7 @@ const poster =
   }
 
   .vsl__frame img,
-  .vsl__frame :global(iframe) {
+  .vsl__frame :global(video) {
     width: 100%;
     height: 100%;
     object-fit: cover;
@@ -73,7 +73,9 @@ const poster =
     border-radius: var(--g-radius-full);
     background: var(--g-accent);
     box-shadow: var(--g-shadow-accent);
-    transition: transform var(--g-duration-base) var(--g-ease-out);
+    transition:
+      transform var(--g-duration-base) var(--g-ease-out),
+      opacity var(--g-duration-base) var(--g-ease-out);
   }
 
   .vsl__frame:hover .vsl__play {
@@ -89,18 +91,21 @@ const poster =
 </style>
 
 <script>
-  document.querySelectorAll('.vsl__frame').forEach((el) => {
+  document.querySelectorAll<HTMLButtonElement>('.vsl__frame').forEach((el) => {
     el.addEventListener(
       'click',
       () => {
-        const id = (el as HTMLElement).dataset.yt;
-        const iframe = document.createElement('iframe');
-        iframe.src = `https://www.youtube-nocookie.com/embed/${id}?autoplay=1&rel=0&modestbranding=1&playsinline=1&iv_load_policy=3`;
-        iframe.allow =
-          'accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture';
-        iframe.allowFullscreen = true;
-        iframe.title = 'Video de presentación de Gravity Studios';
-        el.replaceChildren(iframe);
+        const video = document.createElement('video');
+        video.src = el.dataset.src ?? '';
+        video.controls = true;
+        video.playsInline = true;
+        video.autoplay = true;
+        video.setAttribute('preload', 'auto');
+        el.replaceChildren(video);
+        // El play() ocurre en el mismo gesto de clic, así que el navegador
+        // lo permite con sonido incluido (no es autoplay "silencioso").
+        video.play().catch(() => {});
+
         if ((window as any).gtag)
           (window as any).gtag('event', 'vsl_play', { source: 'hero' });
         if ((window as any).fbq) (window as any).fbq('track', 'ViewContent');
