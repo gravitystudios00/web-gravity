@@ -55,6 +55,9 @@ const max = Math.max(...values);
 
   .bars.is-drawn .bar {
     height: var(--h);
+    /* Un valor 0 queda como una rayita visible y no como un hueco: el
+       "antes" de un caso tiene que verse. */
+    min-height: 3px;
   }
 
   .bars__labels {

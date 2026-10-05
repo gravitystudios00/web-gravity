@@ -1,0 +1,195 @@
+---
+import CaseCard from './CaseCard.astro';
+import BarChart from './charts/BarChart.astro';
+import { guillermo, carolina } from '../data/casos';
+
+/*
+ * Casos de éxito en la landing: una tarjeta por cliente. El caso completo de
+ * Guille vive en /casos/guillermo; acá queda el resumen y el link.
+ */
+---
+
+<section class="section" id="casos-de-exito">
+  <div class="container">
+    <div class="center stack" style="gap: var(--g-space-3)">
+      <p class="eyebrow" data-reveal>Casos de éxito</p>
+      <h2 class="h2" data-reveal style="--reveal-i:1">
+        Clínicas que ya trabajan con el sistema
+      </h2>
+    </div>
+
+    <div class="cases">
+      <CaseCard caso={guillermo}>
+        <p class="cases__result">{guillermo.result}</p>
+        <div class="cases__chart">
+          <p class="cases__chart-label">{guillermo.chartLabel}</p>
+          <BarChart values={guillermo.series} labels={guillermo.seriesLabels} />
+        </div>
+      </CaseCard>
+
+      <CaseCard caso={carolina}>
+        <figure class="cases__clip">
+          {
+            carolina.clip ? (
+              <video
+                src={carolina.clip}
+                poster={carolina.clipPoster || undefined}
+                autoplay
+                muted
+                loop
+                playsinline
+                preload="metadata"
+                aria-label={`Clon con IA de ${carolina.name} hablando`}
+              />
+            ) : (
+              <p class="cases__ph">
+                Clip del clon
+                <br />
+                <code>public/casos/carolina/clon.mp4</code>
+              </p>
+            )
+          }
+        </figure>
+        <p class="cases__caption">{carolina.clipCaption}</p>
+      </CaseCard>
+    </div>
+  </div>
+</section>
+
+<style>
+  .cases {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(22rem, 1fr));
+    gap: var(--g-space-6);
+    margin-top: var(--g-space-12);
+  }
+
+  /* --- Guille: resultado + gráfico ----------------------------------- */
+
+  .cases__result {
+    font-family: var(--g-font-display);
+    font-size: var(--g-text-2xl);
+    font-weight: var(--g-weight-bold);
+    line-height: var(--g-leading-snug);
+    color: var(--g-text-strong);
+    text-wrap: balance;
+  }
+
+  .cases__chart {
+    margin-top: var(--g-space-5);
+    padding: var(--g-space-5);
+    border-radius: var(--g-radius-lg);
+    background: var(--g-bg-subtle);
+    border: var(--g-border-width) solid var(--g-border);
+  }
+
+  .cases__chart-label {
+    font-size: var(--g-text-sm);
+    color: var(--g-text-subtle);
+    margin-bottom: var(--g-space-3);
+  }
+
+  /* --- Caro: clip del clon ------------------------------------------- */
+
+  /* Recorte 4:5 centrado arriba: el clip es un plano de cara hablando, y
+     a 9:16 completo la tarjeta no entraría en una pantalla de teléfono. */
+  .cases__clip {
+    margin: 0 auto;
+    width: 100%;
+    max-width: 17rem;
+    aspect-ratio: 4 / 5;
+    border-radius: var(--g-radius-lg);
+    overflow: hidden;
+    background: var(--g-surface-raised);
+    display: grid;
+    place-items: center;
+    box-shadow:
+      0 0 0 1px var(--g-accent-border),
+      var(--g-shadow-lg);
+  }
+
+  .cases__clip video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center 30%;
+  }
+
+  .cases__caption {
+    margin-top: var(--g-space-3);
+    text-align: center;
+    font-size: var(--g-text-sm);
+    color: var(--g-text-subtle);
+  }
+
+  .cases__ph {
+    text-align: center;
+    font-size: var(--g-text-xs);
+    color: var(--g-text-subtle);
+    line-height: var(--g-leading-normal);
+  }
+
+  .cases__ph code {
+    font-family: var(--g-font-mono);
+    font-size: var(--g-text-2xs);
+    color: var(--g-text-accent);
+  }
+
+  @media (max-width: 768px) {
+    .cases {
+      grid-template-columns: 1fr;
+      gap: var(--g-space-5);
+      margin-top: var(--g-space-8);
+    }
+
+    .cases__result {
+      font-size: var(--g-text-xl);
+    }
+
+    .cases__chart {
+      margin-top: var(--g-space-3);
+      padding: var(--g-space-4);
+    }
+
+    .cases__chart :global(.bars__row) {
+      height: 5rem;
+    }
+
+    .cases__clip {
+      max-width: 13rem;
+    }
+  }
+</style>
+
+<script>
+  /* El gráfico se dibuja al entrar en pantalla (en la página del caso lo
+     hace el script de CaseGuillermo; acá no está ese componente). */
+  const charts = document.querySelectorAll('#casos-de-exito [data-chart]');
+  const io = new IntersectionObserver(
+    (entries) => {
+      for (const e of entries) {
+        if (!e.isIntersecting) continue;
+        e.target.classList.add('is-drawn');
+        io.unobserve(e.target);
+      }
+    },
+    { threshold: 0.5 }
+  );
+  charts.forEach((c) => io.observe(c));
+
+  /* El clip corre solo cuando se ve, y nunca si el usuario pidió menos
+     movimiento: en ese caso queda el poster fijo. */
+  const clip = document.querySelector<HTMLVideoElement>('.cases__clip video');
+  if (clip) {
+    const reduce = matchMedia('(prefers-reduced-motion: reduce)');
+    if (reduce.matches) {
+      clip.removeAttribute('autoplay');
+      clip.pause();
+    } else {
+      new IntersectionObserver(
+        ([e]) => (e.isIntersecting ? clip.play().catch(() => {}) : clip.pause()),
+        { threshold: 0.25 }
+      ).observe(clip);
+    }
+  }
+</script>

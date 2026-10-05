@@ -1,0 +1,183 @@
+---
+import type { Caso } from '../data/casos';
+
+interface Props {
+  caso: Caso;
+}
+
+const { caso } = Astro.props;
+
+/*
+ * Tarjeta de un caso: identidad + problema arriba, y abajo un slot para la
+ * prueba visual — el gráfico de ingresos en Guille, el clip del clon en Caro.
+ * Mismo lenguaje que las .mcard del caso completo (surface + spot + lift).
+ */
+---
+
+<article class="ccard surface spot lift" data-reveal>
+  <header class="ccard__head">
+    <div class="ccard__photo">
+      {
+        caso.photo ? (
+          <img src={caso.photo} alt={caso.name} loading="lazy" width="480" height="600" />
+        ) : (
+          <span class="ccard__initial" aria-hidden="true">{caso.name.replace(/^Dra?\.\s*/, '').charAt(0)}</span>
+        )
+      }
+    </div>
+    <div class="ccard__who">
+      <p class="eyebrow">{caso.eyebrow}</p>
+      <h3 class="ccard__name">{caso.name}</h3>
+      <p class="ccard__role">{caso.role}</p>
+      <p class="ccard__problem">{caso.problem}</p>
+    </div>
+  </header>
+
+  <div class="ccard__media">
+    <slot />
+  </div>
+
+  {
+    caso.href && (
+      <a class="ccard__link" href={caso.href} data-track={`case_click:${caso.slug}`}>
+        Ver el caso completo
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
+      </a>
+    )
+  }
+</article>
+
+<style>
+  .ccard {
+    display: flex;
+    flex-direction: column;
+    gap: var(--g-space-6);
+    padding: var(--g-space-8);
+    border-radius: var(--g-radius-xl);
+  }
+
+  .ccard__head {
+    display: grid;
+    grid-template-columns: 6.5rem minmax(0, 1fr);
+    gap: var(--g-space-5);
+    align-items: center;
+  }
+
+  .ccard__photo {
+    aspect-ratio: 4 / 5;
+    border-radius: var(--g-radius-lg);
+    overflow: hidden;
+    background: var(--g-surface-raised);
+    display: grid;
+    place-items: center;
+    box-shadow:
+      0 0 0 1px var(--g-accent-border),
+      var(--g-shadow-md);
+  }
+
+  .ccard__photo img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center 20%;
+  }
+
+  .ccard__initial {
+    font-family: var(--g-font-display);
+    font-size: var(--g-text-3xl);
+    font-weight: var(--g-weight-bold);
+    color: var(--g-border-strong);
+  }
+
+  .ccard__who {
+    display: flex;
+    flex-direction: column;
+    gap: var(--g-space-1);
+  }
+
+  .ccard__name {
+    font-size: var(--g-text-xl);
+    color: var(--g-text-strong);
+    line-height: var(--g-leading-snug);
+  }
+
+  .ccard__role {
+    font-size: var(--g-text-sm);
+    color: var(--g-text-subtle);
+  }
+
+  .ccard__problem {
+    margin-top: var(--g-space-2);
+    color: var(--g-text-muted);
+    line-height: var(--g-leading-normal);
+    text-wrap: pretty;
+  }
+
+  /* El medio crece para emparejar la altura de las dos tarjetas en desktop. */
+  .ccard__media {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+
+  .ccard__link {
+    /* static a propósito: polish.css le da position: relative a todos los
+       hijos de .spot, y con eso el ::before de abajo quedaría del tamaño del
+       link en vez de cubrir la tarjeta. */
+    position: static;
+    align-self: flex-start;
+    display: inline-flex;
+    align-items: center;
+    gap: var(--g-space-2);
+    font-family: var(--g-font-display);
+    font-weight: var(--g-weight-semibold);
+    color: var(--g-text-accent);
+    text-decoration: none;
+  }
+
+  .ccard__link svg {
+    width: 1.1rem;
+    height: 1.1rem;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    transition: transform var(--g-duration-base) var(--g-ease-out);
+  }
+
+  .ccard__link:hover svg {
+    transform: translateX(4px);
+  }
+
+  /* Toda la tarjeta es clickeable cuando tiene página: el link estira su área
+     de clic sobre la tarjeta entera. */
+  .ccard:has(.ccard__link) {
+    cursor: pointer;
+  }
+
+  .ccard__link::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    z-index: 2;
+  }
+
+  @media (max-width: 768px) {
+    .ccard {
+      gap: var(--g-space-4);
+      padding: var(--g-space-5);
+    }
+
+    .ccard__head {
+      grid-template-columns: 5rem minmax(0, 1fr);
+      gap: var(--g-space-4);
+    }
+
+    .ccard__problem {
+      font-size: var(--g-text-sm);
+    }
+  }
+</style>

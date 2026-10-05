@@ -44,7 +44,7 @@ export const vsl = {
  * (El sitio actual tiene el de Tomás mal escrito: 54295474-8078)
  * ------------------------------------------------------------------------- */
 export const whatsapp = {
-  juan: { name: 'Juan', phone: '543482504982' },
+  juan: { name: 'Juan', phone: '15558684087' },
   tomas: { name: 'Tomás', phone: '542954748078' },
   /** A quién van los botones de la landing. */
   primary: 'juan' as 'juan' | 'tomas',

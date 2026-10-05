@@ -2,10 +2,13 @@
 import { waLink } from '../data/site';
 import Logo from './Logo.astro';
 
+/* Anclas absolutas (/#…) y no relativas (#…): el nav también se usa en
+   /casos/guillermo, y ahí un "#que-hacemos" buscaría la sección en esa
+   página, donde no existe. */
 const links = [
-  { label: 'Casos de éxito', href: '#casos-de-exito' },
-  { label: 'Qué hacemos', href: '#que-hacemos' },
-  { label: 'Quiénes somos', href: '#quienes-somos' },
+  { label: 'Casos de éxito', href: '/#casos-de-exito' },
+  { label: 'Qué hacemos', href: '/#que-hacemos' },
+  { label: 'Quiénes somos', href: '/#quienes-somos' },
 ];
 ---
 
@@ -29,7 +32,7 @@ const links = [
       >
         WhatsApp
       </a>
-      <a class="btn btn--primary" href="#agenda" data-track="calendar_click:nav">
+      <a class="btn btn--primary" href="/#agenda" data-track="calendar_click:nav">
         Agendar auditoría
       </a>
     </div>

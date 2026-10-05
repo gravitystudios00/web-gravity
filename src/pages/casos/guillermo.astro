@@ -1,0 +1,24 @@
+---
+import Base from '../../layouts/Base.astro';
+import Nav from '../../components/Nav.astro';
+import CaseGuillermo from '../../components/CaseGuillermo.astro';
+import FinalCta from '../../components/FinalCta.astro';
+import Footer from '../../components/Footer.astro';
+import FloatingWhatsApp from '../../components/FloatingWhatsApp.astro';
+
+/* El caso completo, tal cual estaba en la landing (scroll horizontal
+   pineado incluido). En la landing quedó la tarjeta que trae hasta acá. */
+---
+
+<Base
+  title="Caso real: Dr. Guillermo Cienfuegos — Gravity Studios"
+  description="Cómo el contenido de un cirujano plástico pasó de buscar vistas a vender: de $0 en Instagram a USD 12.000 por semana, con contenido con IA y mensajes automatizados."
+>
+  <Nav />
+  <main>
+    <CaseGuillermo />
+    <FinalCta />
+  </main>
+  <Footer />
+  <FloatingWhatsApp />
+</Base>
