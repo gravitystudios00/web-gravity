@@ -108,7 +108,16 @@ import { guillermo, carolina } from '../data/casos';
       var(--g-shadow-lg);
   }
 
+  /* Absoluto y no height: 100%: el alto del figure sale de aspect-ratio, y un
+     porcentaje no se resuelve contra eso — el video se dibujaba a su
+     proporción 9:16 original y se desbordaba del recuadro. */
+  .cases__clip {
+    position: relative;
+  }
+
   .cases__clip video {
+    position: absolute;
+    inset: 0;
     width: 100%;
     height: 100%;
     object-fit: cover;
