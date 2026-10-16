@@ -23,12 +23,12 @@ const { headline, short = false } = Astro.props;
 <Nav />
 <main>
   <Hero headline={headline} />
+  {/* Prueba social antes del calendario: resumen de casos en tarjetas (el
+      caso completo de Guille está en /casos/guillermo). */}
+  {!short && <Cases />}
   {/* El calendario va acá arriba, en el lugar donde estaba el carrusel de
       reseñas: es lo primero que ve alguien que ya viene decidido del anuncio. */}
   <Agenda />
-  {/* Resumen de casos en tarjetas; el caso completo de Guille está en
-      /casos/guillermo. */}
-  {!short && <Cases />}
   {!short && <Services />}
   {!short && <About />}
   <Comparison />
