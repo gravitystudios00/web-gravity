@@ -13,3 +13,6 @@ _originales/
 # (bucket web-gravity-assets) y site.ts lo referencia por URL absoluta.
 # Esta carpeta es solo la copia de trabajo local.
 _local-media/
+
+# Secrets locales de wrangler dev
+.dev.vars

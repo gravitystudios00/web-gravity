@@ -64,6 +64,38 @@ const canonical = new URL(Astro.url.pathname, site.url).href;
       crossorigin
     />
 
+    {/* Quién es el visitante. Los links que manda ManyChat traen
+        ?mc=<id de contacto> y los UTM; se guardan en el navegador para que la
+        persona siga identificada si navega o vuelve otro día. El mc se borra
+        de la barra de direcciones: si reenvía el link, el que lo abra no
+        queda registrado como ella. Va antes de GA4 para pasarle el user_id. */}
+    <script is:inline>
+      (function () {
+        var KEY = 'g_visitor';
+        var q = new URLSearchParams(location.search);
+        var v = {};
+        try {
+          v = JSON.parse(localStorage.getItem(KEY)) || {};
+        } catch (e) {}
+        var mc = q.get('mc');
+        if (mc && /^\d{1,20}$/.test(mc)) v.mc = mc;
+        ['utm_source', 'utm_medium', 'utm_campaign', 'utm_content', 'utm_term'].forEach(
+          function (k) {
+            if (q.get(k)) v[k] = q.get(k);
+          }
+        );
+        try {
+          localStorage.setItem(KEY, JSON.stringify(v));
+        } catch (e) {}
+        window.gVisitor = v;
+        if (q.has('mc')) {
+          q.delete('mc');
+          var s = q.toString();
+          history.replaceState(null, '', location.pathname + (s ? '?' + s : '') + location.hash);
+        }
+      })();
+    </script>
+
     {/* GA4 */}
     {
       analytics.ga4 && (
@@ -79,11 +111,61 @@ const canonical = new URL(Astro.url.pathname, site.url).href;
             }
             window.gtag = gtag;
             gtag('js', new Date());
-            gtag('config', id);
+            gtag('config', id, window.gVisitor.mc ? { user_id: window.gVisitor.mc } : {});
           </script>
         </>
       )
     }
+
+    {/* Microsoft Clarity. Con mc, la sesión queda a nombre del contacto de
+        ManyChat: en Clarity se filtra por "Custom user ID". */}
+    {
+      analytics.clarity && (
+        <script is:inline define:vars={{ cid: analytics.clarity }}>
+          (function (c, l, a, r, i, t, y) {
+            c[a] =
+              c[a] ||
+              function () {
+                (c[a].q = c[a].q || []).push(arguments);
+              };
+            t = l.createElement(r);
+            t.async = 1;
+            t.src = 'https://www.clarity.ms/tag/' + i;
+            y = l.getElementsByTagName(r)[0];
+            y.parentNode.insertBefore(t, y);
+          })(window, document, 'clarity', 'script', cid);
+          var v = window.gVisitor;
+          if (v.mc) {
+            clarity('identify', v.mc);
+            clarity('set', 'mc', v.mc);
+          }
+          ['utm_source', 'utm_medium', 'utm_campaign'].forEach(function (k) {
+            if (v[k]) clarity('set', k, v[k]);
+          });
+        </script>
+      )
+    }
+
+    {/* Un solo punto para registrar lo que hace el visitante: GA4, Clarity,
+        Meta y, si viene de ManyChat, una etiqueta en su contacto (la pone el
+        Worker en /api/mc, que tiene la clave de la API). */}
+    <script is:inline>
+      window.gTrack = function (event, props) {
+        props = props || {};
+        if (window.gtag) window.gtag('event', event, props);
+        if (window.clarity) window.clarity('event', event);
+        var fb = {
+          whatsapp_click: 'Contact',
+          calendar_click: 'Lead',
+          vsl_play: 'ViewContent',
+          calendly_booked: 'Schedule',
+        }[event];
+        if (fb && window.fbq) window.fbq('track', fb, props);
+        var mc = window.gVisitor && window.gVisitor.mc;
+        if (mc && navigator.sendBeacon)
+          navigator.sendBeacon('/api/mc', JSON.stringify({ mc: mc, e: event }));
+      };
+    </script>
 
     {/* Meta Pixel — se activa solo cuando cargues el ID en src/data/site.ts */}
     {
@@ -203,17 +285,13 @@ const canonical = new URL(Astro.url.pathname, site.url).href;
       })();
     </script>
 
-    {/* Tracking de clics a WhatsApp y al calendario, en GA4 y Meta. */}
+    {/* Clics a WhatsApp, al calendario y a los casos (data-track="evento:origen"). */}
     <script is:inline>
       document.addEventListener('click', (e) => {
         const a = e.target.closest('a[data-track]');
         if (!a) return;
         const [event, source] = a.dataset.track.split(':');
-        if (window.gtag) window.gtag('event', event, { source });
-        if (window.fbq)
-          window.fbq('track', event === 'whatsapp_click' ? 'Contact' : 'Lead', {
-            source,
-          });
+        window.gTrack(event, { source });
       });
     </script>
   </body>

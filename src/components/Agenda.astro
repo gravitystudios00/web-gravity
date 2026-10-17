@@ -116,6 +116,14 @@ import { calendly } from '../data/site';
       url.searchParams.set('text_color', 'fff2d3');
       url.searchParams.set('primary_color', 'eabe3f');
 
+      // Los UTM llegan a la reserva en Calendly. En utm_content va el
+      // contacto de ManyChat, para saber quién agendó.
+      const v = (window as any).gVisitor ?? {};
+      for (const k of ['utm_source', 'utm_medium', 'utm_campaign', 'utm_term'])
+        if (v[k]) url.searchParams.set(k, v[k]);
+      if (v.mc) url.searchParams.set('utm_content', `mc-${v.mc}`);
+      else if (v.utm_content) url.searchParams.set('utm_content', v.utm_content);
+
       const iframe = document.createElement('iframe');
       iframe.src = url.href;
       iframe.title = 'Calendario para agendar la auditoría';
@@ -134,4 +142,16 @@ import { calendly } from '../data/site';
     );
     io.observe(slot);
   }
+
+  /* Lo que pasa dentro del calendario: Calendly avisa por postMessage cuando
+     eligen un horario y cuando confirman la reserva. */
+  const calendlyEvents: Record<string, string> = {
+    'calendly.date_and_time_selected': 'calendly_time',
+    'calendly.event_scheduled': 'calendly_booked',
+  };
+  window.addEventListener('message', (e) => {
+    if (!/^https:\/\/([a-z0-9-]+\.)*calendly\.com$/.test(e.origin)) return;
+    const name = calendlyEvents[e.data?.event];
+    if (name) (window as any).gTrack(name, { source: 'agenda' });
+  });
 </script>

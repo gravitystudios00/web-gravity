@@ -1,18 +1,27 @@
 {
-  // Configuración del Worker que sirve el sitio estático.
+  // Configuración del Worker que sirve el sitio.
   //
   // Cloudflare tiene el repo conectado por Git y, en cada push, corre
   // `astro build` y después `npx wrangler versions upload`. Ese comando
   // fallaba con "Missing entry-point to Worker script or to assets directory"
   // porque no encontraba este archivo: sin él, wrangler no sabe qué subir.
   //
-  // El sitio no tiene lógica de servidor, así que no lleva "main" — solo
-  // apunta a la carpeta que genera el build. Los assets se sirven directo
-  // desde la red de Cloudflare.
+  // Los archivos de dist/ se sirven directo desde la red de Cloudflare. El
+  // único código de servidor es worker/index.js, que solo atiende /api/mc
+  // (etiquetas de ManyChat); todo lo demás lo pasa a ASSETS.
+  //
+  // Secret necesario (no va en el repo):
+  //   npx wrangler secret put MANYCHAT_API_KEY
   "$schema": "./node_modules/wrangler/config-schema.json",
   "name": "web-gravity",
   "compatibility_date": "2026-08-22",
+  "main": "./worker/index.js",
   "assets": {
-    "directory": "./dist"
+    "directory": "./dist",
+    "binding": "ASSETS",
+    "run_worker_first": ["/api/*"]
+  },
+  "observability": {
+    "enabled": true
   }
 }

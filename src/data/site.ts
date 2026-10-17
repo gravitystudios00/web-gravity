@@ -17,6 +17,8 @@ export const site = {
  * ------------------------------------------------------------------------- */
 export const analytics = {
   ga4: 'G-4K6QNGC64M',
+  /** Microsoft Clarity: grabaciones de sesión y mapas de calor. */
+  clarity: 'yzain7fn0c',
   /** TODO: pegar el Meta Pixel ID. Hoy el sitio en Framer NO tiene pixel. */
   metaPixel: '' as string,
 };

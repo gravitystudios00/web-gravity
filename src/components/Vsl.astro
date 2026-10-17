@@ -116,9 +116,19 @@ const { kicker = vsl.kicker } = Astro.props;
         // lo permite con sonido incluido (no es autoplay "silencioso").
         video.play().catch(() => {});
 
-        if ((window as any).gtag)
-          (window as any).gtag('event', 'vsl_play', { source: 'hero' });
-        if ((window as any).fbq) (window as any).fbq('track', 'ViewContent');
+        const track = (window as any).gTrack as (e: string, p?: object) => void;
+        track('vsl_play', { source: 'hero' });
+
+        // Hasta dónde lo miró: cada hito se registra una sola vez.
+        const marks: [number, string][] = [
+          [0.5, 'vsl_50'],
+          [0.9, 'vsl_90'],
+        ];
+        video.addEventListener('timeupdate', () => {
+          if (!video.duration || !marks.length) return;
+          while (marks.length && video.currentTime / video.duration >= marks[0][0])
+            track(marks.shift()![1], { source: 'hero' });
+        });
       },
       { once: true }
     );
