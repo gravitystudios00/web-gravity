@@ -28,7 +28,9 @@ const { kicker = vsl.kicker } = Astro.props;
     data-src={vsl.src}
     aria-label="Reproducir el video"
   >
-    <img src={vsl.poster} alt="" width="1280" height="720" loading="eager" />
+    {/* fetchpriority: es el elemento más grande de la primera pantalla; sin
+        esto el navegador lo pedía después de las fuentes y de Analytics. */}
+    <img src={vsl.poster} alt="" width="1280" height="720" loading="eager" fetchpriority="high" />
     <span class="vsl__play" aria-hidden="true">
       <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"></path></svg>
     </span>
