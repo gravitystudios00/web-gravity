@@ -99,21 +99,26 @@ const canonical = new URL(Astro.url.pathname, site.url).href;
     {/* GA4 */}
     {
       analytics.ga4 && (
-        <>
-          <script
-            async
-            src={`https://www.googletagmanager.com/gtag/js?id=${analytics.ga4}`}
-          />
-          <script is:inline define:vars={{ id: analytics.ga4 }}>
-            window.dataLayer = window.dataLayer || [];
-            function gtag() {
-              dataLayer.push(arguments);
-            }
-            window.gtag = gtag;
-            gtag('js', new Date());
-            gtag('config', id, window.gVisitor.mc ? { user_id: window.gVisitor.mc } : {});
-          </script>
-        </>
+        <script is:inline define:vars={{ id: analytics.ga4 }}>
+          window.dataLayer = window.dataLayer || [];
+          function gtag() {
+            dataLayer.push(arguments);
+          }
+          window.gtag = gtag;
+          gtag('js', new Date());
+          gtag('config', id, window.gVisitor.mc ? { user_id: window.gVisitor.mc } : {});
+          // La librería (175 KB) se pide recién cuando la página terminó de
+          // cargar: antes le competía al poster del VSL en mobile. Los eventos
+          // de antes quedan en dataLayer y se mandan cuando llega.
+          addEventListener('load', function () {
+            (window.requestIdleCallback || setTimeout)(function () {
+              var s = document.createElement('script');
+              s.async = true;
+              s.src = 'https://www.googletagmanager.com/gtag/js?id=' + id;
+              document.head.appendChild(s);
+            });
+          });
+        </script>
       )
     }
 

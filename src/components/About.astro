@@ -22,7 +22,15 @@ import { team, aboutText } from '../data/site';
           <figure class="member surface spot lift" data-reveal="right" style={`--reveal-i:${i}`}>
             <div class="member__photo">
               {m.photo ? (
-                <img src={m.photo} alt={m.name} loading="lazy" width="720" height="900" />
+                <img
+                  src={m.photo}
+                  srcset={`${m.photo.replace('.webp', '-360.webp')} 360w, ${m.photo} 720w`}
+                  sizes="(max-width: 900px) 45vw, 280px"
+                  alt={m.name}
+                  loading="lazy"
+                  width="720"
+                  height="900"
+                />
               ) : (
                 <span class="member__initial" aria-hidden="true">
                   {m.name.charAt(0)}

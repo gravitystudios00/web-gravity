@@ -33,7 +33,7 @@ const photos = [
 
 for (const p of photos) {
   await mkdir(resolve(p.out, '..'), { recursive: true });
-  await sharp(p.src).extract(p.extract).resize(480, 600).webp({ quality: 84 }).toFile(p.out);
+  await sharp(p.src).extract(p.extract).resize(260, 325).webp({ quality: 84 }).toFile(p.out);
   console.log(`${p.out}  ${((await stat(p.out)).size / 1024).toFixed(0)} KB`);
 }
 

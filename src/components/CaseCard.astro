@@ -19,7 +19,7 @@ const { caso } = Astro.props;
     <div class="ccard__photo">
       {
         caso.photo ? (
-          <img src={caso.photo} alt={caso.name} loading="lazy" width="480" height="600" />
+          <img src={caso.photo} alt={caso.name} loading="lazy" width="260" height="325" />
         ) : (
           <span class="ccard__initial" aria-hidden="true">{caso.name.replace(/^Dra?\.\s*/, '').charAt(0)}</span>
         )
