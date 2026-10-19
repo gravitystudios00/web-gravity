@@ -118,7 +118,9 @@ const canonical = new URL(Astro.url.pathname, site.url).href;
     }
 
     {/* Microsoft Clarity. Con mc, la sesión queda a nombre del contacto de
-        ManyChat: en Clarity se filtra por "Custom user ID". */}
+        ManyChat: en Clarity se filtra por "Custom user ID". Los UTM también
+        van como etiquetas, así se ven aunque la persona vuelva sin ellos en
+        la URL (el filtro Tráfico de Clarity solo lee la URL de entrada). */}
     {
       analytics.clarity && (
         <script is:inline define:vars={{ cid: analytics.clarity }}>
@@ -136,7 +138,9 @@ const canonical = new URL(Astro.url.pathname, site.url).href;
           })(window, document, 'clarity', 'script', cid);
           var v = window.gVisitor;
           if (v.mc) {
-            clarity('identify', v.mc);
+            // Clarity guarda el ID hasheado; el 5º parámetro (nombre visible) es
+            // lo que se lee en la lista de grabaciones.
+            clarity('identify', v.mc, undefined, undefined, 'ManyChat ' + v.mc);
             clarity('set', 'mc', v.mc);
           }
           ['utm_source', 'utm_medium', 'utm_campaign'].forEach(function (k) {

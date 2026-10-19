@@ -113,8 +113,21 @@ etiquetas de lo que se hizo en la prueba (`Web_vio_video`, `_50`,
 - **Qué muestra:** la grabación de cada visita (como un video de su pantalla),
   mapas de calor de clics y de scroll, y los eventos de la tabla de arriba.
 - **Buscar a una persona:** Filtros → **Custom user ID** → pegar su ID de
-  ManyChat (está en su ficha de contacto, debajo de la foto).
-- **Separar por origen:** Filtros → Custom tags → `utm_source` / `utm_medium`.
+  ManyChat (está en su ficha de contacto, debajo de la foto). Desde el
+  19/10/2026 las grabaciones de contactos de ManyChat además muestran
+  "ManyChat <ID>" como nombre.
+- El "User ID" que aparece en cada tarjeta de la lista (por ejemplo
+  `g36mah`) es un ID **interno de Clarity**, no el de ManyChat.
+- **Separar por origen (UTM):**
+  - Filtros → **Tráfico** → Fuente / Medio / Campaña. Lee los UTM de la URL
+    con la que entró a esa sesión.
+  - Filtros → **Custom filters → Custom tags** → `utm_source` /
+    `utm_medium`. Los pone la web y se mantienen aunque la persona vuelva otro
+    día sin UTM en el link.
+  - En cada grabación: **More details** muestra la fuente, el medio y las
+    etiquetas personalizadas.
+- Si una sesión no tiene ni UTM ni etiquetas, entró directo (escribiendo la
+  dirección, desde un buscador o desde un link sin UTM).
 - Las grabaciones aparecen entre 1 y 2 horas después de la visita.
 - Es gratis y sin límite de grabaciones.
 
