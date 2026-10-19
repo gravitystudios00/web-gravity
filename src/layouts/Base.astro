@@ -205,7 +205,10 @@ const canonical = new URL(Astro.url.pathname, site.url).href;
     }
   </head>
 
-  <body>
+  <body data-clarity-unmask="true">
+    {/* data-clarity-unmask: en modo "Balanced" Clarity tapa todos los números
+        de las grabaciones (se veían como ▫▫ días, ▫▫▫%). El sitio no muestra
+        datos de visitantes; los campos de texto Clarity los tapa siempre igual. */}
     <div class="grain" aria-hidden="true"></div>
     <slot />
 
