@@ -16,9 +16,25 @@ const { headline } = Astro.props;
 
     <h1 class="h1 center reveal-words" data-reveal style="--reveal-i:1">
       {
-        headline.parts.map((p) =>
-          p.accent ? <span class="accent">{p.text}</span> : <span>{p.text}</span>
-        )
+        headline.parts.map((p) => {
+          // El "⭣" de los titulares se dibuja en SVG: ni la fuente del sitio
+          // ni la de muchos celulares tienen ese carácter, y salía un cuadrado.
+          const [before, ...rest] = p.text.split('⭣');
+          const content = (
+            <>
+              {rest.length ? before.replace(/\s+$/, ' ') : before}
+              {rest.length > 0 && (
+                <span class="word hero__arrow" aria-hidden="true">
+                  <svg viewBox="0 0 24 24">
+                    <path d="M12 3v15M5.5 12 12 18.5 18.5 12" />
+                  </svg>
+                </span>
+              )}
+              {rest.join('')}
+            </>
+          );
+          return p.accent ? <span class="accent">{content}</span> : <span>{content}</span>;
+        })
       }
     </h1>
 
@@ -43,6 +59,17 @@ const { headline } = Astro.props;
 </section>
 
 <style>
+  .hero__arrow svg {
+    width: 0.85em;
+    height: 0.85em;
+    vertical-align: -0.08em;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 3.2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
   .hero {
     position: relative;
     background: var(--g-bg);
