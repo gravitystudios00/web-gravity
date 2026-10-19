@@ -7,8 +7,10 @@ export default defineConfig({
   output: 'static',
 
   build: {
-    // Un solo archivo CSS en vez de uno por componente.
-    inlineStylesheets: 'auto',
+    // El CSS va dentro del HTML: son ~27 KB (≈6 KB comprimido) y como
+    // archivo aparte bloqueaba el primer render un viaje de red extra
+    // (~2 s en un celular con 4G lento, según Lighthouse).
+    inlineStylesheets: 'always',
   },
 
   devToolbar: { enabled: false },

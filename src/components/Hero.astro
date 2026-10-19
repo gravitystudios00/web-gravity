@@ -22,7 +22,10 @@ const { headline } = Astro.props;
       }
     </h1>
 
-    <div class="hero__video" data-reveal style="--reveal-i:2">
+    {/* Sin data-reveal: el poster del video es el elemento más grande de la
+        primera pantalla (el LCP). Con el fade-in quedaba invisible hasta que
+        corría el JS y Google lo medía como "carga lenta" (4–10 s en mobile). */}
+    <div class="hero__video">
       <Vsl />
     </div>
 

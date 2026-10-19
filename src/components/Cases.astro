@@ -32,13 +32,12 @@ import { guillermo, carolina } from '../data/casos';
           {
             carolina.clip ? (
               <video
-                src={carolina.clip}
+                data-src={carolina.clip}
                 poster={carolina.clipPoster || undefined}
-                autoplay
                 muted
                 loop
                 playsinline
-                preload="metadata"
+                preload="none"
                 aria-label={`Clon con IA de ${carolina.name} hablando`}
               />
             ) : (
@@ -186,19 +185,19 @@ import { guillermo, carolina } from '../data/casos';
   );
   charts.forEach((c) => io.observe(c));
 
-  /* El clip corre solo cuando se ve, y nunca si el usuario pidió menos
-     movimiento: en ese caso queda el poster fijo. */
+  /* El clip (~1,7 MB) recién se descarga cuando se acerca a la pantalla: con
+     src fijo arrancaba junto con la página y le competía el ancho de banda al
+     poster del VSL. Corre solo cuando se ve, y nunca si el usuario pidió
+     menos movimiento: en ese caso queda el poster fijo. */
   const clip = document.querySelector<HTMLVideoElement>('.cases__clip video');
-  if (clip) {
-    const reduce = matchMedia('(prefers-reduced-motion: reduce)');
-    if (reduce.matches) {
-      clip.removeAttribute('autoplay');
-      clip.pause();
-    } else {
-      new IntersectionObserver(
-        ([e]) => (e.isIntersecting ? clip.play().catch(() => {}) : clip.pause()),
-        { threshold: 0.25 }
-      ).observe(clip);
-    }
+  if (clip && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    new IntersectionObserver(
+      ([e]) => {
+        if (!e.isIntersecting) return clip.pause();
+        if (!clip.src) clip.src = clip.dataset.src!;
+        clip.play().catch(() => {});
+      },
+      { threshold: 0.25 }
+    ).observe(clip);
   }
 </script>
