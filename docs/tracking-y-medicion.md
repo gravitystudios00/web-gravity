@@ -26,7 +26,7 @@ la visita. Analytics y Clarity las leen solas.
 | Dónde está el link | URL |
 |---|---|
 | Mensaje de Cleo en WhatsApp (ManyChat) | `https://gravity-studios.com/?utm_source=whatsapp&utm_medium=cleo&mc={{ID de contacto}}` |
-| Bio de Instagram | `https://gravity-studios.com/?utm_source=instagram&utm_medium=bio` |
+| Bio de Instagram (@gravity.clinicas) | `https://gravity-studios.com/?utm_source=instagram&utm_medium=bio&utm_content=gravity.clinicas` |
 
 - `{{ID de contacto}}` se inserta con el selector de variables de ManyChat
   (el botón de "+" en el campo de URL), no se escribe a mano. En el editor se
@@ -41,6 +41,7 @@ la visita. Analytics y Clarity las leen solas.
 | `utm_source` | De qué plataforma viene | `whatsapp`, `instagram` |
 | `utm_medium` | Desde qué lugar de esa plataforma | `cleo` (mensaje automático), `bio` (perfil) |
 | `utm_campaign` | Campaña puntual (opcional) | — (todavía no se usa) |
+| `utm_content` | Qué cuenta o pieza puntual (opcional) | `gravity.clinicas` (bio de esa cuenta) |
 | `mc` | ID del contacto en ManyChat: identifica a la persona | lo completa ManyChat |
 
 ### Links nuevos
