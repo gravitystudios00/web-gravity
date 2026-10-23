@@ -204,8 +204,8 @@ export const services = [
     text: 'Responde dudas, filtra curiosos y solo lleva a agenda pacientes interesados. Sin quemar a tu secretaria ni tu presupuesto.',
   },
   {
-    title: 'Un sistema que queda funcionando',
-    text: 'En menos de 90 días tenés un sistema automático que trae pacientes nuevos todos los días, sin depender de que publiques.',
+    title: 'Programas internos de IA',
+    text: 'Para tareas operativas que NADIE en el mercado utiliza.',
   },
 ];
 
@@ -239,8 +239,8 @@ export const team = [
 ];
 
 export const aboutText = [
-  'Fundada en 2023, Gravity Studios nació de la obsesión compartida de Tomás Cuesta y Juan Colussi: ayudar a los negocios a escalar y vender más digitalmente.',
-  'El primer año trabajamos contenido, community management y anuncios en rubros muy distintos. Esa experiencia nos mostró dónde estaba el problema real: muchas agencias ofreciendo lo mismo y ninguna metiéndose en lo que de verdad hace escalar una clínica.',
+  'Fundada en 2023, Gravity nació de una obsesión compartida de Tomás Cuesta y Juan Colussi: ayudar a los negocios a escalar y vender más digitalmente.',
+  'El primer año trabajamos con una oferta genérica ofreciendo contenido y anuncios en rubros muy distintos. Esa experiencia nos mostró dónde estaba el problema real: muchas agencias ofreciendo lo mismo y ninguna metiéndose en lo que de verdad le importa a un negocio: FACTURAR MÁS.',
   'Hoy diseñamos un embudo completo de adquisición de pacientes con IA para clínicas de medicina estética y cirugía plástica, para que puedas enfocarte en lo que mejor sabés hacer con un sistema corriendo en automático 24/7.',
 ];
 

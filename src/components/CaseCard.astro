@@ -70,8 +70,10 @@ const { caso } = Astro.props;
     background: var(--g-surface-raised);
     display: grid;
     place-items: center;
+    /* Borde ámbar sólido: el semitransparente se leía sobre fotos oscuras
+       (Guille) pero se perdía sobre fondos claros (Caro). */
     box-shadow:
-      0 0 0 1px var(--g-accent-border),
+      0 0 0 1.5px var(--g-accent),
       var(--g-shadow-md);
   }
 

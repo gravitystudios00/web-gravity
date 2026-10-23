@@ -53,7 +53,8 @@ export const carolina: Caso & {
   name: 'Dra. Carolina Alonso',
   role: 'Odontóloga estética · Bogotá',
   photo: asset('/casos/carolina/foto.webp'),
-  problem: 'Vino con un problema puntual: no tenía tiempo para grabar contenido.',
+  problem:
+    'Vino con un problema puntual: no tenía tiempo para grabar contenido. Lo resolvimos creando un clon de IA que crea contenido por ella y pasamos de cero agendas a ocho semanales.',
   clip: asset('/casos/carolina/clon.mp4'),
   clipPoster: asset('/casos/carolina/clon-poster.webp'),
   clipCaption: 'Su clon con IA graba por ella',
