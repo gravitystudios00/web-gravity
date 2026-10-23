@@ -195,13 +195,13 @@ export const gravityPoints = [
 /* ---------------------------------------------------------------------------
  * "Qué hacemos" — el 3er item ya no habla de la garantía
  * ------------------------------------------------------------------------- */
-export type ServiceMedia = {
+/** Video vertical en loop dentro de la tarjeta, que se abre completo al tocarlo. */
+export type ServiceVideo = {
+  kind: 'video';
   slug: string;
-  /** vertical: recorte cuadrado en la tarjeta. wide: 16:9 entero. */
-  shape: 'vertical' | 'wide';
   /** Versión liviana y muteada que corre en loop dentro de la tarjeta. */
   loop: string;
-  /** Versión que se abre al tocar la tarjeta (más resolución, con audio si tiene). */
+  /** Versión que se abre al tocar la tarjeta, con audio. */
   full: string;
   poster: string;
   label: string;
@@ -209,14 +209,17 @@ export type ServiceMedia = {
   cta: string;
 };
 
+/** Animación del bot (src/components/bot), que avanza con el scroll. */
+export type ServiceBot = { kind: 'bot'; slug: string; label: string };
+
 /** Videos generados con scripts/process-services-media.mjs. */
-export const services: { title: string; text: string; media?: ServiceMedia }[] = [
+export const services: { title: string; text: string; media?: ServiceVideo | ServiceBot }[] = [
   {
     title: 'Contenido y anuncios con IA',
     text: 'Diseñamos mensajes y videos con IA para tus anuncios. Vos solo validás el contenido y dedicás más tiempo a lo que te gusta que a grabar.',
     media: {
+      kind: 'video',
       slug: 'clon-caro',
-      shape: 'vertical',
       loop: asset('/servicios/clon-caro-loop.mp4'),
       full: asset('/servicios/clon-caro-full.mp4'),
       poster: asset('/servicios/clon-caro-poster.webp'),
@@ -228,13 +231,9 @@ export const services: { title: string; text: string; media?: ServiceMedia }[] =
     title: 'Asistente virtual 24/7',
     text: 'Responde dudas, filtra curiosos y solo lleva a agenda pacientes interesados. Sin quemar a tu secretaria ni tu presupuesto.',
     media: {
+      kind: 'bot',
       slug: 'bot-whatsapp',
-      shape: 'wide',
-      loop: asset('/servicios/bot-whatsapp-loop.mp4'),
-      full: asset('/servicios/bot-whatsapp-full.mp4'),
-      poster: asset('/servicios/bot-whatsapp-poster.webp'),
-      label: 'Conversación real del asistente de WhatsApp, de la consulta al turno agendado',
-      cta: 'Ver en grande',
+      label: 'Animación: el asistente de WhatsApp conversa con una paciente, anota sus datos y le agenda la valoración',
     },
   },
   {

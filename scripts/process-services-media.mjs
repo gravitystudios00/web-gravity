@@ -3,11 +3,12 @@
  *
  *   node scripts/process-services-media.mjs
  *
+ * (El bot de WhatsApp ya no es un video: es la animación de src/components/bot.)
+ *
  * Cada video sale en dos versiones:
  *   - *-loop.mp4: la que corre en la tarjeta, muteada y en loop. Liviana,
  *     porque arranca sola apenas la tarjeta entra en pantalla.
- *   - *-full.mp4: la que se abre al tocar la tarjeta. Más resolución (el bot
- *     tiene texto chico que en la tarjeta no se lee) y, en el clon, con audio.
+ *   - *-full.mp4: la que se abre al tocar la tarjeta. Más resolución y con audio.
  *     Solo se descarga si alguien la abre.
  * Requiere ffmpeg en el PATH.
  */
@@ -27,14 +28,6 @@ const videos = [
     loop: { scale: '480:-2', crf: 28, audio: false },
     full: { scale: '720:-2', crf: 24, audio: true },
     posterAt: 1,
-  },
-  {
-    // Bot de WhatsApp, 1920×1080, 40 s, sin audio.
-    name: 'bot-whatsapp',
-    src: `${DL}/Bot WhatsApp 16x9.mp4`,
-    loop: { scale: '960:-2', crf: 26, audio: false },
-    full: { scale: '1920:-2', crf: 23, audio: false },
-    posterAt: 12,
   },
 ];
 
@@ -69,7 +62,7 @@ for (const v of videos) {
     stdio: 'inherit',
   });
   const poster = `${OUT}/${v.name}-poster.webp`;
-  await sharp(raw).resize({ width: v.name === 'bot-whatsapp' ? 960 : 480 }).webp({ quality: 80 }).toFile(poster);
+  await sharp(raw).resize({ width: 480 }).webp({ quality: 80 }).toFile(poster);
   await unlink(raw);
 
   console.log(`${v.name}: loop ${await size(loop)} · full ${await size(full)} · poster ${await size(poster)}`);

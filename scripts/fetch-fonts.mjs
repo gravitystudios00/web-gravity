@@ -21,6 +21,9 @@ const UA =
 const FAMILIES = [
   { name: 'Baloo Da 2', slug: 'baloo-da-2', axis: 'wght@400;500;600;700' },
   { name: 'Baloo Bhaina 2', slug: 'baloo-bhaina-2', axis: 'wght@400;500;600' },
+  // Solo la usa la animación del bot (BotWhatsAppScroll): es la letra de la
+  // interfaz de WhatsApp dentro del teléfono.
+  { name: 'Figtree', slug: 'figtree', axis: 'wght@400;500;600;700' },
 ];
 
 await mkdir(OUT, { recursive: true });

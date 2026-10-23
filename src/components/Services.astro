@@ -2,10 +2,14 @@
 import { services } from '../data/site';
 
 /*
- * Las tarjetas con video muestran una versión liviana en loop, muteada y
- * recortada para que la tarjeta no crezca de más. Tocarla abre el video
- * completo en un <dialog>: el clon con sonido, el bot en resolución completa
- * para que el texto del chat se lea.
+ * Tarjeta 01: el clon de Caro, vertical, en loop y muteado; tocarlo abre el
+ * video completo con sonido en un <dialog>.
+ *
+ * Tarjeta 02: la animación del bot (src/components/bot), que avanza con el
+ * scroll y retrocede al subir. Mientras corre, algo queda fijo en pantalla:
+ *   - teléfono: el video dentro de su tarjeta (.bot-runway → .bot-stage)
+ *   - escritorio: la fila de tarjetas entera (.cards-runway → .cards), para
+ *     no dejar dos columnas vacías al lado de una fija.
  */
 ---
 
@@ -20,45 +24,56 @@ import { services } from '../data/site';
       </p>
     </div>
 
-    <div class="cards">
-      {
-        services.map((s, i) => (
-          <article class="card surface spot lift" data-reveal style={`--reveal-i:${i}`}>
-            <span class="card__n" aria-hidden="true">
-              {String(i + 1).padStart(2, '0')}
-            </span>
-            <h3 class="h3">{s.title}</h3>
-            <p class="muted">{s.text}</p>
-            {s.media?.loop && (
-              <button
-                type="button"
-                class={`card__media card__media--${s.media.shape}`}
-                data-full={s.media.full || s.media.loop}
-                data-shape={s.media.shape}
-                data-slug={s.media.slug}
-                aria-label={`${s.media.cta}: ${s.media.label}`}
-              >
-                <video
-                  src={s.media.loop}
-                  poster={s.media.poster || undefined}
-                  muted
-                  loop
-                  playsinline
-                  preload="none"
-                  aria-hidden="true"
-                  tabindex="-1"
-                />
-                <span class="card__expand">
-                  <svg viewBox="0 0 24 24" aria-hidden="true">
-                    <path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7" />
-                  </svg>
-                  {s.media.cta}
-                </span>
-              </button>
-            )}
-          </article>
-        ))
-      }
+    <div class="cards-runway">
+      <div class="cards">
+        {
+          services.map((s, i) => (
+            <article class="card surface spot lift" data-reveal style={`--reveal-i:${i}`}>
+              <span class="card__n" aria-hidden="true">
+                {String(i + 1).padStart(2, '0')}
+              </span>
+              <h3 class="h3">{s.title}</h3>
+              <p class="muted">{s.text}</p>
+
+              {s.media?.kind === 'video' && s.media.loop && (
+                <button
+                  type="button"
+                  class="card__media card__vframe"
+                  data-full={s.media.full || s.media.loop}
+                  data-slug={s.media.slug}
+                  aria-label={`${s.media.cta}: ${s.media.label}`}
+                >
+                  <video
+                    src={s.media.loop}
+                    poster={s.media.poster || undefined}
+                    muted
+                    loop
+                    playsinline
+                    preload="none"
+                    aria-hidden="true"
+                    tabindex="-1"
+                  />
+                  <span class="card__expand">
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                      <path d="M11 5 6 9H2v6h4l5 4V5zM15.5 8.5a5 5 0 0 1 0 7M19 5a10 10 0 0 1 0 14" />
+                    </svg>
+                    {s.media.cta}
+                  </span>
+                </button>
+              )}
+
+              {s.media?.kind === 'bot' && (
+                <div class="card__media bot-runway">
+                  <div class="card__vframe bot-stage" role="img" aria-label={s.media.label}>
+                    <div class="bot-mount" data-bot></div>
+                  </div>
+                </div>
+              )}
+            </article>
+          ))
+        }
+      </div>
+      <div class="cards-runway__spacer" aria-hidden="true"></div>
     </div>
   </div>
 
@@ -103,68 +118,71 @@ import { services } from '../data/site';
     text-wrap: pretty;
   }
 
-  /* --- Video dentro de la tarjeta ------------------------------------ */
-
-  .card__media {
-    /* Abajo de todo: con las tarjetas a la misma altura en desktop, los
-       videos quedan alineados por la base. */
-    margin-top: auto;
-    position: relative;
-    width: 100%;
-    padding: 0;
-    border: 0;
-    border-radius: var(--g-radius-lg);
-    overflow: hidden;
-    background: var(--g-surface-raised);
-    cursor: zoom-in;
-    box-shadow:
-      0 0 0 1px var(--g-accent-border),
-      var(--g-shadow-md);
-    transition: box-shadow var(--g-duration-base) var(--g-ease-out);
-  }
-
-  /* El texto va pegado; el video se separa un poco más. */
   .card:has(.card__media) p {
     margin-bottom: var(--g-space-2);
   }
 
-  .card__media:hover,
-  .card__media:focus-visible {
+  /* --- Marco vertical 9:16 (clon y bot) ------------------------------ */
+
+  .card {
+    /* Alto de los dos videos verticales. El ancho sale del 9:16. */
+    --vframe-h: clamp(17rem, 50vh, 30rem);
+  }
+
+  .card__media {
+    /* Abajo de todo: con las tarjetas a la misma altura en escritorio, los
+       dos videos quedan alineados por la base. */
+    margin-top: auto;
+  }
+
+  .card__vframe {
+    position: relative;
+    display: block;
+    height: var(--vframe-h);
+    aspect-ratio: 9 / 16;
+    max-width: 100%;
+    margin-inline: auto;
+    padding: 0;
+    border: 0;
+    border-radius: var(--g-radius-lg);
+    overflow: hidden;
+    background: #000;
+    box-shadow:
+      0 0 0 1px var(--g-accent-border),
+      var(--g-shadow-md);
+  }
+
+  button.card__vframe {
+    cursor: zoom-in;
+    transition: box-shadow var(--g-duration-base) var(--g-ease-out);
+  }
+
+  button.card__vframe:hover,
+  button.card__vframe:focus-visible {
     box-shadow:
       0 0 0 1.5px var(--g-accent),
       var(--g-shadow-lg);
   }
 
-  .card__media:focus-visible {
+  button.card__vframe:focus-visible {
     outline: 2px solid var(--g-accent);
     outline-offset: 3px;
   }
 
-  /* El clon es 9:16: entero estiraría la tarjeta al doble. El recorte
-     cuadrado deja la cara y los subtítulos, que van a media altura. */
-  .card__media--vertical {
-    aspect-ratio: 1 / 1;
-  }
-
-  /* El bot es 16:9 y entra entero a lo ancho. */
-  .card__media--wide {
-    aspect-ratio: 16 / 9;
-  }
-
-  .card__media video {
+  .card__vframe video {
     position: absolute;
     inset: 0;
     width: 100%;
     height: 100%;
     object-fit: cover;
-    object-position: center 42%;
     display: block;
   }
 
   .card__expand {
     position: absolute;
-    right: var(--g-space-2);
-    bottom: var(--g-space-2);
+    left: 50%;
+    bottom: var(--g-space-3);
+    translate: -50% 0;
     display: inline-flex;
     align-items: center;
     gap: var(--g-space-1);
@@ -176,17 +194,55 @@ import { services } from '../data/site';
     font-family: var(--g-font-display);
     font-size: var(--g-text-xs);
     font-weight: var(--g-weight-semibold);
+    white-space: nowrap;
     pointer-events: none;
   }
 
   .card__expand svg {
-    width: 0.9rem;
-    height: 0.9rem;
+    width: 0.95rem;
+    height: 0.95rem;
     fill: none;
     stroke: var(--g-accent);
     stroke-width: 2;
     stroke-linecap: round;
     stroke-linejoin: round;
+  }
+
+  .bot-mount {
+    position: absolute;
+    inset: 0;
+  }
+
+  /* --- Scroll del bot -------------------------------------------------- */
+
+  /* Escritorio: queda fija la fila de tarjetas mientras se recorre el spacer. */
+  @media (min-width: 769px) {
+    .cards {
+      position: sticky;
+      /* Debajo del nav fijo. */
+      top: 5.5rem;
+    }
+
+    .cards-runway__spacer {
+      height: var(--bot-scroll, 300vh);
+    }
+  }
+
+  /* Teléfono: las tarjetas van apiladas, así que se fija solo el video. */
+  @media (max-width: 768px) {
+    .card {
+      --vframe-h: 50svh;
+    }
+
+    .bot-runway {
+      --vframe-h: 66svh;
+      height: calc(var(--vframe-h) + var(--bot-scroll, 280svh));
+    }
+
+    .bot-stage {
+      position: sticky;
+      top: calc((100svh - var(--vframe-h)) / 2);
+    }
   }
 
   /* --- Video completo ------------------------------------------------- */
@@ -209,23 +265,14 @@ import { services } from '../data/site';
 
   .vmodal__frame {
     position: relative;
+    height: min(88dvh, calc(92vw * 16 / 9));
+    aspect-ratio: 9 / 16;
     border-radius: var(--g-radius-lg);
     overflow: hidden;
     background: #000;
     box-shadow:
       0 0 0 1px var(--g-accent-border),
       var(--g-shadow-lg);
-  }
-
-  /* Cada formato ocupa lo más que puede sin salirse de la pantalla. */
-  .vmodal[data-shape='vertical'] .vmodal__frame {
-    height: min(88dvh, calc(92vw * 16 / 9));
-    aspect-ratio: 9 / 16;
-  }
-
-  .vmodal[data-shape='wide'] .vmodal__frame {
-    width: min(94vw, 1400px, calc(88dvh * 16 / 9));
-    aspect-ratio: 16 / 9;
   }
 
   .vmodal video {
@@ -262,28 +309,16 @@ import { services } from '../data/site';
   .vmodal__close:focus-visible {
     outline: 2px solid var(--g-accent);
   }
-
-  @media (max-width: 768px) {
-    /* En el teléfono el cuadrado del clon ocuparía media pantalla: lo bajo a
-       4:3, que sigue mostrando la cara y el subtítulo. */
-    .card__media--vertical {
-      aspect-ratio: 4 / 3;
-    }
-
-    /* Ventana de ~27% a 68% del alto: entra desde la frente hasta el
-       subtítulo, que va un poco más abajo de la mitad. */
-    .card__media--vertical video {
-      object-position: center 45%;
-    }
-  }
 </style>
 
 <script>
-  const tiles = document.querySelectorAll<HTMLButtonElement>('#que-hacemos .card__media');
+  /* --- Clon: loop en la tarjeta + video completo al tocarlo ------------ */
+
+  const tiles = document.querySelectorAll<HTMLButtonElement>('#que-hacemos button.card__vframe');
   const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-  /* Los loops corren solo mientras se ven; con menos movimiento pedido
-     queda el poster fijo y el video se ve solo al abrirlo. */
+  // El loop corre solo mientras se ve; con menos movimiento pedido queda el
+  // poster fijo y el video se ve solo al abrirlo.
   if (!reduce) {
     const io = new IntersectionObserver(
       (entries) => {
@@ -307,52 +342,48 @@ import { services } from '../data/site';
 
   tiles.forEach((t) =>
     t.addEventListener('click', () => {
-      modal.dataset.shape = t.dataset.shape;
       player.src = t.dataset.full!;
       player.poster = t.querySelector('video')!.poster;
       modal.showModal();
       player.play().catch(() => {});
-      if (t.dataset.shape === 'wide' && portraitPhone.matches) goLandscape();
       (window as any).gTrack?.('video_open', { source: t.dataset.slug });
     })
   );
 
-  /* Un 16:9 en un teléfono vertical queda de ~370px de ancho y el texto del
-     chat no se lee. Ahí va a pantalla completa y se intenta girar a
-     horizontal: Android lo permite con orientation.lock; en iPhone el
-     reproductor nativo gira solo cuando el usuario gira el teléfono. */
-  const portraitPhone = matchMedia('(max-width: 768px) and (orientation: portrait)');
-  const p = player as HTMLVideoElement & { webkitEnterFullscreen?: () => void };
-
-  function goLandscape() {
-    if (p.requestFullscreen) {
-      p.requestFullscreen()
-        .then(() => (screen.orientation as any)?.lock?.('landscape'))
-        .catch(() => {});
-    } else {
-      p.webkitEnterFullscreen?.();
-    }
-  }
-
-  // Al salir de pantalla completa se cierra todo, para no dejar el modal
-  // abierto detrás.
-  document.addEventListener('fullscreenchange', () => {
-    if (!document.fullscreenElement && modal.open) modal.close();
-  });
-  p.addEventListener('webkitendfullscreen', () => modal.close());
-
-  const close = () => modal.close();
-  modal.querySelector('.vmodal__close')!.addEventListener('click', close);
+  modal.querySelector('.vmodal__close')!.addEventListener('click', () => modal.close());
   // Clic en el fondo oscuro (fuera del video) también cierra.
   modal.addEventListener('click', (e) => {
-    if (e.target === modal) close();
+    if (e.target === modal) modal.close();
   });
   modal.addEventListener('close', () => {
-    try {
-      (screen.orientation as any)?.unlock?.();
-    } catch {}
     player.pause();
     player.removeAttribute('src');
     player.load();
   });
+
+  /* --- Bot: se monta cuando la tarjeta se acerca a la pantalla ---------- */
+
+  const mount = document.querySelector<HTMLElement>('#que-hacemos [data-bot]');
+  if (mount) {
+    const phone = matchMedia('(max-width: 768px)');
+    const getTrack = () =>
+      phone.matches
+        ? { runway: mount.closest<HTMLElement>('.bot-runway'), sticky: mount.closest<HTMLElement>('.bot-stage') }
+        : {
+            runway: mount.closest<HTMLElement>('.cards-runway'),
+            sticky: mount.closest<HTMLElement>('.cards'),
+          };
+
+    const io = new IntersectionObserver(
+      async ([e]) => {
+        if (!e.isIntersecting) return;
+        io.disconnect();
+        const { mountBot } = await import('./bot/mount.jsx');
+        mountBot(mount, getTrack);
+      },
+      // Con margen, para que esté dibujado antes de que aparezca.
+      { rootMargin: '800px 0px' }
+    );
+    io.observe(mount);
+  }
 </script>
