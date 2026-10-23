@@ -2,6 +2,7 @@
  * Configuración central de la landing.
  * Todo lo editable sin tocar componentes vive acá.
  */
+import { asset } from '../utils/asset';
 
 export const site = {
   title: 'Gravity Studios — Sistema de captación de pacientes con IA',
@@ -194,14 +195,47 @@ export const gravityPoints = [
 /* ---------------------------------------------------------------------------
  * "Qué hacemos" — el 3er item ya no habla de la garantía
  * ------------------------------------------------------------------------- */
-export const services = [
+export type ServiceMedia = {
+  slug: string;
+  /** vertical: recorte cuadrado en la tarjeta. wide: 16:9 entero. */
+  shape: 'vertical' | 'wide';
+  /** Versión liviana y muteada que corre en loop dentro de la tarjeta. */
+  loop: string;
+  /** Versión que se abre al tocar la tarjeta (más resolución, con audio si tiene). */
+  full: string;
+  poster: string;
+  label: string;
+  /** Texto del botón que abre el video completo. */
+  cta: string;
+};
+
+/** Videos generados con scripts/process-services-media.mjs. */
+export const services: { title: string; text: string; media?: ServiceMedia }[] = [
   {
     title: 'Contenido y anuncios con IA',
     text: 'Diseñamos mensajes y videos con IA para tus anuncios. Vos solo validás el contenido y dedicás más tiempo a lo que te gusta que a grabar.',
+    media: {
+      slug: 'clon-caro',
+      shape: 'vertical',
+      loop: asset('/servicios/clon-caro-loop.mp4'),
+      full: asset('/servicios/clon-caro-full.mp4'),
+      poster: asset('/servicios/clon-caro-poster.webp'),
+      label: 'Anuncio grabado por el clon de IA de la Dra. Carolina Alonso',
+      cta: 'Ver con sonido',
+    },
   },
   {
     title: 'Asistente virtual 24/7',
     text: 'Responde dudas, filtra curiosos y solo lleva a agenda pacientes interesados. Sin quemar a tu secretaria ni tu presupuesto.',
+    media: {
+      slug: 'bot-whatsapp',
+      shape: 'wide',
+      loop: asset('/servicios/bot-whatsapp-loop.mp4'),
+      full: asset('/servicios/bot-whatsapp-full.mp4'),
+      poster: asset('/servicios/bot-whatsapp-poster.webp'),
+      label: 'Conversación real del asistente de WhatsApp, de la consulta al turno agendado',
+      cta: 'Ver en grande',
+    },
   },
   {
     title: 'Programas internos de IA',

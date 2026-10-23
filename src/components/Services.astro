@@ -1,5 +1,12 @@
 ---
 import { services } from '../data/site';
+
+/*
+ * Las tarjetas con video muestran una versión liviana en loop, muteada y
+ * recortada para que la tarjeta no crezca de más. Tocarla abre el video
+ * completo en un <dialog>: el clon con sonido, el bot en resolución completa
+ * para que el texto del chat se lea.
+ */
 ---
 
 <section class="section" id="que-hacemos">
@@ -22,11 +29,47 @@ import { services } from '../data/site';
             </span>
             <h3 class="h3">{s.title}</h3>
             <p class="muted">{s.text}</p>
+            {s.media?.loop && (
+              <button
+                type="button"
+                class={`card__media card__media--${s.media.shape}`}
+                data-full={s.media.full || s.media.loop}
+                data-shape={s.media.shape}
+                data-slug={s.media.slug}
+                aria-label={`${s.media.cta}: ${s.media.label}`}
+              >
+                <video
+                  src={s.media.loop}
+                  poster={s.media.poster || undefined}
+                  muted
+                  loop
+                  playsinline
+                  preload="none"
+                  aria-hidden="true"
+                  tabindex="-1"
+                />
+                <span class="card__expand">
+                  <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7" />
+                  </svg>
+                  {s.media.cta}
+                </span>
+              </button>
+            )}
           </article>
         ))
       }
     </div>
   </div>
+
+  <dialog class="vmodal" aria-label="Video">
+    <div class="vmodal__frame">
+      <button type="button" class="vmodal__close" aria-label="Cerrar video">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" /></svg>
+      </button>
+      <video controls playsinline preload="none"></video>
+    </div>
+  </dialog>
 </section>
 
 <style>
@@ -59,4 +102,257 @@ import { services } from '../data/site';
     line-height: var(--g-leading-normal);
     text-wrap: pretty;
   }
+
+  /* --- Video dentro de la tarjeta ------------------------------------ */
+
+  .card__media {
+    /* Abajo de todo: con las tarjetas a la misma altura en desktop, los
+       videos quedan alineados por la base. */
+    margin-top: auto;
+    position: relative;
+    width: 100%;
+    padding: 0;
+    border: 0;
+    border-radius: var(--g-radius-lg);
+    overflow: hidden;
+    background: var(--g-surface-raised);
+    cursor: zoom-in;
+    box-shadow:
+      0 0 0 1px var(--g-accent-border),
+      var(--g-shadow-md);
+    transition: box-shadow var(--g-duration-base) var(--g-ease-out);
+  }
+
+  /* El texto va pegado; el video se separa un poco más. */
+  .card:has(.card__media) p {
+    margin-bottom: var(--g-space-2);
+  }
+
+  .card__media:hover,
+  .card__media:focus-visible {
+    box-shadow:
+      0 0 0 1.5px var(--g-accent),
+      var(--g-shadow-lg);
+  }
+
+  .card__media:focus-visible {
+    outline: 2px solid var(--g-accent);
+    outline-offset: 3px;
+  }
+
+  /* El clon es 9:16: entero estiraría la tarjeta al doble. El recorte
+     cuadrado deja la cara y los subtítulos, que van a media altura. */
+  .card__media--vertical {
+    aspect-ratio: 1 / 1;
+  }
+
+  /* El bot es 16:9 y entra entero a lo ancho. */
+  .card__media--wide {
+    aspect-ratio: 16 / 9;
+  }
+
+  .card__media video {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center 42%;
+    display: block;
+  }
+
+  .card__expand {
+    position: absolute;
+    right: var(--g-space-2);
+    bottom: var(--g-space-2);
+    display: inline-flex;
+    align-items: center;
+    gap: var(--g-space-1);
+    padding: var(--g-space-1) var(--g-space-3);
+    border-radius: var(--g-radius-pill);
+    background: rgba(0, 0, 0, 0.72);
+    backdrop-filter: blur(6px);
+    color: var(--g-text-strong);
+    font-family: var(--g-font-display);
+    font-size: var(--g-text-xs);
+    font-weight: var(--g-weight-semibold);
+    pointer-events: none;
+  }
+
+  .card__expand svg {
+    width: 0.9rem;
+    height: 0.9rem;
+    fill: none;
+    stroke: var(--g-accent);
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  /* --- Video completo ------------------------------------------------- */
+
+  .vmodal {
+    /* margin auto es lo que centra un <dialog>; el reset global lo pisa. */
+    margin: auto;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    max-width: none;
+    max-height: none;
+    overflow: visible;
+  }
+
+  .vmodal::backdrop {
+    background: rgba(0, 0, 0, 0.86);
+    backdrop-filter: blur(4px);
+  }
+
+  .vmodal__frame {
+    position: relative;
+    border-radius: var(--g-radius-lg);
+    overflow: hidden;
+    background: #000;
+    box-shadow:
+      0 0 0 1px var(--g-accent-border),
+      var(--g-shadow-lg);
+  }
+
+  /* Cada formato ocupa lo más que puede sin salirse de la pantalla. */
+  .vmodal[data-shape='vertical'] .vmodal__frame {
+    height: min(88dvh, calc(92vw * 16 / 9));
+    aspect-ratio: 9 / 16;
+  }
+
+  .vmodal[data-shape='wide'] .vmodal__frame {
+    width: min(94vw, 1400px, calc(88dvh * 16 / 9));
+    aspect-ratio: 16 / 9;
+  }
+
+  .vmodal video {
+    width: 100%;
+    height: 100%;
+    display: block;
+    object-fit: contain;
+  }
+
+  .vmodal__close {
+    position: absolute;
+    top: var(--g-space-2);
+    right: var(--g-space-2);
+    z-index: 1;
+    width: 2.5rem;
+    height: 2.5rem;
+    display: grid;
+    place-items: center;
+    border: 0;
+    border-radius: 50%;
+    background: rgba(0, 0, 0, 0.72);
+    cursor: pointer;
+  }
+
+  .vmodal__close svg {
+    width: 1.1rem;
+    height: 1.1rem;
+    fill: none;
+    stroke: var(--g-text-strong);
+    stroke-width: 2.2;
+    stroke-linecap: round;
+  }
+
+  .vmodal__close:focus-visible {
+    outline: 2px solid var(--g-accent);
+  }
+
+  @media (max-width: 768px) {
+    /* En el teléfono el cuadrado del clon ocuparía media pantalla: lo bajo a
+       4:3, que sigue mostrando la cara y el subtítulo. */
+    .card__media--vertical {
+      aspect-ratio: 4 / 3;
+    }
+
+    /* Ventana de ~27% a 68% del alto: entra desde la frente hasta el
+       subtítulo, que va un poco más abajo de la mitad. */
+    .card__media--vertical video {
+      object-position: center 45%;
+    }
+  }
 </style>
+
+<script>
+  const tiles = document.querySelectorAll<HTMLButtonElement>('#que-hacemos .card__media');
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  /* Los loops corren solo mientras se ven; con menos movimiento pedido
+     queda el poster fijo y el video se ve solo al abrirlo. */
+  if (!reduce) {
+    const io = new IntersectionObserver(
+      (entries) => {
+        for (const e of entries) {
+          const v = e.target.querySelector('video')!;
+          if (e.isIntersecting) {
+            v.preload = 'auto';
+            v.play().catch(() => {});
+          } else {
+            v.pause();
+          }
+        }
+      },
+      { threshold: 0.35 }
+    );
+    tiles.forEach((t) => io.observe(t));
+  }
+
+  const modal = document.querySelector<HTMLDialogElement>('#que-hacemos .vmodal')!;
+  const player = modal.querySelector('video')!;
+
+  tiles.forEach((t) =>
+    t.addEventListener('click', () => {
+      modal.dataset.shape = t.dataset.shape;
+      player.src = t.dataset.full!;
+      player.poster = t.querySelector('video')!.poster;
+      modal.showModal();
+      player.play().catch(() => {});
+      if (t.dataset.shape === 'wide' && portraitPhone.matches) goLandscape();
+      (window as any).gTrack?.('video_open', { source: t.dataset.slug });
+    })
+  );
+
+  /* Un 16:9 en un teléfono vertical queda de ~370px de ancho y el texto del
+     chat no se lee. Ahí va a pantalla completa y se intenta girar a
+     horizontal: Android lo permite con orientation.lock; en iPhone el
+     reproductor nativo gira solo cuando el usuario gira el teléfono. */
+  const portraitPhone = matchMedia('(max-width: 768px) and (orientation: portrait)');
+  const p = player as HTMLVideoElement & { webkitEnterFullscreen?: () => void };
+
+  function goLandscape() {
+    if (p.requestFullscreen) {
+      p.requestFullscreen()
+        .then(() => (screen.orientation as any)?.lock?.('landscape'))
+        .catch(() => {});
+    } else {
+      p.webkitEnterFullscreen?.();
+    }
+  }
+
+  // Al salir de pantalla completa se cierra todo, para no dejar el modal
+  // abierto detrás.
+  document.addEventListener('fullscreenchange', () => {
+    if (!document.fullscreenElement && modal.open) modal.close();
+  });
+  p.addEventListener('webkitendfullscreen', () => modal.close());
+
+  const close = () => modal.close();
+  modal.querySelector('.vmodal__close')!.addEventListener('click', close);
+  // Clic en el fondo oscuro (fuera del video) también cierra.
+  modal.addEventListener('click', (e) => {
+    if (e.target === modal) close();
+  });
+  modal.addEventListener('close', () => {
+    try {
+      (screen.orientation as any)?.unlock?.();
+    } catch {}
+    player.pause();
+    player.removeAttribute('src');
+    player.load();
+  });
+</script>

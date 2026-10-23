@@ -55,8 +55,10 @@ export const carolina: Caso & {
   photo: asset('/casos/carolina/foto.webp'),
   problem:
     'Vino con un problema puntual: no tenía tiempo para grabar contenido. Lo resolvimos creando un clon de IA que crea contenido por ella y pasamos de cero agendas a ocho semanales.',
-  clip: asset('/casos/carolina/clon.mp4'),
-  clipPoster: asset('/casos/carolina/clon-poster.webp'),
+  // El clon nuevo; es el mismo archivo que corre en "Qué hacemos", así que
+  // el navegador lo baja una sola vez.
+  clip: asset('/servicios/clon-caro-loop.mp4'),
+  clipPoster: asset('/servicios/clon-caro-poster.webp'),
   clipCaption: 'Su clon con IA graba por ella',
   // Sin href: todavía no tiene página propia.
 };
