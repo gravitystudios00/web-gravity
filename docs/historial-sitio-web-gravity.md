@@ -35,7 +35,7 @@ Registro completo de la migración de **gravity-studios.com** de Framer a códig
 
 | Dónde | Número |
 |---|---|
-| Landing (todos los botones) y `/video-j` | +1 555 868 4087 (`wa.me/15558684087`) |
+| Landing (todos los botones) y `/video-j` | +54 9 11 2757 0674 (`wa.me/5491127570674`) — antes +1 555 868 4087 |
 | `/video-t` | Tomás: `542954748078` |
 
 **Stack**
