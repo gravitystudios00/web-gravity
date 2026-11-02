@@ -64,11 +64,12 @@ const canonical = new URL(Astro.url.pathname, site.url).href;
       crossorigin
     />
 
-    {/* Quién es el visitante. Los links que manda ManyChat traen
-        ?mc=<id de contacto> y los UTM; se guardan en el navegador para que la
-        persona siga identificada si navega o vuelve otro día. El mc se borra
-        de la barra de direcciones: si reenvía el link, el que lo abra no
-        queda registrado como ella. Va antes de GA4 para pasarle el user_id. */}
+    {/* Quién es el visitante. Los links del bot de WhatsApp traen un código
+        del contacto y los UTM: ?cw=<código> desde Cleo en Chatwoot, ?mc=<id>
+        en los links viejos de ManyChat. Se guardan en el navegador para que
+        la persona siga identificada si navega o vuelve otro día. El código se
+        borra de la barra de direcciones: si reenvía el link, el que lo abra
+        no queda registrado como ella. Va antes de GA4 para pasarle el user_id. */}
     <script is:inline>
       (function () {
         var KEY = 'g_visitor';
@@ -79,6 +80,8 @@ const canonical = new URL(Astro.url.pathname, site.url).href;
         } catch (e) {}
         var mc = q.get('mc');
         if (mc && /^\d{1,20}$/.test(mc)) v.mc = mc;
+        var cw = q.get('cw');
+        if (cw && /^[a-z0-9]{12}$/.test(cw)) v.cw = cw;
         ['utm_source', 'utm_medium', 'utm_campaign', 'utm_content', 'utm_term'].forEach(
           function (k) {
             if (q.get(k)) v[k] = q.get(k);
@@ -88,8 +91,9 @@ const canonical = new URL(Astro.url.pathname, site.url).href;
           localStorage.setItem(KEY, JSON.stringify(v));
         } catch (e) {}
         window.gVisitor = v;
-        if (q.has('mc')) {
+        if (q.has('mc') || q.has('cw')) {
           q.delete('mc');
+          q.delete('cw');
           var s = q.toString();
           history.replaceState(null, '', location.pathname + (s ? '?' + s : '') + location.hash);
         }
@@ -106,7 +110,8 @@ const canonical = new URL(Astro.url.pathname, site.url).href;
           }
           window.gtag = gtag;
           gtag('js', new Date());
-          gtag('config', id, window.gVisitor.mc ? { user_id: window.gVisitor.mc } : {});
+          var uid = window.gVisitor.cw ? 'cw-' + window.gVisitor.cw : window.gVisitor.mc;
+          gtag('config', id, uid ? { user_id: uid } : {});
           // La librería (175 KB) se pide recién cuando la página terminó de
           // cargar: antes le competía al poster del VSL en mobile. Los eventos
           // de antes quedan en dataLayer y se mandan cuando llega.
@@ -142,9 +147,12 @@ const canonical = new URL(Astro.url.pathname, site.url).href;
             y.parentNode.insertBefore(t, y);
           })(window, document, 'clarity', 'script', cid);
           var v = window.gVisitor;
-          if (v.mc) {
-            // Clarity guarda el ID hasheado; el 5º parámetro (nombre visible) es
-            // lo que se lee en la lista de grabaciones.
+          // Clarity guarda el ID hasheado; el 5º parámetro (nombre visible) es
+          // lo que se lee en la lista de grabaciones.
+          if (v.cw) {
+            clarity('identify', v.cw, undefined, undefined, 'WhatsApp ' + v.cw);
+            clarity('set', 'cw', v.cw);
+          } else if (v.mc) {
             clarity('identify', v.mc, undefined, undefined, 'ManyChat ' + v.mc);
             clarity('set', 'mc', v.mc);
           }
@@ -156,8 +164,9 @@ const canonical = new URL(Astro.url.pathname, site.url).href;
     }
 
     {/* Un solo punto para registrar lo que hace el visitante: GA4, Clarity,
-        Meta y, si viene de ManyChat, una etiqueta en su contacto (la pone el
-        Worker en /api/mc, que tiene la clave de la API). */}
+        Meta y, si viene del bot de WhatsApp, una etiqueta en su charla (el
+        Worker en /api/mc la pasa a n8n → Chatwoot, o a ManyChat si es un link
+        viejo). */}
     <script is:inline>
       window.gTrack = function (event, props) {
         props = props || {};
@@ -170,9 +179,9 @@ const canonical = new URL(Astro.url.pathname, site.url).href;
           calendly_booked: 'Schedule',
         }[event];
         if (fb && window.fbq) window.fbq('track', fb, props);
-        var mc = window.gVisitor && window.gVisitor.mc;
-        if (mc && navigator.sendBeacon)
-          navigator.sendBeacon('/api/mc', JSON.stringify({ mc: mc, e: event }));
+        var v = window.gVisitor || {};
+        if ((v.cw || v.mc) && navigator.sendBeacon)
+          navigator.sendBeacon('/api/mc', JSON.stringify({ cw: v.cw, mc: v.mc, e: event }));
       };
     </script>
 
