@@ -82,7 +82,11 @@ const canonical = new URL(Astro.url.pathname, site.url).href;
         if (mc && /^\d{1,20}$/.test(mc)) v.mc = mc;
         var cw = q.get('cw');
         if (cw && /^[a-z0-9]{12}$/.test(cw)) v.cw = cw;
-        // fbclid: el clic del anuncio de Meta. Lo guarda el lead del quiz (/plan).
+        // fbclid: el clic del anuncio de Meta. Con él se arma fbc (el formato
+        // que pide la API de conversiones: fb.1.<momento del clic>.<fbclid>),
+        // que el quiz de /plan le manda al Worker.
+        var fbclid = q.get('fbclid');
+        if (fbclid && fbclid !== v.fbclid) v.fbc = 'fb.1.' + Date.now() + '.' + fbclid;
         ['utm_source', 'utm_medium', 'utm_campaign', 'utm_content', 'utm_term', 'fbclid'].forEach(
           function (k) {
             if (q.get(k)) v[k] = q.get(k);

@@ -907,7 +907,16 @@ const avatars = [guillermo, carolina].filter((c) => c.photo);
   import { quiz, quizMessage, type QuizStep } from '../data/quiz';
 
   type Answers = Record<QuizStep['id'], string>;
-  type Saved = { idx: number; answers: Partial<Answers>; msg?: string; link?: string };
+  type Saved = {
+    idx: number;
+    answers: Partial<Answers>;
+    msg?: string;
+    link?: string;
+    /** Para la API de conversiones: se manda al abrir WhatsApp. */
+    contact?: { name: string; phone: string };
+    /** Ya se mandó la conversión: no se repite si vuelve a tocar el botón. */
+    converted?: boolean;
+  };
 
   const KEY = 'g_quiz';
   const card = document.querySelector<HTMLElement>('[data-quiz]')!;
@@ -1050,8 +1059,34 @@ const avatars = [guillermo, carolina].filter((c) => c.photo);
     const msg = quizMessage(lead.name, lead.instagram, answers);
     state.msg = msg;
     state.link = `https://wa.me/${card.dataset.phone}?text=${encodeURIComponent(msg)}`;
+    state.contact = { name: lead.name, phone: lead.phone };
+    state.converted = false;
     openFinal(true);
   });
+
+  /* --- API de conversiones de Meta ---------------------------------------- */
+
+  // La conversión es abrir WhatsApp (botón o cuenta regresiva), no dejar los
+  // datos. El Worker la manda a Meta desde el servidor (POST /api/capi).
+  function sendConversion() {
+    if (state.converted || !state.contact) return;
+    state.converted = true;
+    save();
+    const v = (window as any).gVisitor || {};
+    fetch('/api/capi', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        ...state.contact,
+        event_id: `quiz-${state.contact.phone.slice(1)}-${Date.now()}`,
+        fbc: v.fbc,
+        url: location.href.split('#')[0],
+        cuello: state.answers.cuello,
+        momento: state.answers.momento,
+      }),
+      keepalive: true,
+    }).catch(() => {});
+  }
 
   /* --- Abrí WhatsApp ------------------------------------------------------ */
 
@@ -1076,6 +1111,7 @@ const avatars = [guillermo, carolina].filter((c) => c.photo);
       clearInterval(timer);
       countdown.textContent = 'Si WhatsApp no se abrió, tocá el botón verde.';
       track('whatsapp_click', { source: 'quiz_auto' });
+      sendConversion();
       location.href = waBtn.href;
     }, 1000);
   }
@@ -1083,6 +1119,7 @@ const avatars = [guillermo, carolina].filter((c) => c.photo);
   // Si toca el botón antes de que termine la cuenta, no se abre dos veces.
   waBtn.addEventListener('click', () => {
     clearInterval(timer);
+    sendConversion();
     countdown.textContent = 'Te abrimos WhatsApp. Solo tocá enviar.';
   });
 
