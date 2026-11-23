@@ -26,7 +26,9 @@
   // secret: npx wrangler secret put META_CAPI_TOKEN
   // META_TEST_EVENT_CODE: solo para probar en "Probar eventos"; dejarlo vacío.
   "vars": {
-    "META_PIXEL_ID": "",
+    // Conjunto de datos "Gravity Pixel - 23/11" (portfolio Gravity Studios,
+    // compartido con la cuenta publicitaria Gravity Studios 440300779171266).
+    "META_PIXEL_ID": "4149392285331933",
     "META_TEST_EVENT_CODE": ""
   },
   "observability": {
