@@ -26,7 +26,8 @@ export default defineConfig({
       // la página le dice que no indexe.
       //   /hl1…/hl3  → variantes de headline, casi iguales a la home
       //   /video-t, /video-j → post-agenda, no tienen sentido fuera del embudo
-      filter: (page) => !/\/(hl\d+|video-[tj])\/?$/.test(page),
+      //   /plan → quiz de los anuncios, solo para tráfico pago
+      filter: (page) => !/\/(hl\d+|video-[tj]|plan)\/?$/.test(page),
     }),
   ],
 });

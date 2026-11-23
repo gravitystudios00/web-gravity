@@ -82,7 +82,8 @@ const canonical = new URL(Astro.url.pathname, site.url).href;
         if (mc && /^\d{1,20}$/.test(mc)) v.mc = mc;
         var cw = q.get('cw');
         if (cw && /^[a-z0-9]{12}$/.test(cw)) v.cw = cw;
-        ['utm_source', 'utm_medium', 'utm_campaign', 'utm_content', 'utm_term'].forEach(
+        // fbclid: el clic del anuncio de Meta. Lo guarda el lead del quiz (/plan).
+        ['utm_source', 'utm_medium', 'utm_campaign', 'utm_content', 'utm_term', 'fbclid'].forEach(
           function (k) {
             if (q.get(k)) v[k] = q.get(k);
           }
@@ -175,6 +176,7 @@ const canonical = new URL(Astro.url.pathname, site.url).href;
         var fb = {
           whatsapp_click: 'Contact',
           calendar_click: 'Lead',
+          quiz_lead: 'Lead',
           vsl_play: 'ViewContent',
           calendly_booked: 'Schedule',
         }[event];

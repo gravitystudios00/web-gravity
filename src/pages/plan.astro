@@ -1,0 +1,69 @@
+---
+import Base from '../layouts/Base.astro';
+import Logo from '../components/Logo.astro';
+import Quiz from '../components/Quiz.astro';
+import Cases from '../components/Cases.astro';
+import { quiz } from '../data/quiz';
+
+/*
+ * Landing de los anuncios del recurso gratis: quiz → datos → WhatsApp.
+ * Sin menú ni links a la home: la única salida es terminar el quiz. No se
+ * indexa: es solo para tráfico pago.
+ */
+const year = new Date().getFullYear();
+---
+
+<Base title={quiz.title} description={quiz.description} noindex>
+  <header class="plan-head">
+    <Logo tone="yellow" height="1.75rem" />
+  </header>
+
+  <main>
+    <Quiz />
+    <Cases />
+
+    <div class="container plan-cta">
+      <a class="btn btn--primary btn--lg" href="#plan" data-track="quiz_cta:casos">
+        Quiero mi plan gratis
+      </a>
+    </div>
+  </main>
+
+  <footer class="plan-foot">
+    <p>© {year} Gravity Studios</p>
+    <p>
+      Este sitio no forma parte de Meta ni de Facebook. Los resultados de los casos dependen de cada
+      clínica y no constituyen una garantía.
+    </p>
+  </footer>
+</Base>
+
+<style>
+  .plan-head {
+    display: flex;
+    justify-content: center;
+    padding: var(--g-space-5) var(--g-space-6) 0;
+  }
+
+  .plan-cta {
+    display: flex;
+    justify-content: center;
+    padding-bottom: var(--g-space-16);
+  }
+
+  .plan-foot {
+    display: grid;
+    gap: var(--g-space-2);
+    padding: var(--g-space-8) var(--g-space-6);
+    border-top: var(--g-border-width) solid var(--g-border);
+    background: var(--g-bg-subtle);
+    font-size: var(--g-text-xs);
+    color: var(--g-text-subtle);
+    text-align: center;
+  }
+
+  .plan-foot p {
+    max-width: 40rem;
+    margin-inline: auto;
+  }
+</style>

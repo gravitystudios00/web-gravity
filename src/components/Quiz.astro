@@ -1,0 +1,1093 @@
+---
+import { quiz } from '../data/quiz';
+import { whatsapp } from '../data/site';
+import { guillermo, carolina } from '../data/casos';
+
+/*
+ * Quiz funnel de /plan. Una pregunta por pantalla: tocar una opción guarda la
+ * respuesta y pasa sola a la siguiente. Al final pide nombre, WhatsApp e
+ * Instagram, guarda el lead (POST /api/lead → n8n) y abre WhatsApp con el
+ * mensaje ya escrito para que Cleo le mande el plan.
+ *
+ * El texto está en src/data/quiz.ts.
+ */
+const total = quiz.steps.length;
+const waPhone = whatsapp[whatsapp.primary].phone;
+const avatars = [guillermo, carolina].filter((c) => c.photo);
+---
+
+<section class="qhero" id="plan">
+  <div class="container qhero__inner">
+    <p class="qproof" data-reveal>
+      {
+        avatars.length > 0 && (
+          <span class="qproof__faces" aria-hidden="true">
+            {avatars.map((c) => (
+              <img src={c.photo} alt="" width="260" height="325" />
+            ))}
+          </span>
+        )
+      }
+      {quiz.proof}
+    </p>
+
+    <h1 class="h1 qhero__title" data-reveal style="--reveal-i:1">
+      {quiz.headline.map((p) => (p.accent ? <span class="accent">{p.text}</span> : p.text))}
+    </h1>
+
+    {/* Mockup del plan: tres tarjetas en HTML, sin imágenes. Es decorativo. */}
+    <div class="qmock" aria-hidden="true">
+      <div class="qmock__card qmock__card--left">
+        <p class="qmock__crumb">Gravity / Contenido</p>
+        <p class="qmock__title">Guiones para tu clon</p>
+        <ul class="qmock__list">
+          <li><span class="qmock__dot qmock__dot--ok"></span>"¿Cuánto sale?" sin perder al paciente</li>
+          <li><span class="qmock__dot qmock__dot--ok"></span>Antes y después que vende</li>
+          <li><span class="qmock__dot"></span>3 mitos de tu tratamiento estrella</li>
+          <li><span class="qmock__dot"></span>Anuncio: valoración sin cargo</li>
+        </ul>
+      </div>
+
+      <div class="qmock__card qmock__card--right">
+        <p class="qmock__crumb">Gravity / Cleo · WhatsApp</p>
+        <p class="qmock__title">Asistente 24/7</p>
+        <div class="qmock__chat">
+          <p class="qmock__msg qmock__msg--in">Hola! ¿Cuánto sale el tratamiento?</p>
+          <p class="qmock__msg qmock__msg--out">Te cuento 😊 ¿Es para vos? ¿Qué te gustaría mejorar?</p>
+          <p class="qmock__msg qmock__msg--ok">✓ Valoración agendada · jueves 10:30</p>
+        </div>
+      </div>
+
+      <div class="qmock__card qmock__card--center">
+        <p class="qmock__crumb">Gravity / Plan de Captación</p>
+        <p class="qmock__title qmock__title--lg">Tu Plan de Captación</p>
+        <div class="qmock__progress">
+          <span class="qmock__ring"><b>02</b><small>de 04</small></span>
+          <div class="qmock__stats">
+            <p><span class="qmock__dot qmock__dot--ok"></span>Etapas listas: <b>1</b></p>
+            <p><span class="qmock__dot qmock__dot--now"></span>Etapa actual: <b>Contenido</b></p>
+            <p><span class="qmock__dot"></span>Meta: <b>40 consultas en 90 días</b></p>
+          </div>
+        </div>
+        <p class="qmock__label">Etapas de tu clínica</p>
+        <ul class="qmock__stages">
+          <li class="is-done">Oferta clara<span>Listo</span></li>
+          <li class="is-now">Contenido con tu clon de IA<span>En curso</span></li>
+          <li>Cleo responde y filtra<span>Pendiente</span></li>
+          <li>Agenda llena y recordatorios<span>Pendiente</span></li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="qcard" data-quiz data-phone={waPhone}>
+      <div class="qcard__top" data-top>
+        <button type="button" class="qcard__back" data-back hidden>
+          <span aria-hidden="true">←</span> Atrás
+        </button>
+        <p class="qcard__count" data-count>Pregunta 1 de {total}</p>
+        <span class="qcard__bar" aria-hidden="true"><span data-bar></span></span>
+      </div>
+
+      {
+        quiz.steps.map((s, i) => (
+          <div class="qstep" data-step={i} data-id={s.id} hidden={i > 0}>
+            {s.kicker && <p class="qstep__kicker">{s.kicker}</p>}
+            <h2 class="qstep__q" tabindex="-1">
+              {s.question}
+            </h2>
+            {s.hint && <p class="qstep__hint">{s.hint}</p>}
+            <div class="qstep__opts" role="group" aria-label={s.question}>
+              {s.options.map((o) => (
+                <button type="button" class="qopt" data-key={o.key} aria-pressed="false">
+                  <span>{o.label}</span>
+                  <span class="qopt__arrow" aria-hidden="true">→</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        ))
+      }
+
+      <form class="qstep qform" data-step={total} data-form hidden novalidate>
+        <h2 class="qstep__q" tabindex="-1">{quiz.form.question}</h2>
+
+        <label class="qfield">
+          <span>{quiz.form.name}</span>
+          <input name="name" type="text" autocomplete="given-name" required maxlength="80" placeholder="Nombre" />
+        </label>
+
+        <div class="qfield">
+          <label for="q-phone">{quiz.form.phone}</label>
+          <div class="qfield__phone">
+            <select name="country" aria-label="Código de país">
+              {
+                quiz.countries.map((c) => (
+                  <option value={c.code}>
+                    {c.flag} {c.code ? `+${c.code}` : 'Otro'}
+                  </option>
+                ))
+              }
+            </select>
+            <input
+              id="q-phone"
+              name="phone"
+              type="tel"
+              inputmode="tel"
+              autocomplete="tel-national"
+              required
+              maxlength="20"
+              placeholder="11 2345 6789"
+            />
+          </div>
+        </div>
+
+        <label class="qfield">
+          <span>{quiz.form.instagram}</span>
+          <input
+            name="instagram"
+            type="text"
+            autocomplete="off"
+            autocapitalize="none"
+            spellcheck="false"
+            required
+            maxlength="31"
+            placeholder="@tuclinica"
+          />
+        </label>
+
+        {/* Trampa para bots: una persona no ve ni completa este campo. */}
+        <label class="qform__hp" aria-hidden="true">
+          Web <input name="website" type="text" tabindex="-1" autocomplete="off" />
+        </label>
+
+        <p class="qform__error" data-error role="alert"></p>
+
+        <button type="submit" class="btn btn--primary btn--lg qform__submit">
+          {quiz.form.submit} <span aria-hidden="true">→</span>
+        </button>
+        <p class="qform__consent">{quiz.form.consent}</p>
+      </form>
+
+      <div class="qstep qfinal" data-step={total + 1} data-final hidden>
+        <p class="qstep__kicker">{quiz.final.kicker}</p>
+        <h2 class="qfinal__title" tabindex="-1">{quiz.final.title}</h2>
+        <p class="qfinal__lead">{quiz.final.lead}</p>
+
+        <a class="qfinal__btn" href="#" target="_blank" rel="noopener" data-wa data-track="whatsapp_click:quiz">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path
+              d="M12.04 2c-5.46 0-9.91 4.45-9.91 9.91 0 1.75.46 3.45 1.32 4.95L2 22l5.25-1.38a9.87 9.87 0 0 0 4.79 1.22h.01c5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01A9.82 9.82 0 0 0 12.04 2Zm0 18.15h-.01a8.2 8.2 0 0 1-4.19-1.15l-.3-.18-3.12.82.83-3.04-.2-.31a8.18 8.18 0 0 1-1.26-4.38c0-4.54 3.7-8.23 8.25-8.23a8.2 8.2 0 0 1 8.24 8.24c0 4.54-3.7 8.23-8.24 8.23Zm4.52-6.16c-.25-.12-1.47-.72-1.69-.81-.23-.08-.39-.12-.56.13-.16.25-.64.81-.79.98-.14.16-.29.18-.54.06-.25-.12-1.05-.39-2-1.23-.74-.66-1.24-1.47-1.38-1.72-.15-.25-.02-.39.11-.51.11-.11.25-.29.37-.43.12-.15.16-.25.25-.41.08-.17.04-.31-.02-.43-.06-.12-.56-1.34-.76-1.84-.2-.48-.41-.42-.56-.43h-.48c-.17 0-.43.06-.66.31-.23.25-.87.85-.87 2.07s.89 2.4 1.02 2.56c.12.17 1.75 2.67 4.23 3.74.59.26 1.05.41 1.41.52.59.19 1.13.16 1.56.1.48-.07 1.47-.6 1.67-1.18.21-.58.21-1.07.15-1.18-.06-.1-.23-.17-.48-.29Z"
+            ></path>
+          </svg>
+          {quiz.final.button}
+        </a>
+        <p class="qfinal__count" data-countdown aria-live="polite">
+          Abriendo WhatsApp en <b data-sec>{quiz.final.countdown}</b> segundos…
+        </p>
+
+        <div class="qfinal__preview">
+          <p class="qfinal__label">{quiz.final.preview}</p>
+          <p class="qfinal__msg" data-msg></p>
+          <p class="qfinal__note">{quiz.final.previewNote}</p>
+        </div>
+      </div>
+    </div>
+
+    <ul class="qbullets" data-reveal>
+      {quiz.bullets.map((b) => <li>{b}</li>)}
+    </ul>
+  </div>
+</section>
+
+<style>
+  .qhero {
+    position: relative;
+    overflow: clip;
+    padding-block: var(--g-space-8) var(--g-space-12);
+  }
+
+  /* Halo ámbar tenue detrás del mockup, como en el hero de la home. */
+  .qhero::before {
+    content: '';
+    position: absolute;
+    inset: 4rem 0 auto;
+    height: 32rem;
+    background: radial-gradient(50% 50% at 50% 50%, var(--g-accent-subtle), transparent 70%);
+    pointer-events: none;
+  }
+
+  .qhero__inner {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    max-width: 52rem;
+  }
+
+  /* --- Prueba social --------------------------------------------------- */
+
+  .qproof {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--g-space-2);
+    padding: var(--g-space-1) var(--g-space-4) var(--g-space-1) var(--g-space-1);
+    border: var(--g-border-width) solid var(--g-border-strong);
+    border-radius: var(--g-radius-full);
+    background: var(--g-surface);
+    font-size: var(--g-text-sm);
+    color: var(--g-text-muted);
+    line-height: 1.3;
+  }
+
+  .qproof__faces {
+    display: inline-flex;
+    flex: none;
+  }
+
+  .qproof__faces img {
+    width: 1.75rem;
+    height: 1.75rem;
+    border-radius: 50%;
+    object-fit: cover;
+    object-position: 50% 20%;
+    border: 2px solid var(--g-surface);
+  }
+
+  .qproof__faces img + img {
+    margin-left: -0.55rem;
+  }
+
+  .qhero__title {
+    margin-top: var(--g-space-5);
+    max-width: 22em;
+    text-wrap: balance;
+    line-height: var(--g-leading-tight);
+  }
+
+  /* --- Mockup ------------------------------------------------------------ */
+
+  .qmock {
+    position: relative;
+    width: 100%;
+    height: 22em;
+    margin-top: var(--g-space-6);
+    font-size: clamp(8px, 2.35vw, 12.5px);
+    text-align: left;
+  }
+
+  .qmock__card {
+    position: absolute;
+    top: 1.5em;
+    left: 50%;
+    width: 18em;
+    padding: 1.1em 1.2em;
+    border: 1px solid var(--g-border-strong);
+    border-radius: 1em;
+    background: linear-gradient(180deg, var(--g-neutral-800), var(--g-neutral-900));
+    box-shadow: var(--g-shadow-xl);
+    color: var(--g-text-muted);
+    font-size: 1em;
+    line-height: 1.35;
+  }
+
+  /* Las laterales quedan medio tapadas por la del centro: el texto arranca
+     del lado de afuera para que se lea. */
+  .qmock__card--left {
+    transform: translateX(calc(-50% - 15.5em)) rotate(-8deg);
+    top: 3.5em;
+    padding-right: 4.8em;
+  }
+
+  .qmock__card--right {
+    transform: translateX(calc(-50% + 15.5em)) rotate(8deg);
+    top: 3.5em;
+    padding-left: 4.8em;
+  }
+
+  .qmock ul,
+  .qbullets {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .qmock__card--center {
+    width: 21em;
+    top: 0;
+    transform: translateX(-50%);
+    z-index: 1;
+    border-color: var(--g-accent-border);
+  }
+
+  .qmock__crumb {
+    font-size: 0.75em;
+    color: var(--g-text-subtle);
+  }
+
+  .qmock__title {
+    margin-top: 0.3em;
+    font-family: var(--g-font-display);
+    font-weight: var(--g-weight-semibold);
+    font-size: 1.15em;
+    color: var(--g-text-strong);
+  }
+
+  .qmock__title--lg {
+    font-size: 1.35em;
+  }
+
+  .qmock__list {
+    margin-top: 0.8em;
+    display: grid;
+    gap: 0.55em;
+    font-size: 0.85em;
+  }
+
+  .qmock__list li,
+  .qmock__stats p {
+    display: flex;
+    align-items: center;
+    gap: 0.5em;
+  }
+
+  .qmock__dot {
+    flex: none;
+    width: 0.6em;
+    height: 0.6em;
+    border-radius: 50%;
+    border: 1px solid var(--g-border-strong);
+  }
+
+  .qmock__dot--ok {
+    background: var(--g-success);
+    border-color: var(--g-success);
+  }
+
+  .qmock__dot--now {
+    background: var(--g-accent);
+    border-color: var(--g-accent);
+  }
+
+  .qmock__chat {
+    margin-top: 0.8em;
+    display: grid;
+    gap: 0.45em;
+    font-size: 0.8em;
+  }
+
+  .qmock__msg {
+    max-width: 85%;
+    padding: 0.45em 0.7em;
+    border-radius: 0.8em;
+    background: var(--g-neutral-700);
+    color: var(--g-text);
+  }
+
+  .qmock__msg--out {
+    justify-self: end;
+    background: rgba(63, 163, 107, 0.28);
+  }
+
+  .qmock__msg--ok {
+    justify-self: center;
+    max-width: none;
+    background: var(--g-success-bg);
+    border: 1px solid var(--g-success-border);
+    color: var(--g-success);
+  }
+
+  .qmock__progress {
+    display: flex;
+    align-items: center;
+    gap: 1em;
+    margin-top: 0.9em;
+    padding: 0.8em;
+    border-radius: 0.8em;
+    background: rgba(0, 0, 0, 0.3);
+  }
+
+  .qmock__ring {
+    flex: none;
+    display: grid;
+    place-content: center;
+    width: 4.2em;
+    height: 4.2em;
+    border-radius: 50%;
+    background:
+      radial-gradient(closest-side, var(--g-neutral-900) 76%, transparent 78%),
+      conic-gradient(var(--g-accent) 0 50%, var(--g-neutral-700) 0);
+    text-align: center;
+    line-height: 1;
+  }
+
+  .qmock__ring b {
+    font-size: 1.3em;
+    color: var(--g-text-strong);
+  }
+
+  .qmock__ring small {
+    font-size: 0.6em;
+  }
+
+  .qmock__stats {
+    display: grid;
+    gap: 0.35em;
+    font-size: 0.78em;
+  }
+
+  .qmock__stats b {
+    color: var(--g-text-strong);
+    font-weight: var(--g-weight-semibold);
+  }
+
+  .qmock__label {
+    margin-top: 0.9em;
+    font-size: 0.7em;
+    letter-spacing: var(--g-tracking-wider);
+    text-transform: uppercase;
+    color: var(--g-text-subtle);
+  }
+
+  .qmock__stages {
+    margin-top: 0.4em;
+    display: grid;
+    gap: 0.35em;
+    font-size: 0.8em;
+  }
+
+  .qmock__stages li {
+    display: flex;
+    justify-content: space-between;
+    gap: 0.5em;
+    padding: 0.4em 0.6em;
+    border-radius: 0.5em;
+  }
+
+  .qmock__stages span {
+    flex: none;
+    font-size: 0.85em;
+    padding: 0 0.5em;
+    border-radius: 0.4em;
+    background: var(--g-neutral-700);
+  }
+
+  .qmock__stages .is-done span {
+    background: var(--g-success-bg);
+    color: var(--g-success);
+  }
+
+  .qmock__stages .is-now {
+    background: var(--g-accent-subtle);
+    color: var(--g-text-strong);
+  }
+
+  .qmock__stages .is-now span {
+    background: var(--g-accent);
+    color: var(--g-on-accent);
+  }
+
+  /* --- Tarjeta del quiz -------------------------------------------------- */
+
+  .qcard {
+    position: relative;
+    z-index: 2;
+    width: 100%;
+    max-width: 36rem;
+    margin-top: calc(var(--g-space-8) * -1);
+    padding: var(--g-space-6);
+    border: var(--g-border-width) solid var(--g-border-strong);
+    border-radius: var(--g-radius-xl);
+    background: var(--g-surface);
+    box-shadow: var(--g-shadow-xl);
+    text-align: left;
+    scroll-margin-top: var(--g-space-4);
+  }
+
+  .qcard__top {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    align-items: center;
+    gap: var(--g-space-2) var(--g-space-3);
+    margin-bottom: var(--g-space-5);
+  }
+
+  .qcard__top[hidden] {
+    display: none;
+  }
+
+  .qcard__back {
+    grid-column: 1;
+    padding: var(--g-space-1) var(--g-space-3);
+    border: var(--g-border-width) solid var(--g-border-strong);
+    border-radius: var(--g-radius-full);
+    background: none;
+    color: var(--g-text-muted);
+    font: inherit;
+    font-size: var(--g-text-sm);
+    cursor: pointer;
+  }
+
+  .qcard__back:hover {
+    color: var(--g-text-strong);
+    border-color: var(--g-text-muted);
+  }
+
+  .qcard__back[hidden] {
+    display: none;
+  }
+
+  .qcard__count {
+    grid-column: 2;
+    justify-self: end;
+    font-size: var(--g-text-sm);
+    color: var(--g-text-subtle);
+  }
+
+  .qcard__back[hidden] + .qcard__count {
+    grid-column: 1 / -1;
+  }
+
+  .qcard__bar {
+    grid-column: 1 / -1;
+    height: 4px;
+    border-radius: var(--g-radius-full);
+    background: var(--g-neutral-800);
+    overflow: hidden;
+  }
+
+  .qcard__bar span {
+    display: block;
+    height: 100%;
+    width: 0;
+    border-radius: inherit;
+    background: var(--g-accent);
+    transition: width var(--g-duration-slow) var(--g-ease-out);
+  }
+
+  .qstep[hidden] {
+    display: none;
+  }
+
+  .qstep:not([hidden]) {
+    animation: qstep-in var(--g-duration-slow) var(--g-ease-out) both;
+  }
+
+  @keyframes qstep-in {
+    from {
+      opacity: 0;
+      transform: translateX(12px);
+    }
+  }
+
+  .qstep__kicker {
+    margin-bottom: var(--g-space-2);
+    font-family: var(--g-font-display);
+    font-size: var(--g-text-xs);
+    font-weight: var(--g-weight-semibold);
+    letter-spacing: var(--g-tracking-wider);
+    text-transform: uppercase;
+    color: var(--g-text-accent);
+    text-align: center;
+  }
+
+  .qstep__q {
+    font-size: var(--g-text-xl);
+    line-height: var(--g-leading-snug);
+    text-align: center;
+    text-wrap: balance;
+    outline: none;
+  }
+
+  .qstep__hint {
+    margin-top: var(--g-space-2);
+    font-size: var(--g-text-sm);
+    color: var(--g-text-muted);
+    text-align: center;
+  }
+
+  .qstep__opts {
+    display: grid;
+    gap: var(--g-space-2);
+    margin-top: var(--g-space-5);
+  }
+
+  .qopt {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--g-space-3);
+    width: 100%;
+    min-height: 3.25rem;
+    padding: var(--g-space-3) var(--g-space-4);
+    border: var(--g-border-width) solid var(--g-border-strong);
+    border-radius: var(--g-radius-md);
+    background: var(--g-bg-subtle);
+    color: var(--g-text);
+    font: inherit;
+    font-size: var(--g-text-md);
+    text-align: left;
+    line-height: 1.3;
+    cursor: pointer;
+    transition:
+      background var(--g-duration-fast) var(--g-ease-out),
+      border-color var(--g-duration-fast) var(--g-ease-out),
+      color var(--g-duration-fast) var(--g-ease-out);
+  }
+
+  .qopt__arrow {
+    flex: none;
+    color: var(--g-text-subtle);
+    transition: transform var(--g-duration-base) var(--g-ease-out);
+  }
+
+  @media (hover: hover) {
+    .qopt:hover {
+      border-color: var(--g-accent-border);
+      background: var(--g-accent-subtle);
+      color: var(--g-text-strong);
+    }
+
+    .qopt:hover .qopt__arrow {
+      color: var(--g-accent);
+      transform: translateX(3px);
+    }
+  }
+
+  .qopt[aria-pressed='true'] {
+    border-color: var(--g-accent);
+    background: var(--g-accent);
+    color: var(--g-on-accent);
+  }
+
+  .qopt[aria-pressed='true'] .qopt__arrow {
+    color: var(--g-on-accent);
+  }
+
+  /* --- Formulario -------------------------------------------------------- */
+
+  .qform {
+    display: grid;
+    gap: var(--g-space-4);
+  }
+
+  .qfield {
+    display: grid;
+    gap: var(--g-space-1);
+  }
+
+  .qfield > span,
+  .qfield > label {
+    font-size: var(--g-text-xs);
+    font-weight: var(--g-weight-semibold);
+    letter-spacing: var(--g-tracking-wide);
+    text-transform: uppercase;
+    color: var(--g-text-muted);
+  }
+
+  .qfield input,
+  .qfield select {
+    width: 100%;
+    min-height: 3rem;
+    padding: var(--g-space-2) var(--g-space-4);
+    border: var(--g-border-width) solid var(--g-border-strong);
+    border-radius: var(--g-radius-md);
+    background: var(--g-bg-subtle);
+    color: var(--g-text-strong);
+    font: inherit;
+    font-size: var(--g-text-md);
+  }
+
+  .qfield input:focus,
+  .qfield select:focus {
+    outline: none;
+    border-color: var(--g-accent);
+    box-shadow: 0 0 0 var(--g-focus-width) var(--g-focus-ring);
+  }
+
+  .qfield input[aria-invalid='true'] {
+    border-color: var(--g-danger);
+  }
+
+  .qfield__phone {
+    display: grid;
+    grid-template-columns: 7.25rem 1fr;
+    gap: var(--g-space-2);
+  }
+
+  .qfield__phone select {
+    padding-inline: var(--g-space-3);
+  }
+
+  .qform__hp {
+    position: absolute;
+    left: -9999px;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+  }
+
+  .qform__error {
+    color: var(--g-danger);
+    font-size: var(--g-text-sm);
+  }
+
+  .qform__error:empty {
+    display: none;
+  }
+
+  .qform__submit {
+    width: 100%;
+  }
+
+  .qform__consent {
+    font-size: var(--g-text-xs);
+    color: var(--g-text-subtle);
+    text-align: center;
+    line-height: var(--g-leading-normal);
+  }
+
+  /* --- Abrí WhatsApp ----------------------------------------------------- */
+
+  .qfinal {
+    text-align: center;
+  }
+
+  .qfinal__title {
+    font-size: clamp(var(--g-text-3xl), 9vw, var(--g-text-5xl));
+    font-weight: var(--g-weight-extrabold);
+    line-height: 1;
+    text-transform: uppercase;
+    outline: none;
+  }
+
+  .qfinal__lead {
+    margin: var(--g-space-3) auto 0;
+    max-width: 26rem;
+    color: var(--g-text-muted);
+  }
+
+  .qfinal__btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--g-space-3);
+    width: 100%;
+    margin-top: var(--g-space-6);
+    padding: var(--g-space-4) var(--g-space-6);
+    border-radius: var(--g-radius-lg);
+    background: var(--g-green-400);
+    color: var(--g-neutral-1000);
+    font-family: var(--g-font-display);
+    font-size: var(--g-text-lg);
+    font-weight: var(--g-weight-bold);
+    text-decoration: none;
+    box-shadow: 0 10px 30px rgba(88, 201, 140, 0.3);
+    transition: transform var(--g-duration-fast) var(--g-ease-out);
+  }
+
+  .qfinal__btn:hover {
+    transform: translateY(-1px);
+  }
+
+  .qfinal__btn svg {
+    width: 1.4em;
+    height: 1.4em;
+    fill: currentColor;
+    flex: none;
+  }
+
+  .qfinal__count {
+    margin-top: var(--g-space-3);
+    font-size: var(--g-text-sm);
+    color: var(--g-text-subtle);
+  }
+
+  .qfinal__count b {
+    color: var(--g-text-strong);
+  }
+
+  .qfinal__preview {
+    margin-top: var(--g-space-6);
+    padding: var(--g-space-4);
+    border: var(--g-border-width) solid var(--g-border);
+    border-radius: var(--g-radius-lg);
+    background: var(--g-bg-subtle);
+  }
+
+  .qfinal__label {
+    font-size: var(--g-text-xs);
+    font-weight: var(--g-weight-semibold);
+    letter-spacing: var(--g-tracking-wider);
+    text-transform: uppercase;
+    color: var(--g-text-subtle);
+  }
+
+  .qfinal__msg {
+    margin-top: var(--g-space-3);
+    padding: var(--g-space-3) var(--g-space-4);
+    border-radius: var(--g-radius-md) var(--g-radius-md) var(--g-radius-xs) var(--g-radius-md);
+    background: #144d37;
+    color: #e9f6ee;
+    font-size: var(--g-text-sm);
+    line-height: var(--g-leading-normal);
+    text-align: left;
+    white-space: pre-line;
+  }
+
+  .qfinal__note {
+    margin-top: var(--g-space-2);
+    font-size: var(--g-text-xs);
+    color: var(--g-text-subtle);
+  }
+
+  /* --- Viñetas ----------------------------------------------------------- */
+
+  .qbullets {
+    display: grid;
+    gap: var(--g-space-2);
+    margin-top: var(--g-space-6);
+    text-align: left;
+    font-size: var(--g-text-md);
+  }
+
+  .qbullets li {
+    display: flex;
+    gap: var(--g-space-2);
+    align-items: baseline;
+  }
+
+  .qbullets li::before {
+    content: '✓';
+    color: var(--g-accent);
+    font-weight: var(--g-weight-bold);
+  }
+
+  @media (max-width: 480px) {
+    .qhero {
+      padding-top: var(--g-space-5);
+    }
+
+    .qproof {
+      font-size: var(--g-text-xs);
+    }
+
+    .qhero__title {
+      font-size: var(--g-text-2xl);
+      margin-top: var(--g-space-4);
+    }
+
+    .qmock {
+      height: 17em;
+      margin-top: var(--g-space-4);
+    }
+
+    .qcard {
+      padding: var(--g-space-5) var(--g-space-4);
+      margin-top: calc(var(--g-space-6) * -1);
+    }
+
+    .qstep__q {
+      font-size: var(--g-text-lg);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .qstep:not([hidden]) {
+      animation: none;
+    }
+
+    .qcard__bar span {
+      transition: none;
+    }
+  }
+</style>
+
+<script>
+  import { quiz, quizMessage, type QuizStep } from '../data/quiz';
+
+  type Answers = Record<QuizStep['id'], string>;
+  type Saved = { idx: number; answers: Partial<Answers>; msg?: string; link?: string };
+
+  const KEY = 'g_quiz';
+  const card = document.querySelector<HTMLElement>('[data-quiz]')!;
+  const steps = [...card.querySelectorAll<HTMLElement>('.qstep')];
+  const total = quiz.steps.length;
+  const FORM = total;
+  const FINAL = total + 1;
+
+  const top = card.querySelector<HTMLElement>('[data-top]')!;
+  const back = card.querySelector<HTMLButtonElement>('[data-back]')!;
+  const count = card.querySelector<HTMLElement>('[data-count]')!;
+  const bar = card.querySelector<HTMLElement>('[data-bar]')!;
+  const form = card.querySelector<HTMLFormElement>('[data-form]')!;
+  const error = card.querySelector<HTMLElement>('[data-error]')!;
+  const waBtn = card.querySelector<HTMLAnchorElement>('[data-wa]')!;
+  const msgBox = card.querySelector<HTMLElement>('[data-msg]')!;
+  const countdown = card.querySelector<HTMLElement>('[data-countdown]')!;
+  const sec = card.querySelector<HTMLElement>('[data-sec]')!;
+
+  let state: Saved = { idx: 0, answers: {} };
+  try {
+    const s = JSON.parse(sessionStorage.getItem(KEY) || 'null');
+    if (s && typeof s.idx === 'number') state = s;
+  } catch {}
+  const save = () => {
+    try {
+      sessionStorage.setItem(KEY, JSON.stringify(state));
+    } catch {}
+  };
+
+  const track = (event: string, props: Record<string, unknown> = {}) =>
+    (window as any).gTrack?.(event, props);
+
+  /* Marca en cada pregunta la opción que ya eligió (al volver atrás o recargar). */
+  const paintAnswers = () =>
+    quiz.steps.forEach((s, i) =>
+      steps[i].querySelectorAll<HTMLButtonElement>('.qopt').forEach((b) =>
+        b.setAttribute('aria-pressed', String(b.dataset.key === state.answers[s.id]))
+      )
+    );
+
+  function show(idx: number, focus = true) {
+    state.idx = idx;
+    save();
+    steps.forEach((el, i) => (el.hidden = i !== idx));
+    top.hidden = idx === FINAL;
+    back.hidden = idx === 0 || idx === FINAL;
+    count.textContent = idx < total ? `Pregunta ${idx + 1} de ${total}` : 'Último paso';
+    bar.style.width = `${(Math.min(idx, total) / total) * 100}%`;
+    paintAnswers();
+
+    if (!focus) return;
+    // Si la persona bajó (al formulario, en el teléfono), la tarjeta vuelve a
+    // quedar arriba para que vea la pregunta nueva entera.
+    if (card.getBoundingClientRect().top < 0) card.scrollIntoView({ block: 'start' });
+    steps[idx].querySelector<HTMLElement>('[tabindex="-1"]')?.focus({ preventScroll: true });
+  }
+
+  /* --- Preguntas ---------------------------------------------------------- */
+
+  quiz.steps.forEach((s, i) => {
+    steps[i].addEventListener('click', (e) => {
+      const btn = (e.target as HTMLElement).closest<HTMLButtonElement>('.qopt');
+      if (!btn) return;
+      if (!Object.keys(state.answers).length) track('quiz_start');
+      state.answers[s.id] = btn.dataset.key!;
+      btn.setAttribute('aria-pressed', 'true');
+      track('quiz_step', { step: i + 1, question: s.id, answer: btn.dataset.key });
+      // Un respiro para que se vea la opción marcada antes de pasar.
+      setTimeout(() => show(i + 1), 180);
+    });
+  });
+
+  back.addEventListener('click', () => show(Math.max(0, state.idx - 1)));
+
+  /* --- Formulario --------------------------------------------------------- */
+
+  const field = (n: string) => form.elements.namedItem(n) as HTMLInputElement;
+
+  function fail(input: HTMLInputElement, text: string) {
+    input.setAttribute('aria-invalid', 'true');
+    error.textContent = text;
+    input.focus();
+    return false;
+  }
+
+  form.addEventListener('input', (e) => {
+    (e.target as HTMLElement).removeAttribute('aria-invalid');
+    error.textContent = '';
+  });
+
+  form.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const name = field('name');
+    const phone = field('phone');
+    const ig = field('instagram');
+    const code = (form.elements.namedItem('country') as HTMLSelectElement).value;
+
+    if (name.value.trim().length < 2) return fail(name, 'Escribí tu nombre.');
+
+    // Sin espacios, guiones ni paréntesis. Con "Otro", el número trae su código.
+    let digits = phone.value.replace(/[^\d]/g, '');
+    if (code) digits = code + digits.replace(/^0+/, '');
+    if (digits.length < 8 || digits.length > 15)
+      return fail(phone, 'Revisá el número de WhatsApp (con código de área).');
+
+    const handle = ig.value.trim().replace(/^@/, '');
+    if (!/^[A-Za-z0-9._]{1,30}$/.test(handle))
+      return fail(ig, 'Escribí el usuario de Instagram de tu clínica, por ejemplo @tuclinica.');
+
+    const answers = state.answers as Answers;
+    if (quiz.steps.some((s) => !answers[s.id])) return show(0);
+
+    const v = (window as any).gVisitor || {};
+    const lead = {
+      name: name.value.trim(),
+      phone: '+' + digits,
+      instagram: '@' + handle,
+      answers,
+      utm: {
+        source: v.utm_source,
+        medium: v.utm_medium,
+        campaign: v.utm_campaign,
+        content: v.utm_content,
+        term: v.utm_term,
+      },
+      fbclid: v.fbclid,
+      website: field('website').value,
+    };
+
+    // No se espera la respuesta: si n8n tarda o falla, la persona igual sigue.
+    fetch('/api/lead', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(lead),
+      keepalive: true,
+    }).catch(() => {});
+    track('quiz_lead', { cuello: answers.cuello, momento: answers.momento });
+
+    const msg = quizMessage(lead.name, lead.instagram, answers);
+    state.msg = msg;
+    state.link = `https://wa.me/${card.dataset.phone}?text=${encodeURIComponent(msg)}`;
+    openFinal(true);
+  });
+
+  /* --- Abrí WhatsApp ------------------------------------------------------ */
+
+  let timer = 0;
+
+  function openFinal(autoOpen: boolean) {
+    msgBox.textContent = state.msg || '';
+    waBtn.href = state.link || '#';
+    show(FINAL);
+    clearInterval(timer);
+    if (!autoOpen) {
+      countdown.hidden = true;
+      return;
+    }
+    countdown.hidden = false;
+    let left = quiz.final.countdown;
+    sec.textContent = String(left);
+    timer = window.setInterval(() => {
+      left -= 1;
+      sec.textContent = String(left);
+      if (left > 0) return;
+      clearInterval(timer);
+      countdown.textContent = 'Si WhatsApp no se abrió, tocá el botón verde.';
+      track('whatsapp_click', { source: 'quiz_auto' });
+      location.href = waBtn.href;
+    }, 1000);
+  }
+
+  // Si toca el botón antes de que termine la cuenta, no se abre dos veces.
+  waBtn.addEventListener('click', () => {
+    clearInterval(timer);
+    countdown.textContent = 'Te abrimos WhatsApp. Solo tocá enviar.';
+  });
+
+  /* --- Arranque ----------------------------------------------------------- */
+
+  if (state.idx === FINAL && state.link) openFinal(false);
+  else show(Math.min(state.idx, FORM), false);
+</script>
