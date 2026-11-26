@@ -20,8 +20,12 @@ export const analytics = {
   ga4: 'G-4K6QNGC64M',
   /** Microsoft Clarity: grabaciones de sesión y mapas de calor. */
   clarity: 'yzain7fn0c',
-  /** TODO: pegar el Meta Pixel ID. Hoy el sitio en Framer NO tiene pixel. */
-  metaPixel: '' as string,
+  /**
+   * Meta Pixel: conjunto de datos "Gravity Pixel - 23/11", el mismo que usa la
+   * API de conversiones (META_PIXEL_ID en wrangler.jsonc). Tienen que coincidir
+   * para que Meta junte el evento del navegador con el del servidor.
+   */
+  metaPixel: '4149392285331933' as string,
 };
 
 /* ---------------------------------------------------------------------------

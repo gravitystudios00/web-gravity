@@ -153,6 +153,9 @@ import { calendly } from '../data/site';
   window.addEventListener('message', (e) => {
     if (!/^https:\/\/([a-z0-9-]+\.)*calendly\.com$/.test(e.origin)) return;
     const name = calendlyEvents[e.data?.event];
-    if (name) (window as any).gTrack(name, { source: 'agenda' });
+    // Al confirmar, Calendly manda la URL de la reserva: el Worker la lee para
+    // mandarle a Meta el Schedule con nombre, email y teléfono.
+    if (name)
+      (window as any).gTrack(name, { source: 'agenda' }, { invitee: e.data?.payload?.invitee?.uri });
   });
 </script>

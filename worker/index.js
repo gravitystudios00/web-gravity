@@ -20,10 +20,15 @@
  * Y POST /api/capi: cuando alguien del quiz abre WhatsApp, manda el evento Lead
  * a la API de conversiones de Meta (worker/meta.js).
  *
+ * Y POST /api/capi-web: los eventos de Meta de la landing (VideoCompleto,
+ * EligioHorario y Schedule al agendar en Calendly). El navegador manda el mismo
+ * evento por el pixel con el mismo event_id, y Meta lo cuenta una vez.
+ *
  * Y /api/recurso/*: el recurso con IA de /recurso (worker/recurso/).
  */
 import { empty, readJson, sameOrigin, text, PHONE_RE, N8N_LEADS } from './util.js';
 import { metaEvent, sitePageUrl } from './meta.js';
+import { readInvitee } from './calendly.js';
 import { handleRecurso } from './recurso/routes.js';
 
 const TAGS = {
@@ -46,6 +51,7 @@ export default {
     if (url.pathname === '/api/mc') return trackEvent(request, env, ctx, url);
     if (url.pathname === '/api/lead') return saveLead(request, ctx, url);
     if (url.pathname === '/api/capi') return sendConversion(request, env, ctx, url);
+    if (url.pathname === '/api/capi-web') return sendWebConversion(request, env, ctx, url);
     if (url.pathname.startsWith('/api/recurso/')) return handleRecurso(request, env, ctx, url);
     return env.ASSETS.fetch(request);
   },
@@ -218,14 +224,62 @@ async function sendConversion(request, env, ctx, url) {
     if (QUIZ[k].includes(body[k])) custom[k] = body[k];
   }
 
-  await metaEvent(env, ctx, request, {
-    eventName: 'Lead',
+  const evento = { eventId, pageUrl: sitePageUrl(body.url, url, '/plan/'), name, phone, fbc: body.fbc, custom };
+  await metaEvent(env, ctx, request, { ...evento, eventName: 'Lead' });
+  // Lead calificado del quiz: respondió que quiere llenar la agenda en 90 días.
+  // Va aparte para poder optimizar una campaña solo por estos.
+  if (custom.momento === '1')
+    await metaEvent(env, ctx, request, { ...evento, eventName: 'LeadCaliente', eventId: `${eventId}-caliente` });
+  return empty(204);
+}
+
+/* ---------------------------------------------------------------------------
+ * API de conversiones de Meta (desde la landing)
+ *
+ *   vsl_90           → VideoCompleto  (vio el 90% del video)
+ *   calendly_time    → EligioHorario  (eligió día y hora en Calendly)
+ *   calendly_booked  → Schedule       (confirmó la auditoría), con nombre, email
+ *                                      y teléfono leídos de la reserva
+ *
+ * La landing no usa Lead: ese evento es del quiz (/plan) y del recurso, así
+ * cada campaña se optimiza por lo suyo.
+ * ------------------------------------------------------------------------- */
+
+const WEB_EVENTS = {
+  vsl_90: { eventName: 'VideoCompleto', content: 'Video de la landing' },
+  calendly_time: { eventName: 'EligioHorario', content: 'Auditoría Gravity (Calendly)' },
+  calendly_booked: { eventName: 'Schedule', content: 'Auditoría Gravity (Calendly)' },
+};
+
+async function sendWebConversion(request, env, ctx, url) {
+  if (request.method !== 'POST') return empty(405);
+  if (!sameOrigin(request, url)) return empty(403);
+  const body = await readJson(request);
+  if (!body) return empty(400);
+
+  const def = WEB_EVENTS[body.e];
+  const eventId = text(body.event_id, 80);
+  if (!def || !/^[\w-]{1,80}$/.test(eventId)) return empty(400);
+
+  const cw = /^[a-z0-9]{12}$/.test(body.cw || '') ? body.cw : '';
+  const evento = {
+    eventName: def.eventName,
     eventId,
-    pageUrl: sitePageUrl(body.url, url, '/plan/'),
-    name,
-    phone,
-    fbc: body.fbc,
-    custom,
-  });
+    pageUrl: sitePageUrl(body.url, url, '/'),
+    externalId: cw ? `cw-${cw}` : undefined,
+    custom: { content_name: def.content },
+  };
+
+  if (body.e === 'calendly_booked') {
+    // Sin una reserva real y reciente no se manda Schedule (ver worker/calendly.js).
+    const inv = await readInvitee(env, body.invitee);
+    if (!inv) {
+      if (!env.CALENDLY_TOKEN) console.log('Schedule sin mandar: falta el secret CALENDLY_TOKEN');
+      return empty(204);
+    }
+    Object.assign(evento, { name: inv.name, lastName: inv.lastName, email: inv.email, phone: inv.phone || undefined });
+  }
+
+  await metaEvent(env, ctx, request, evento);
   return empty(204);
 }

@@ -1073,12 +1073,19 @@ const avatars = [guillermo, carolina].filter((c) => c.photo);
     state.converted = true;
     save();
     const v = (window as any).gVisitor || {};
+    const eventId = `quiz-${state.contact.phone.slice(1)}-${Date.now()}`;
+    // El mismo Lead por el pixel, con el mismo event_id: Meta junta los dos.
+    // LeadCaliente: quiere llenar la agenda en 90 días (el Worker lo manda igual).
+    const pixel = (window as any).gPixel;
+    const props = { content_name: 'Plan de Captación (quiz)' };
+    pixel?.('track', 'Lead', props, eventId);
+    if (state.answers.momento === '1') pixel?.('trackCustom', 'LeadCaliente', props, `${eventId}-caliente`);
     fetch('/api/capi', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         ...state.contact,
-        event_id: `quiz-${state.contact.phone.slice(1)}-${Date.now()}`,
+        event_id: eventId,
         fbc: v.fbc,
         url: location.href.split('#')[0],
         cuello: state.answers.cuello,

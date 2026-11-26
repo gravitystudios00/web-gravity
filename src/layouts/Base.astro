@@ -176,18 +176,49 @@ const canonical = new URL(Astro.url.pathname, site.url).href;
         Worker en /api/mc la pasa a n8n → Chatwoot, o a ManyChat si es un link
         viejo). */}
     <script is:inline>
-      window.gTrack = function (event, props) {
+      /* Eventos de Meta de la landing. Los marcados con `capi` salen por el
+         pixel y por la API de conversiones (Worker, /api/capi-web) con el mismo
+         event_id: Meta junta los dos y lo cuenta una vez, y si el navegador
+         bloquea el pixel igual llega el del servidor.
+         Lead no está acá a propósito: es del quiz (/plan) y del recurso, que lo
+         mandan ellos mismos. Así cada campaña se optimiza por lo suyo:
+         quiz → Lead, landing → Schedule (o EligioHorario mientras haya pocas
+         reservas). */
+      window.gMetaEvents = {
+        whatsapp_click: { type: 'track', name: 'Contact' },
+        vsl_play: { type: 'track', name: 'ViewContent' },
+        vsl_90: { type: 'trackCustom', name: 'VideoCompleto', capi: true },
+        calendly_time: { type: 'trackCustom', name: 'EligioHorario', capi: true },
+        calendly_booked: { type: 'track', name: 'Schedule', capi: true },
+      };
+      /* Manda un evento por el pixel con su event_id (para que Meta lo junte
+         con el mismo evento mandado desde el servidor). */
+      window.gPixel = function (type, name, props, eventId) {
+        if (window.fbq) window.fbq(type, name, props || {}, { eventID: eventId });
+      };
+      window.gTrack = function (event, props, extra) {
         props = props || {};
         if (window.gtag) window.gtag('event', event, props);
         if (window.clarity) window.clarity('event', event);
-        var fb = {
-          whatsapp_click: 'Contact',
-          calendar_click: 'Lead',
-          quiz_lead: 'Lead',
-          vsl_play: 'ViewContent',
-          calendly_booked: 'Schedule',
-        }[event];
-        if (fb && window.fbq) window.fbq('track', fb, props);
+        var m = window.gMetaEvents[event];
+        // En /recurso el clic a WhatsApp ya lo manda el servidor como Contact.
+        if (m && !(event === 'whatsapp_click' && location.pathname.indexOf('/recurso') === 0)) {
+          var id = event + '-' + Date.now() + '-' + Math.random().toString(36).slice(2, 8);
+          window.gPixel(m.type, m.name, props, id);
+          if (m.capi)
+            fetch('/api/capi-web', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              keepalive: true,
+              body: JSON.stringify({
+                e: event,
+                event_id: id,
+                url: location.href.split('#')[0],
+                cw: (window.gVisitor || {}).cw,
+                invitee: extra && extra.invitee,
+              }),
+            }).catch(function () {});
+        }
         var v = window.gVisitor || {};
         if ((v.cw || v.mc) && navigator.sendBeacon)
           navigator.sendBeacon('/api/mc', JSON.stringify({ cw: v.cw, mc: v.mc, e: event }));

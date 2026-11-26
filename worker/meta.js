@@ -21,11 +21,18 @@ const GRAPH = 'https://graph.facebook.com/v26.0';
  * @param {string} e.eventName  Lead, Contact, CompleteRegistration…
  * @param {string} e.eventId
  * @param {string} e.pageUrl    URL de la página (ya validada que es del sitio)
- * @param {string} e.name
- * @param {string} e.phone      +<dígitos>
+ * @param {string} [e.name]     nombre completo (o solo el nombre)
+ * @param {string} [e.lastName] apellido, si viene aparte
+ * @param {string} [e.phone]    +<dígitos>
  * @param {string} [e.email]
+ * @param {string} [e.externalId] id propio del visitante cuando no hay teléfono
+ *                                (por ejemplo el código cw del bot)
  * @param {string} [e.fbc]
  * @param {object} [e.custom]   custom_data extra
+ *
+ * Los eventos sin datos personales (VideoCompleto, EligioHorario) igual
+ * sirven: Meta reconoce a la persona por las cookies del pixel (_fbp, _fbc),
+ * la IP y el navegador.
  */
 export async function metaEvent(env, ctx, request, e) {
   if (!env.META_PIXEL_ID || !env.META_CAPI_TOKEN) {
@@ -33,26 +40,34 @@ export async function metaEvent(env, ctx, request, e) {
     return;
   }
 
-  const digits = e.phone.slice(1);
-  // En Argentina WhatsApp usa 54 9 + número; si lo escribieron sin el 9, se
-  // mandan las dos formas para que Meta encuentre a la persona.
-  const phones = [digits];
-  if (/^54(?!9)\d{10}$/.test(digits)) phones.push(`549${digits.slice(2)}`);
-
-  const first = e.name.toLowerCase().split(/\s+/)[0];
   const country = request.cf?.country?.toLowerCase();
-  const fbc = text(e.fbc, 600);
+  const cookies = readCookies(request);
+  const fbc = text(e.fbc, 600) || cookies._fbc || '';
+  const fbp = cookies._fbp || '';
 
   const user_data = {
-    ph: await Promise.all(phones.map(sha256)),
-    fn: [await sha256(first)],
-    external_id: [await sha256(digits)],
     client_ip_address: request.headers.get('CF-Connecting-IP') || undefined,
     client_user_agent: request.headers.get('User-Agent') || undefined,
   };
+  if (e.phone) {
+    const digits = e.phone.slice(1);
+    // En Argentina WhatsApp usa 54 9 + número; si lo escribieron sin el 9, se
+    // mandan las dos formas para que Meta encuentre a la persona.
+    const phones = [digits];
+    if (/^54(?!9)\d{10}$/.test(digits)) phones.push(`549${digits.slice(2)}`);
+    user_data.ph = await Promise.all(phones.map(sha256));
+    user_data.external_id = [await sha256(digits)];
+  } else if (e.externalId) {
+    user_data.external_id = [await sha256(e.externalId)];
+  }
+  const parts = (e.name || '').trim().toLowerCase().split(/\s+/).filter(Boolean);
+  if (parts.length) user_data.fn = [await sha256(parts[0])];
+  const last = (e.lastName || (parts.length > 1 ? parts[parts.length - 1] : '')).trim().toLowerCase();
+  if (last) user_data.ln = [await sha256(last)];
   if (e.email) user_data.em = [await sha256(e.email.trim().toLowerCase())];
   if (country) user_data.country = [await sha256(country)];
   if (/^fb\.1\.\d+\.\S+$/.test(fbc)) user_data.fbc = fbc;
+  if (/^fb\.\d\.\d+\.\d+$/.test(fbp)) user_data.fbp = fbp;
 
   const payload = {
     data: [
@@ -82,6 +97,16 @@ export async function metaEvent(env, ctx, request, e) {
       }
     })()
   );
+}
+
+/** Cookies del pedido como objeto (las del pixel: _fbp y _fbc). */
+function readCookies(request) {
+  const out = {};
+  for (const c of (request.headers.get('Cookie') || '').split(/;\s*/)) {
+    const i = c.indexOf('=');
+    if (i > 0) out[c.slice(0, i)] = c.slice(i + 1);
+  }
+  return out;
 }
 
 /** La URL que manda el navegador, solo si es de este sitio; si no, `fallback`. */
