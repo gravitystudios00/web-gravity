@@ -11,6 +11,9 @@ export const TOPE_USUARIO = { oferta: 2, avatar: 2, guion: 6 };
 /** Registros nuevos por IP por día. */
 export const TOPE_IP = 3;
 
+/** Gasto máximo en OpenAI por médico, en USD (env.RECURSO_TOPE_USD_USUARIO). */
+export const TOPE_USD_USUARIO = 0.3;
+
 /** Tope general por día (env.RECURSO_TOPE_DIARIO, con este valor por defecto). */
 export const TOPE_DIARIO = 400;
 
@@ -52,4 +55,26 @@ export async function topeIpAlcanzado(db, ip) {
     .bind(ip)
     .first();
   return r.n >= TOPE_IP;
+}
+
+/**
+ * Gasto por médico. Antes de cada generación se suma lo que ya gastó (las
+ * terminadas, con su costo real) + lo que podría costar como máximo cada una
+ * en curso + lo máximo que puede costar la nueva. Si eso pasa el tope, no se
+ * genera: así el tope es duro, aunque abra varias pestañas.
+ */
+export async function gastoProyectado(db, usuarioId, costoMax) {
+  const r = await db
+    .prepare(
+      `SELECT COALESCE(SUM(CASE WHEN estado = 'ok' THEN costo_usd ELSE 0 END), 0) AS gastado,
+              SUM(CASE WHEN estado = 'pendiente' THEN 1 ELSE 0 END) AS pendientes
+       FROM generaciones WHERE usuario_id = ?`
+    )
+    .bind(usuarioId)
+    .first();
+  return { gastado: r.gastado, enCurso: (r.pendientes || 0) * costoMax };
+}
+
+export function topeUsd(env) {
+  return Number(env.RECURSO_TOPE_USD_USUARIO) || TOPE_USD_USUARIO;
 }

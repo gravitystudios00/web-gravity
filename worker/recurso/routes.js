@@ -14,8 +14,8 @@
  */
 import { empty, json, readJson, sameOrigin, text, PHONE_RE, N8N_LEADS } from '../util.js';
 import { metaEvent, sitePageUrl } from '../meta.js';
-import { generarEnVivo, costo } from './openai.js';
-import { usadas, restantes, topeDiarioAlcanzado, topeIpAlcanzado } from './limits.js';
+import { generarEnVivo, costo, precio, MODELO_DEFAULT } from './openai.js';
+import { usadas, restantes, topeDiarioAlcanzado, topeIpAlcanzado, gastoProyectado, topeUsd } from './limits.js';
 import { PROFESIONES } from './prompts/comun.js';
 import { promptOferta } from './prompts/oferta.js';
 import { promptAvatar } from './prompts/avatar.js';
@@ -35,12 +35,31 @@ const EVENTOS = [
   'retomo',
 ];
 
-/** Cuánto razona y cuánto puede escribir cada tipo. */
+/**
+ * Cuánto razona y cuánto puede escribir cada tipo. `entrada` es el tamaño
+ * aproximado del pedido (instrucciones + datos), para calcular el costo máximo.
+ * maxTokens incluye el razonamiento: es el techo de lo que se puede gastar.
+ */
 const CONFIG = {
-  oferta: { effort: 'medium', maxTokens: 16000 },
-  avatar: { effort: 'low', maxTokens: 12000 },
-  guion: { effort: 'low', maxTokens: 5000 },
+  oferta: { effort: 'medium', maxTokens: 14000, entrada: 4000 },
+  avatar: { effort: 'low', maxTokens: 10000, entrada: 7000 },
+  guion: { effort: 'low', maxTokens: 4000, entrada: 7000 },
 };
+
+/** Lo máximo que puede costar una generación de este tipo, en USD. */
+function costoMax(env, tipo) {
+  const p = precio(env.OPENAI_MODEL || MODELO_DEFAULT);
+  return (CONFIG[tipo].entrada * p.entrada + CONFIG[tipo].maxTokens * p.salida) / 1e6;
+}
+
+/** Restantes, en 0 los tipos que ya no entran en el tope de gasto. */
+async function restantesReales(env, usuarioId) {
+  const r = restantes(await usadas(env.DB, usuarioId));
+  const { gastado, enCurso } = await gastoProyectado(env.DB, usuarioId, costoMax(env, 'oferta'));
+  const tope = topeUsd(env);
+  for (const tipo of Object.keys(r)) if (gastado + enCurso + costoMax(env, tipo) > tope) r[tipo] = 0;
+  return r;
+}
 
 export async function handleRecurso(request, env, ctx, url) {
   if (!env.DB) return json({ error: 'El recurso no está configurado.' }, 503);
@@ -219,9 +238,8 @@ async function generar(request, env, ctx) {
     "UPDATE generaciones SET estado = 'error' WHERE estado = 'pendiente' AND creado < datetime('now', '-10 minutes')"
   ).run();
 
-  const uso = await usadas(env.DB, u.id);
-  if (restantes(uso)[tipo] <= 0)
-    return json({ error: 'limite', restantes: restantes(uso) }, 429);
+  const disponibles = await restantesReales(env, u.id);
+  if (disponibles[tipo] <= 0) return json({ error: 'limite', restantes: disponibles }, 429);
   if (await topeDiarioAlcanzado(env))
     return json({ error: 'Hoy el generador recibió muchísimos pedidos. Volvé mañana o escribinos por WhatsApp y te ayudamos.' }, 503);
 
@@ -269,17 +287,18 @@ async function generar(request, env, ctx) {
         tokens?.entrada ?? null,
         tokens?.cache ?? null,
         tokens?.salida ?? null,
-        tokens ? Math.round(costo(tokens) * 1e5) / 1e5 : null,
+        tokens ? Math.round(costo(tokens, env.OPENAI_MODEL || MODELO_DEFAULT) * 1e5) / 1e5 : null,
         ok ? 'ok' : 'error',
         genId
       )
       .run();
     await log(env, u.id, ok ? `generar_${tipo}` : `error_${tipo}`, formato ? `${formato} · ${servicio}` : null);
     if (!ok) return {};
-    return { id: genId, restantes: restantes(await usadas(env.DB, u.id)) };
+    return { id: genId, restantes: await restantesReales(env, u.id) };
   };
 
-  const res = await generarEnVivo(env, ctx, { ...prompt, ...CONFIG[tipo] }, alTerminar);
+  const { effort, maxTokens } = CONFIG[tipo];
+  const res = await generarEnVivo(env, ctx, { ...prompt, effort, maxTokens }, alTerminar);
   if (!res) return json({ error: 'No pudimos conectarnos con la IA. Probá de nuevo en un minuto.' }, 502);
   return res;
 }
@@ -307,7 +326,7 @@ async function estado(env, url) {
         }
       : null,
     generaciones: results,
-    restantes: restantes(await usadas(env.DB, u.id)),
+    restantes: await restantesReales(env, u.id),
   });
 }
 

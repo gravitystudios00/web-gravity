@@ -14,12 +14,22 @@
 
 const API = 'https://api.openai.com/v1/responses';
 
-/** USD por token de gpt-6.2-sol (entrada, entrada cacheada, salida). */
-const PRECIO = { entrada: 2 / 1e6, cache: 0.1 / 1e6, salida: 10 / 1e6 };
+/** USD por millón de tokens (entrada, entrada cacheada, salida), según
+ *  developers.openai.com/api/docs/pricing (noviembre 2026). */
+const PRECIOS = {
+  'gpt-6.1-terra': { entrada: 1, cache: 0.05, salida: 5 },
+  'gpt-6.2-sol': { entrada: 2, cache: 0.1, salida: 10 },
+};
+export const MODELO_DEFAULT = 'gpt-6.1-terra';
 
-export function costo(uso) {
+export function precio(modelo) {
+  return PRECIOS[modelo] || PRECIOS[MODELO_DEFAULT];
+}
+
+export function costo(uso, modelo) {
+  const p = precio(modelo);
   const cache = uso.cache || 0;
-  return (uso.entrada - cache) * PRECIO.entrada + cache * PRECIO.cache + uso.salida * PRECIO.salida;
+  return ((uso.entrada - cache) * p.entrada + cache * p.cache + uso.salida * p.salida) / 1e6;
 }
 
 /**
@@ -38,7 +48,7 @@ export async function generarEnVivo(env, ctx, { instructions, input, effort, max
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: env.OPENAI_MODEL || 'gpt-6.2-sol',
+        model: env.OPENAI_MODEL || MODELO_DEFAULT,
         instructions,
         input,
         stream: true,

@@ -31,10 +31,13 @@
     "META_PIXEL_ID": "4149392285331933",
     "META_TEST_EVENT_CODE": "TEST34971",
     // Recurso de /recurso (worker/recurso). Secrets: OPENAI_API_KEY y ADMIN_KEY.
-    "OPENAI_MODEL": "gpt-6.2-sol",
+    "OPENAI_MODEL": "gpt-6.1-terra",
     // Tope de generaciones por día para todo el sitio: si se llega, el recurso
     // pide volver mañana. Es la red de seguridad del gasto en OpenAI.
-    "RECURSO_TOPE_DIARIO": "400"
+    "RECURSO_TOPE_DIARIO": "400",
+    // Gasto máximo en OpenAI por médico (USD). Antes de cada generación se
+    // suma lo gastado + lo máximo que puede costar la nueva: nunca se pasa.
+    "RECURSO_TOPE_USD_USUARIO": "0.30"
   },
   // Base del recurso de /recurso (worker/recurso). Esquema en migrations/.
   "d1_databases": [
