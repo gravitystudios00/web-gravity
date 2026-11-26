@@ -197,6 +197,21 @@ estética, Bogotá). No inventar números ni otros casos.
 >
 > ¿Más o menos cuántos pacientes por semana te quedan sin venir?
 
+### El link del recurso (NUEVO, va siempre)
+
+Desde el 26/11/2026, el quiz de `/plan` promete **"el sistema para conseguir tus primeras 10 ventas de tratamientos por Instagram"**. Ese sistema es una página con IA: **`https://gravity-studios.com/recurso/`**. El médico deja nombre, WhatsApp y email, completa una encuesta corta (especialidad, servicios con su servicio estrella, ciudades y país) y genera su oferta, su paciente ideal y hasta 6 guiones.
+
+**Qué cambia en la respuesta de Cleo:** el plan de 3 mensajes queda igual (sirve como adelanto) y se agrega un **cuarto mensaje con el link**, antes de la pregunta de seguimiento:
+
+> Y acá tenés tu sistema completo, armado con IA para tu clínica 👇
+> https://gravity-studios.com/recurso/?utm_source=whatsapp&utm_medium=cleo
+>
+> Ahí generás tu oferta, el perfil de tu paciente ideal y tus primeros guiones listos para grabar. Te lleva 10 minutos.
+
+- Los `utm` sirven para ver en la administración (`/admin/recurso`) cuántos médicos llegaron desde Cleo.
+- Si el médico ya usó el recurso y vuelve a preguntar, en la administración está su **link para retomar**, con la forma `…/recurso/?u=<código>`. Ese link le abre todo lo que generó, sin volver a registrarse.
+- Cuando el médico se registra en el recurso, llega otro lead al mismo webhook de n8n con **`"source": "recurso"`**, con `email` y `resume_url` (el link para retomar). El workflow "Gravity · Leads quiz" lo tiene que aceptar y guardarlo en la misma hoja (columna "Origen").
+
 ### Después del plan, en los 5 casos
 
 - Seguir la charla con la respuesta a la pregunta del mensaje 3, como Cleo ya lo hace hoy.

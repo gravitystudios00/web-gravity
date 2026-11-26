@@ -24,24 +24,23 @@ export type QuizStep = {
 };
 
 export const quiz = {
-  title: 'Recibí gratis tu Plan de Captación para tu clínica · Gravity Studios',
+  title: 'Tus primeras 10 ventas de tratamientos por Instagram · Gravity Studios',
   description:
-    'Respondé 6 preguntas y recibí por WhatsApp un plan personalizado para llenar la agenda de tu clínica con pacientes calificados.',
+    'Respondé 6 preguntas y recibí gratis por WhatsApp el sistema con IA para conseguir tus primeras 10 ventas de tratamientos por Instagram.',
 
   /** `accent: true` lo pinta de ámbar, igual que los headlines de la home. */
   headline: [
-    { text: 'Recibí gratis tu ' },
-    { text: 'Plan personalizado', accent: true },
-    { text: ' para llenar la agenda de tu clínica con ' },
-    { text: 'pacientes calificados', accent: true },
-    { text: '… en menos de 60 segundos' },
+    { text: 'Recibí gratis el sistema para conseguir tus ' },
+    { text: 'primeras 10 ventas de tratamientos por Instagram', accent: true },
+    { text: '… armado con IA para tu clínica' },
   ],
 
   proof: 'Especialistas que ya llenan su agenda con nuestro sistema',
 
   bullets: [
-    'Tu plan por WhatsApp en menos de 60 segundos',
-    'Hecho para clínicas estéticas, no una plantilla genérica',
+    'Tu oferta: por qué un paciente te elige a vos',
+    'Tu paciente ideal: a quién le hablás en cada video',
+    'Tus guiones listos para grabar, con la estructura que usamos con nuestros clientes',
     '100% gratis, sin compromiso',
   ],
 
@@ -164,8 +163,8 @@ export const quiz = {
   final: {
     kicker: 'Solo falta un paso',
     title: 'Abrí WhatsApp',
-    lead: 'Para recibir tu plan personalizado, abrí WhatsApp. El mensaje ya está escrito: solo tocá enviar.',
-    button: 'Recibir mi plan por WhatsApp',
+    lead: 'Abrí WhatsApp y te mandamos el link de tu sistema. El mensaje ya está escrito: solo tocá enviar.',
+    button: 'Recibir mi sistema por WhatsApp',
     countdown: 8,
     preview: 'Vista previa del mensaje',
     previewNote: 'Solamente tocá enviar en WhatsApp',

@@ -1,0 +1,1068 @@
+---
+import { recurso } from '../../data/recurso';
+import { quiz } from '../../data/quiz';
+import { whatsapp } from '../../data/site';
+import { guillermo, carolina } from '../../data/casos';
+
+/*
+ * Recurso de /recurso. Tres vistas en la misma página: datos → encuesta →
+ * panel con los 3 pasos (oferta, paciente ideal, guiones). La lógica está en
+ * app.ts; los textos en src/data/recurso.ts.
+ */
+const waPhone = whatsapp[whatsapp.primary].phone;
+const avatars = [guillermo, carolina].filter((c) => c.photo);
+const r = recurso;
+---
+
+<section class="rhero">
+  <div class="container rhero__inner">
+    <p class="rhero__kicker">{r.hero.kicker}</p>
+    <h1 class="h1 rhero__title">
+      {r.hero.title.map((p) => (p.accent ? <span class="accent">{p.text}</span> : p.text))}
+    </h1>
+    <p class="lead rhero__lead">{r.hero.lead}</p>
+
+    <a class="btn btn--primary btn--lg rhero__cta" href="#app" data-start>{r.hero.cta} <span aria-hidden="true">→</span></a>
+
+    <ol class="rpasos">
+      {
+        r.pasos.map((p) => (
+          <li class="rpasos__item">
+            <span class="rpasos__n">{p.n}</span>
+            <h2 class="rpasos__title">{p.title}</h2>
+            <p class="rpasos__text">{p.text}</p>
+          </li>
+        ))
+      }
+    </ol>
+
+    <a class="btn btn--primary btn--lg" href="#app">{r.hero.cta} <span aria-hidden="true">→</span></a>
+
+    <p class="rproof">
+      {
+        avatars.length > 0 && (
+          <span class="rproof__faces" aria-hidden="true">
+            {avatars.map((c) => (
+              <img src={c.photo} alt="" width="260" height="325" />
+            ))}
+          </span>
+        )
+      }
+      {r.hero.proof}
+    </p>
+  </div>
+</section>
+
+<section class="rapp" id="app" data-recurso data-phone={waPhone}>
+  <div class="container rapp__inner">
+    {/* --- 1. Datos ------------------------------------------------------ */}
+    <form class="rcard" data-view="gate" novalidate>
+      <h2 class="rcard__title">{r.gate.title}</h2>
+      <p class="rcard__lead">{r.gate.lead}</p>
+
+      <label class="rfield">
+        <span>{r.gate.name}</span>
+        <input name="nombre" type="text" autocomplete="name" required maxlength="80" placeholder="Nombre y apellido" />
+      </label>
+
+      <div class="rfield">
+        <label for="r-phone">{r.gate.phone}</label>
+        <div class="rfield__phone">
+          <select name="country" aria-label="Código de país">
+            {quiz.countries.map((c) => <option value={c.code}>{c.flag} {c.code ? `+${c.code}` : 'Otro'}</option>)}
+          </select>
+          <input id="r-phone" name="telefono" type="tel" inputmode="tel" autocomplete="tel-national" required maxlength="20" placeholder="11 2345 6789" />
+        </div>
+      </div>
+
+      <label class="rfield">
+        <span>{r.gate.email}</span>
+        <input name="email" type="email" inputmode="email" autocomplete="email" required maxlength="254" placeholder="tu@email.com" />
+      </label>
+
+      <label class="rform__hp" aria-hidden="true">Web <input name="website" type="text" tabindex="-1" autocomplete="off" /></label>
+
+      <p class="rform__error" data-error role="alert"></p>
+      <button type="submit" class="btn btn--primary btn--lg rform__submit">{r.gate.submit} <span aria-hidden="true">→</span></button>
+      <p class="rform__note">{r.gate.consent}</p>
+    </form>
+
+    {/* --- 2. Encuesta --------------------------------------------------- */}
+    <form class="rcard" data-view="survey" hidden novalidate>
+      <h2 class="rcard__title">{r.survey.title}</h2>
+      <p class="rcard__lead">{r.survey.lead}</p>
+
+      <fieldset class="rgroup">
+        <legend>{r.survey.profesion}</legend>
+        <div class="rchips">
+          {
+            r.survey.profesiones.map((p) => (
+              <label class="rchip">
+                <input type="radio" name="profesion" value={p.key} />
+                <span>{p.label}</span>
+              </label>
+            ))
+          }
+        </div>
+      </fieldset>
+
+      <fieldset class="rgroup">
+        <legend>{r.survey.servicios}</legend>
+        <p class="rgroup__hint">{r.survey.serviciosHint}</p>
+        <ol class="rrows" data-servicios></ol>
+        <button type="button" class="radd" data-add-servicio>{r.survey.addServicio}</button>
+      </fieldset>
+
+      <fieldset class="rgroup">
+        <legend>{r.survey.ciudades}</legend>
+        <ol class="rrows" data-ciudades></ol>
+        <button type="button" class="radd" data-add-ciudad>{r.survey.addCiudad}</button>
+        <label class="rfield rfield--top">
+          <span>{r.survey.pais}</span>
+          <select name="pais" required>
+            <option value="">Elegí tu país</option>
+            {r.paises.map((p) => <option value={p}>{p}</option>)}
+          </select>
+        </label>
+      </fieldset>
+
+      <fieldset class="rgroup">
+        <legend>{r.survey.opcional}</legend>
+        <label class="rfield">
+          <span>{r.survey.precio}</span>
+          <input name="precio" type="text" maxlength="80" placeholder={r.survey.precioPlaceholder} />
+        </label>
+        <label class="rfield">
+          <span>{r.survey.diferencial}</span>
+          <textarea name="diferencial" rows="3" maxlength="400" placeholder={r.survey.diferencialPlaceholder}></textarea>
+        </label>
+      </fieldset>
+
+      <p class="rform__error" data-error role="alert"></p>
+      <button type="submit" class="btn btn--primary btn--lg rform__submit">{r.survey.submit} <span aria-hidden="true">→</span></button>
+    </form>
+
+    {/* Filas que el script clona para servicios y ciudades. */}
+    <template data-tpl-servicio>
+      <li class="rrow">
+        <input type="text" maxlength="80" placeholder={r.survey.servicioPlaceholder} aria-label="Servicio" />
+        <button type="button" class="rstar" aria-pressed="false" aria-label="Marcar como servicio estrella">★</button>
+        <button type="button" class="rdel" aria-label="Quitar">×</button>
+      </li>
+    </template>
+    <template data-tpl-ciudad>
+      <li class="rrow">
+        <input type="text" maxlength="60" placeholder={r.survey.ciudadPlaceholder} aria-label="Ciudad" />
+        <button type="button" class="rdel" aria-label="Quitar">×</button>
+      </li>
+    </template>
+
+    {/* --- 3. Panel ------------------------------------------------------ */}
+    <div class="rpanel" data-view="panel" hidden>
+      <div class="rpanel__hello">
+        <p>Hola, <b data-nombre></b>. Este es tu sistema.</p>
+        <button type="button" class="rlink" data-edit>Editar mis datos</button>
+      </div>
+
+      {
+        (['oferta', 'avatar'] as const).map((k) => (
+          <article class="rstep" data-step={k}>
+            <header class="rstep__head">
+              <span class="rstep__n">{r.pasosApp[k].n}</span>
+              <div>
+                <h2 class="rstep__title">{r.pasosApp[k].title}</h2>
+                <p class="rstep__lead">{r.pasosApp[k].lead}</p>
+              </div>
+            </header>
+            {k === 'avatar' && <p class="rstep__locked" data-locked>{r.pasosApp.avatar.locked}</p>}
+            <button type="button" class="btn btn--primary rstep__go" data-generate={k}>{r.pasosApp[k].button}</button>
+            <p class="rstep__loading" data-loading hidden>{r.pasosApp[k].loading}</p>
+            <div class="rout" data-out hidden>
+              <div class="rmd" data-md></div>
+              <div class="rout__bar" data-bar hidden>
+                <button type="button" class="rtool" data-copy>Copiar</button>
+                <button type="button" class="rtool" data-print>Descargar PDF</button>
+                <button type="button" class="rtool" data-again>Regenerar</button>
+              </div>
+              <p class="rout__disclaimer">{r.shortDisclaimer}</p>
+            </div>
+          </article>
+        ))
+      }
+
+      <article class="rstep" data-step="guion">
+        <header class="rstep__head">
+          <span class="rstep__n">{r.pasosApp.guiones.n}</span>
+          <div>
+            <h2 class="rstep__title">{r.pasosApp.guiones.title}</h2>
+            <p class="rstep__lead">{r.pasosApp.guiones.lead}</p>
+          </div>
+        </header>
+        <p class="rstep__locked" data-locked>{r.pasosApp.guiones.locked}</p>
+
+        <div class="rgen" data-guion-form>
+          <p class="rgen__label">{r.pasosApp.guiones.formato}</p>
+          <div class="rchips rchips--formats">
+            {
+              r.formatos.map((f, i) => (
+                <label class="rchip rchip--format">
+                  <input type="radio" name="formato" value={f.key} checked={i === 0} />
+                  <span>
+                    <b>{f.label}</b>
+                    <small>{f.hint}</small>
+                  </span>
+                </label>
+              ))
+            }
+          </div>
+          <label class="rfield">
+            <span>{r.pasosApp.guiones.servicio}</span>
+            <select name="servicio" data-servicio></select>
+          </label>
+          <button type="button" class="btn btn--primary rstep__go" data-generate="guion">
+            {r.pasosApp.guiones.button} <span class="rgen__left" data-left></span>
+          </button>
+          <p class="rstep__loading" data-loading hidden>{r.pasosApp.guiones.loading}</p>
+        </div>
+
+        <div class="rlimit" data-limit hidden>
+          <p>{r.pasosApp.guiones.limite}</p>
+          <a class="rwa" href="#" target="_blank" rel="noopener" data-wa="limite">{r.pasosApp.guiones.limiteCta}</a>
+        </div>
+
+        <div class="rguiones" data-guiones></div>
+      </article>
+    </div>
+
+    <p class="rerror" data-fatal role="alert" hidden></p>
+  </div>
+</section>
+
+<template data-tpl-guion>
+  <details class="rout rguion" open>
+    <summary class="rguion__sum"><span data-title>Guion</span><small data-meta></small></summary>
+    <div class="rmd" data-md></div>
+    <div class="rout__bar" data-bar>
+      <button type="button" class="rtool" data-copy>Copiar</button>
+      <button type="button" class="rtool" data-print>Descargar PDF</button>
+    </div>
+    <p class="rout__disclaimer">{r.shortDisclaimer}</p>
+  </details>
+</template>
+
+<dialog class="rnudge" data-nudge aria-labelledby="rnudge-title">
+  <h2 id="rnudge-title" class="rnudge__title">{r.nudge.title}</h2>
+  <p class="rnudge__text">{r.nudge.text}</p>
+  <a class="rwa" href="#" target="_blank" rel="noopener" data-wa="cartel">{r.nudge.button}</a>
+  <button type="button" class="rnudge__close" data-nudge-close>{r.nudge.dismiss}</button>
+</dialog>
+
+<a class="rfloat" href="#" target="_blank" rel="noopener" data-wa="flotante" hidden>
+  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12.04 2c-5.46 0-9.91 4.45-9.91 9.91 0 1.75.46 3.45 1.32 4.95L2 22l5.25-1.38a9.87 9.87 0 0 0 4.79 1.22c5.46 0 9.91-4.45 9.91-9.91S17.5 2 12.04 2Zm4.52 11.99c-.25-.12-1.47-.72-1.69-.81-.23-.08-.39-.12-.56.13-.16.25-.64.81-.79.98-.14.16-.29.18-.54.06-.25-.12-1.05-.39-2-1.23-.74-.66-1.24-1.47-1.38-1.72-.15-.25-.02-.39.11-.51.11-.11.25-.29.37-.43.12-.15.16-.25.25-.41.08-.17.04-.31-.02-.43-.06-.12-.56-1.34-.76-1.84-.2-.48-.41-.42-.56-.43h-.48c-.17 0-.43.06-.66.31-.23.25-.87.85-.87 2.07s.89 2.4 1.02 2.56c.12.17 1.75 2.67 4.23 3.74.59.26 1.05.41 1.41.52.59.19 1.13.16 1.56.1.48-.07 1.47-.6 1.67-1.18.21-.58.21-1.07.15-1.18-.06-.1-.23-.17-.48-.29Z"></path></svg>
+  <span>{r.nudge.floating}</span>
+</a>
+
+<style>
+  .rhero {
+    position: relative;
+    overflow: clip;
+    padding-block: var(--g-space-10) var(--g-space-12);
+  }
+
+  .rhero::before {
+    content: '';
+    position: absolute;
+    inset: 2rem 0 auto;
+    height: 30rem;
+    background: radial-gradient(50% 50% at 50% 50%, var(--g-accent-subtle), transparent 70%);
+    pointer-events: none;
+  }
+
+  .rhero__inner {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    max-width: 56rem;
+  }
+
+  .rhero__kicker {
+    font-family: var(--g-font-display);
+    font-size: var(--g-text-sm);
+    font-weight: var(--g-weight-semibold);
+    letter-spacing: var(--g-tracking-wide);
+    text-transform: uppercase;
+    color: var(--g-text-accent);
+    max-width: 30rem;
+  }
+
+  .rhero__title {
+    margin-top: var(--g-space-4);
+    max-width: 22em;
+    text-wrap: balance;
+    line-height: var(--g-leading-tight);
+  }
+
+  .rhero__lead {
+    margin-top: var(--g-space-4);
+    max-width: 38rem;
+  }
+
+  .rhero__cta {
+    margin-top: var(--g-space-6);
+  }
+
+  .rpasos {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--g-space-4);
+    margin: var(--g-space-10) 0 var(--g-space-8);
+    padding: 0;
+    list-style: none;
+    text-align: left;
+  }
+
+  .rpasos__item {
+    padding: var(--g-space-5);
+    border: var(--g-border-width) solid var(--g-border-strong);
+    border-radius: var(--g-radius-lg);
+    background: var(--g-surface);
+  }
+
+  .rpasos__n {
+    font-family: var(--g-font-display);
+    font-weight: var(--g-weight-bold);
+    color: var(--g-accent);
+  }
+
+  .rpasos__title {
+    margin-top: var(--g-space-1);
+    font-size: var(--g-text-xl);
+  }
+
+  .rpasos__text {
+    margin-top: var(--g-space-2);
+    font-size: var(--g-text-sm);
+    color: var(--g-text-muted);
+    line-height: var(--g-leading-normal);
+  }
+
+  .rproof {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--g-space-2);
+    margin-top: var(--g-space-6);
+    font-size: var(--g-text-sm);
+    color: var(--g-text-muted);
+  }
+
+  .rproof__faces {
+    display: inline-flex;
+    flex: none;
+  }
+
+  .rproof__faces img {
+    width: 1.75rem;
+    height: 1.75rem;
+    border-radius: 50%;
+    object-fit: cover;
+    object-position: 50% 20%;
+    border: 2px solid var(--g-bg);
+  }
+
+  .rproof__faces img + img {
+    margin-left: -0.55rem;
+  }
+
+  /* --- App ---------------------------------------------------------------- */
+
+  .rapp {
+    padding-block: var(--g-space-4) var(--g-space-16);
+    scroll-margin-top: var(--g-space-4);
+  }
+
+  .rapp__inner {
+    max-width: 48rem;
+  }
+
+  .rcard,
+  .rstep {
+    padding: var(--g-space-6);
+    border: var(--g-border-width) solid var(--g-border-strong);
+    border-radius: var(--g-radius-xl);
+    background: var(--g-surface);
+    box-shadow: var(--g-shadow-lg);
+  }
+
+  .rcard {
+    display: grid;
+    gap: var(--g-space-4);
+  }
+
+  .rcard[hidden],
+  .rpanel[hidden] {
+    display: none;
+  }
+
+  .rcard__title {
+    font-size: var(--g-text-2xl);
+    line-height: var(--g-leading-snug);
+    text-wrap: balance;
+  }
+
+  .rcard__lead {
+    margin-top: calc(var(--g-space-2) * -1);
+    color: var(--g-text-muted);
+  }
+
+  .rfield {
+    display: grid;
+    gap: var(--g-space-1);
+  }
+
+  .rfield--top {
+    margin-top: var(--g-space-4);
+  }
+
+  .rfield > span,
+  .rfield > label,
+  .rgroup legend,
+  .rgen__label {
+    font-size: var(--g-text-xs);
+    font-weight: var(--g-weight-semibold);
+    letter-spacing: var(--g-tracking-wide);
+    text-transform: uppercase;
+    color: var(--g-text-muted);
+  }
+
+  .rfield input,
+  .rfield select,
+  .rfield textarea,
+  .rrow input {
+    width: 100%;
+    min-height: 3rem;
+    padding: var(--g-space-2) var(--g-space-4);
+    border: var(--g-border-width) solid var(--g-border-strong);
+    border-radius: var(--g-radius-md);
+    background: var(--g-bg-subtle);
+    color: var(--g-text-strong);
+    font: inherit;
+    font-size: var(--g-text-md);
+  }
+
+  .rfield textarea {
+    resize: vertical;
+    line-height: var(--g-leading-normal);
+  }
+
+  .rfield :is(input, select, textarea):focus,
+  .rrow input:focus {
+    outline: none;
+    border-color: var(--g-accent);
+    box-shadow: 0 0 0 var(--g-focus-width) var(--g-focus-ring);
+  }
+
+  [aria-invalid='true'] {
+    border-color: var(--g-danger) !important;
+  }
+
+  .rfield__phone {
+    display: grid;
+    grid-template-columns: 7.25rem 1fr;
+    gap: var(--g-space-2);
+  }
+
+  .rform__hp {
+    position: absolute;
+    left: -9999px;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+  }
+
+  .rform__error,
+  .rerror {
+    color: var(--g-danger);
+    font-size: var(--g-text-sm);
+  }
+
+  .rform__error:empty {
+    display: none;
+  }
+
+  .rform__submit {
+    width: 100%;
+  }
+
+  .rform__note {
+    font-size: var(--g-text-xs);
+    color: var(--g-text-subtle);
+    text-align: center;
+    line-height: var(--g-leading-normal);
+  }
+
+  .rgroup {
+    margin: 0;
+    padding: 0;
+    border: 0;
+    min-width: 0;
+  }
+
+  .rgroup legend {
+    margin-bottom: var(--g-space-2);
+    padding: 0;
+  }
+
+  .rgroup__hint {
+    margin-bottom: var(--g-space-3);
+    font-size: var(--g-text-sm);
+    color: var(--g-text-muted);
+  }
+
+  .rchips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--g-space-2);
+  }
+
+  .rchip {
+    position: relative;
+    cursor: pointer;
+  }
+
+  .rchip input {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .rchip span {
+    display: block;
+    padding: var(--g-space-2) var(--g-space-4);
+    border: var(--g-border-width) solid var(--g-border-strong);
+    border-radius: var(--g-radius-full);
+    background: var(--g-bg-subtle);
+    transition:
+      background var(--g-duration-fast),
+      border-color var(--g-duration-fast);
+  }
+
+  .rchip input:checked + span {
+    border-color: var(--g-accent);
+    background: var(--g-accent);
+    color: var(--g-on-accent);
+  }
+
+  .rchip input:focus-visible + span {
+    box-shadow: 0 0 0 var(--g-focus-width) var(--g-focus-ring);
+  }
+
+  .rchips--formats {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .rchip--format span {
+    height: 100%;
+    border-radius: var(--g-radius-md);
+    line-height: 1.3;
+  }
+
+  .rchip--format small {
+    display: block;
+    margin-top: 2px;
+    font-size: var(--g-text-xs);
+    opacity: 0.75;
+  }
+
+  .rrows {
+    display: grid;
+    gap: var(--g-space-2);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .rrow {
+    display: grid;
+    grid-template-columns: 1fr auto auto;
+    gap: var(--g-space-2);
+    align-items: center;
+  }
+
+  .rrow:has(> :nth-child(2):last-child) {
+    grid-template-columns: 1fr auto;
+  }
+
+  .rstar,
+  .rdel {
+    width: 3rem;
+    height: 3rem;
+    border: var(--g-border-width) solid var(--g-border-strong);
+    border-radius: var(--g-radius-md);
+    background: var(--g-bg-subtle);
+    color: var(--g-text-subtle);
+    font-size: 1.3rem;
+    line-height: 1;
+    cursor: pointer;
+  }
+
+  .rstar[aria-pressed='true'] {
+    border-color: var(--g-accent);
+    background: var(--g-accent-subtle);
+    color: var(--g-accent);
+  }
+
+  .rdel:hover {
+    color: var(--g-danger);
+  }
+
+  .radd,
+  .rlink {
+    margin-top: var(--g-space-2);
+    padding: 0;
+    border: 0;
+    background: none;
+    color: var(--g-text-accent);
+    font: inherit;
+    font-weight: var(--g-weight-semibold);
+    cursor: pointer;
+  }
+
+  .radd[hidden] {
+    display: none;
+  }
+
+  /* --- Panel -------------------------------------------------------------- */
+
+  .rpanel {
+    display: grid;
+    gap: var(--g-space-6);
+  }
+
+  .rpanel__hello {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--g-space-2);
+    font-size: var(--g-text-lg);
+  }
+
+  .rpanel__hello .rlink {
+    margin: 0;
+    font-size: var(--g-text-sm);
+  }
+
+  .rstep {
+    display: grid;
+    gap: var(--g-space-4);
+  }
+
+  .rstep.is-locked {
+    opacity: 0.55;
+  }
+
+  .rstep__head {
+    display: flex;
+    gap: var(--g-space-4);
+    align-items: flex-start;
+  }
+
+  .rstep__n {
+    flex: none;
+    display: grid;
+    place-content: center;
+    width: 2.75rem;
+    height: 2.75rem;
+    border-radius: 50%;
+    background: var(--g-accent-subtle);
+    border: 1px solid var(--g-accent-border);
+    color: var(--g-accent);
+    font-family: var(--g-font-display);
+    font-weight: var(--g-weight-bold);
+  }
+
+  .rstep.is-done .rstep__n {
+    background: var(--g-success-bg);
+    border-color: var(--g-success-border);
+    color: var(--g-success);
+  }
+
+  .rstep__title {
+    font-size: var(--g-text-xl);
+  }
+
+  .rstep__lead {
+    margin-top: var(--g-space-1);
+    color: var(--g-text-muted);
+    font-size: var(--g-text-sm);
+  }
+
+  .rstep__locked {
+    font-size: var(--g-text-sm);
+    color: var(--g-text-subtle);
+  }
+
+  .rstep__locked[hidden],
+  .rstep__go[hidden],
+  .rstep__loading[hidden],
+  .rout[hidden],
+  .rout__bar[hidden],
+  .rgen[hidden],
+  .rlimit[hidden] {
+    display: none;
+  }
+
+  .rstep__go {
+    justify-self: start;
+  }
+
+  .rstep__go:disabled {
+    opacity: 0.6;
+    cursor: wait;
+  }
+
+  .rstep__loading {
+    font-size: var(--g-text-sm);
+    color: var(--g-text-accent);
+  }
+
+  .rstep__loading::before {
+    content: '';
+    display: inline-block;
+    width: 0.8em;
+    height: 0.8em;
+    margin-right: 0.5em;
+    vertical-align: -0.05em;
+    border: 2px solid currentColor;
+    border-right-color: transparent;
+    border-radius: 50%;
+    animation: rspin 0.8s linear infinite;
+  }
+
+  @keyframes rspin {
+    to {
+      transform: rotate(1turn);
+    }
+  }
+
+  .rout {
+    border: var(--g-border-width) solid var(--g-border);
+    border-radius: var(--g-radius-lg);
+    background: var(--g-bg-subtle);
+    padding: var(--g-space-5);
+  }
+
+  .rout__bar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--g-space-2);
+    margin-top: var(--g-space-5);
+    padding-top: var(--g-space-4);
+    border-top: 1px solid var(--g-border);
+  }
+
+  .rtool {
+    padding: var(--g-space-2) var(--g-space-4);
+    border: var(--g-border-width) solid var(--g-border-strong);
+    border-radius: var(--g-radius-full);
+    background: var(--g-surface);
+    color: var(--g-text);
+    font: inherit;
+    font-size: var(--g-text-sm);
+    cursor: pointer;
+  }
+
+  .rtool:hover {
+    border-color: var(--g-accent-border);
+    color: var(--g-text-strong);
+  }
+
+  .rtool[hidden] {
+    display: none;
+  }
+
+  .rout__disclaimer {
+    margin-top: var(--g-space-3);
+    font-size: var(--g-text-xs);
+    color: var(--g-text-subtle);
+  }
+
+  /* Markdown de la IA */
+  .rmd {
+    color: var(--g-text);
+    line-height: var(--g-leading-normal);
+    overflow-wrap: anywhere;
+  }
+
+  .rmd :global(h2) {
+    font-size: var(--g-text-2xl);
+    margin: 0 0 var(--g-space-3);
+    color: var(--g-text-strong);
+  }
+
+  .rmd :global(h3) {
+    font-size: var(--g-text-lg);
+    margin: var(--g-space-6) 0 var(--g-space-2);
+    color: var(--g-text-accent);
+  }
+
+  .rmd :global(h4),
+  .rmd :global(h5) {
+    font-size: var(--g-text-md);
+    margin: var(--g-space-4) 0 var(--g-space-1);
+    color: var(--g-text-strong);
+  }
+
+  .rmd :global(p),
+  .rmd :global(ul),
+  .rmd :global(ol),
+  .rmd :global(blockquote) {
+    margin: 0 0 var(--g-space-3);
+  }
+
+  .rmd :global(ul),
+  .rmd :global(ol) {
+    padding-left: 1.25rem;
+  }
+
+  .rmd :global(li) {
+    margin-bottom: var(--g-space-1);
+  }
+
+  .rmd :global(strong) {
+    color: var(--g-text-strong);
+  }
+
+  .rmd :global(blockquote) {
+    padding: var(--g-space-2) var(--g-space-4);
+    border-left: 3px solid var(--g-accent);
+    background: var(--g-accent-subtle);
+    border-radius: 0 var(--g-radius-sm) var(--g-radius-sm) 0;
+  }
+
+  .rmd :global(hr) {
+    border: 0;
+    border-top: 1px solid var(--g-border);
+    margin: var(--g-space-5) 0;
+  }
+
+  .rmd.is-streaming::after {
+    content: '▍';
+    color: var(--g-accent);
+    animation: rblink 1s steps(1) infinite;
+  }
+
+  @keyframes rblink {
+    50% {
+      opacity: 0;
+    }
+  }
+
+  /* Guiones */
+  .rgen {
+    display: grid;
+    gap: var(--g-space-4);
+  }
+
+  .rgen__left {
+    opacity: 0.75;
+    font-weight: var(--g-weight-regular);
+  }
+
+  .rguiones {
+    display: grid;
+    gap: var(--g-space-3);
+  }
+
+  .rguion__sum {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: var(--g-space-2);
+    font-family: var(--g-font-display);
+    font-weight: var(--g-weight-semibold);
+    color: var(--g-text-strong);
+    cursor: pointer;
+  }
+
+  .rguion[open] .rguion__sum {
+    margin-bottom: var(--g-space-4);
+  }
+
+  .rguion__sum small {
+    font-family: var(--g-font-body);
+    font-weight: var(--g-weight-regular);
+    color: var(--g-text-subtle);
+  }
+
+  .rlimit {
+    padding: var(--g-space-5);
+    border: 1px solid var(--g-accent-border);
+    border-radius: var(--g-radius-lg);
+    background: var(--g-accent-subtle);
+    display: grid;
+    gap: var(--g-space-3);
+    justify-items: start;
+  }
+
+  /* --- WhatsApp ----------------------------------------------------------- */
+
+  .rwa {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--g-space-2);
+    padding: var(--g-space-3) var(--g-space-6);
+    border-radius: var(--g-radius-full);
+    background: var(--g-green-400);
+    color: var(--g-neutral-1000);
+    font-family: var(--g-font-display);
+    font-weight: var(--g-weight-bold);
+    text-decoration: none;
+  }
+
+  .rnudge {
+    width: min(26rem, calc(100vw - 2rem));
+    margin: auto;
+    padding: var(--g-space-6);
+    border: 1px solid var(--g-border-strong);
+    border-radius: var(--g-radius-xl);
+    background: var(--g-surface);
+    color: var(--g-text);
+    box-shadow: var(--g-shadow-xl);
+    text-align: center;
+  }
+
+  .rnudge::backdrop {
+    background: var(--g-overlay);
+  }
+
+  .rnudge__title {
+    font-size: var(--g-text-2xl);
+  }
+
+  .rnudge__text {
+    margin: var(--g-space-3) 0 var(--g-space-5);
+    color: var(--g-text-muted);
+    line-height: var(--g-leading-normal);
+  }
+
+  .rnudge .rwa {
+    width: 100%;
+  }
+
+  .rnudge__close {
+    margin-top: var(--g-space-3);
+    padding: var(--g-space-2);
+    border: 0;
+    background: none;
+    color: var(--g-text-muted);
+    font: inherit;
+    cursor: pointer;
+  }
+
+  .rfloat {
+    position: fixed;
+    right: var(--g-space-4);
+    bottom: var(--g-space-4);
+    z-index: var(--g-z-sticky);
+    display: inline-flex;
+    align-items: center;
+    gap: var(--g-space-2);
+    padding: var(--g-space-2) var(--g-space-4) var(--g-space-2) var(--g-space-3);
+    border-radius: var(--g-radius-full);
+    background: var(--g-green-400);
+    color: var(--g-neutral-1000);
+    font-family: var(--g-font-display);
+    font-weight: var(--g-weight-semibold);
+    font-size: var(--g-text-sm);
+    text-decoration: none;
+    box-shadow: var(--g-shadow-lg);
+  }
+
+  .rfloat[hidden] {
+    display: none;
+  }
+
+  .rfloat svg {
+    width: 1.4rem;
+    height: 1.4rem;
+    fill: currentColor;
+  }
+
+  @media (max-width: 768px) {
+    .rpasos {
+      grid-template-columns: 1fr;
+      margin-block: var(--g-space-8) var(--g-space-6);
+    }
+
+    .rcard,
+    .rstep {
+      padding: var(--g-space-5) var(--g-space-4);
+    }
+
+    .rchips--formats {
+      grid-template-columns: 1fr;
+    }
+
+    .rout {
+      padding: var(--g-space-4);
+    }
+
+    .rstep__go {
+      justify-self: stretch;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .rstep__loading::before,
+    .rmd.is-streaming::after {
+      animation: none;
+    }
+  }
+
+  /* Descargar PDF: se imprime solo el bloque elegido. */
+  @media print {
+    :global(body.is-printing) > :global(*:not(main)),
+    :global(body.is-printing main > *:not(.rapp)),
+    :global(body.is-printing .rapp .rpanel__hello),
+    :global(body.is-printing .rapp [data-view]:not(.rpanel)),
+    :global(body.is-printing .rfloat) {
+      display: none !important;
+    }
+
+    :global(body.is-printing .rstep:not(.is-printing)),
+    :global(body.is-printing .rguion:not(.is-printing)),
+    :global(body.is-printing .rgen),
+    :global(body.is-printing .rlimit),
+    :global(body.is-printing .rout__bar),
+    :global(body.is-printing .rstep__go) {
+      display: none !important;
+    }
+
+    :global(body.is-printing) {
+      background: #fff !important;
+      color: #000 !important;
+    }
+
+    :global(body.is-printing .rstep),
+    :global(body.is-printing .rout) {
+      border: 0 !important;
+      box-shadow: none !important;
+      background: none !important;
+      padding: 0 !important;
+    }
+
+    :global(body.is-printing .rmd),
+    :global(body.is-printing .rmd *) {
+      color: #000 !important;
+    }
+  }
+</style>
+
+<script>
+  import './app';
+</script>

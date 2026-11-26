@@ -4,6 +4,7 @@ import Logo from '../components/Logo.astro';
 import Quiz from '../components/Quiz.astro';
 import Cases from '../components/Cases.astro';
 import { quiz } from '../data/quiz';
+import { recurso } from '../data/recurso';
 
 /*
  * Landing de los anuncios del recurso gratis: quiz → datos → WhatsApp.
@@ -24,7 +25,7 @@ const year = new Date().getFullYear();
 
     <div class="container plan-cta">
       <a class="btn btn--primary btn--lg" href="#plan" data-track="quiz_cta:casos">
-        Quiero mi plan gratis
+        Quiero mi sistema gratis
       </a>
     </div>
   </main>
@@ -32,8 +33,7 @@ const year = new Date().getFullYear();
   <footer class="plan-foot">
     <p>© {year} Gravity Studios</p>
     <p>
-      Este sitio no forma parte de Meta ni de Facebook. Los resultados de los casos dependen de cada
-      clínica y no constituyen una garantía.
+      Este sitio no forma parte de Meta ni de Facebook. {recurso.disclaimer}
     </p>
   </footer>
 </Base>

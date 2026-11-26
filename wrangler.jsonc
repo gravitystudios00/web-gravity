@@ -29,8 +29,22 @@
     // Conjunto de datos "Gravity Pixel - 23/11" (portfolio Gravity Studios,
     // compartido con la cuenta publicitaria Gravity Studios 440300779171266).
     "META_PIXEL_ID": "4149392285331933",
-    "META_TEST_EVENT_CODE": "TEST34971"
+    "META_TEST_EVENT_CODE": "TEST34971",
+    // Recurso de /recurso (worker/recurso). Secrets: OPENAI_API_KEY y ADMIN_KEY.
+    "OPENAI_MODEL": "gpt-6.2-sol",
+    // Tope de generaciones por día para todo el sitio: si se llega, el recurso
+    // pide volver mañana. Es la red de seguridad del gasto en OpenAI.
+    "RECURSO_TOPE_DIARIO": "400"
   },
+  // Base del recurso de /recurso (worker/recurso). Esquema en migrations/.
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "gravity-recurso",
+      "database_id": "2648d9f7-c2a8-48c3-a044-e90b909d770e",
+      "migrations_dir": "migrations"
+    }
+  ],
   "observability": {
     "enabled": true
   }

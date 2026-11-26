@@ -1,0 +1,59 @@
+---
+import Base from '../layouts/Base.astro';
+import Logo from '../components/Logo.astro';
+import Recurso from '../components/recurso/Recurso.astro';
+import { recurso } from '../data/recurso';
+
+/*
+ * Recurso que Cleo manda después del quiz de /plan: oferta, paciente ideal y
+ * guiones generados con IA. No se indexa: es solo para el embudo.
+ */
+const year = new Date().getFullYear();
+---
+
+<Base title={recurso.title} description={recurso.description} noindex>
+  <header class="rec-head">
+    <Logo tone="yellow" height="1.75rem" />
+  </header>
+
+  <main>
+    <Recurso />
+  </main>
+
+  <footer class="rec-foot">
+    <p class="rec-foot__legal">{recurso.disclaimer}</p>
+    <p>
+      © {year} Gravity Studios. Este sitio no forma parte de Meta ni de Facebook. El contenido se genera con
+      inteligencia artificial (OpenAI).
+    </p>
+  </footer>
+</Base>
+
+<style>
+  .rec-head {
+    display: flex;
+    justify-content: center;
+    padding: var(--g-space-5) var(--g-space-6) 0;
+  }
+
+  .rec-foot {
+    display: grid;
+    gap: var(--g-space-3);
+    padding: var(--g-space-8) var(--g-space-6) var(--g-space-20);
+    border-top: var(--g-border-width) solid var(--g-border);
+    background: var(--g-bg-subtle);
+    font-size: var(--g-text-xs);
+    color: var(--g-text-subtle);
+    text-align: center;
+    line-height: var(--g-leading-normal);
+  }
+
+  .rec-foot p {
+    max-width: 44rem;
+    margin-inline: auto;
+  }
+
+  .rec-foot__legal {
+    color: var(--g-text-muted);
+  }
+</style>

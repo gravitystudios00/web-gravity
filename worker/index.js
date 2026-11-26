@@ -18,9 +18,14 @@
  * reenvía al workflow "Gravity · Leads quiz" de n8n (ver docs/quiz-plan-cleo.md).
  *
  * Y POST /api/capi: cuando alguien del quiz abre WhatsApp, manda el evento Lead
- * a la API de conversiones de Meta. Necesita META_PIXEL_ID (vars de
- * wrangler.jsonc) y el secret META_CAPI_TOKEN; sin alguno de los dos no hace nada.
+ * a la API de conversiones de Meta (worker/meta.js).
+ *
+ * Y /api/recurso/*: el recurso con IA de /recurso (worker/recurso/).
  */
+import { empty, readJson, sameOrigin, text, PHONE_RE, N8N_LEADS } from './util.js';
+import { metaEvent, sitePageUrl } from './meta.js';
+import { handleRecurso } from './recurso/routes.js';
+
 const TAGS = {
   vsl_play: 'Web_vio_video',
   vsl_50: 'Web_vio_video_50',
@@ -34,7 +39,6 @@ const TAGS = {
 
 const API = 'https://api.manychat.com/fb';
 const N8N_EVENTOS = 'https://n8n.gravity-studios.com/webhook/web-evento-4f9c2a';
-const N8N_LEADS = 'https://n8n.gravity-studios.com/webhook/quiz-lead-36a69739';
 
 export default {
   async fetch(request, env, ctx) {
@@ -42,6 +46,7 @@ export default {
     if (url.pathname === '/api/mc') return trackEvent(request, env, ctx, url);
     if (url.pathname === '/api/lead') return saveLead(request, ctx, url);
     if (url.pathname === '/api/capi') return sendConversion(request, env, ctx, url);
+    if (url.pathname.startsWith('/api/recurso/')) return handleRecurso(request, env, ctx, url);
     return env.ASSETS.fetch(request);
   },
 };
@@ -116,7 +121,6 @@ const QUIZ = {
   momento: ['1', '2'],
 };
 
-const text = (v, max) => (typeof v === 'string' ? v.trim().slice(0, max) : '');
 
 async function saveLead(request, ctx, url) {
   if (request.method !== 'POST') return new Response(null, { status: 405 });
@@ -191,110 +195,37 @@ async function sendLead(lead) {
 }
 
 /* ---------------------------------------------------------------------------
- * API de conversiones de Meta
+ * API de conversiones de Meta (desde el quiz de /plan)
  *
  * La conversión es abrir WhatsApp desde el quiz (botón "Recibir mi plan por
- * WhatsApp" o la cuenta regresiva). Se manda como Lead. Los datos personales
- * van cifrados con SHA-256, como pide Meta; fbc, IP y navegador van tal cual.
- *
- * Para probar sin ensuciar las estadísticas: cargar META_TEST_EVENT_CODE en
- * las vars de wrangler.jsonc con el código de "Probar eventos" del
- * Administrador de eventos, y sacarlo después.
+ * WhatsApp" o la cuenta regresiva). Se manda como Lead. El envío vive en
+ * worker/meta.js.
  * ------------------------------------------------------------------------- */
 
-const GRAPH = 'https://graph.facebook.com/v26.0';
-
-async function sha256(value) {
-  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(value));
-  return [...new Uint8Array(buf)].map((b) => b.toString(16).padStart(2, '0')).join('');
-}
-
 async function sendConversion(request, env, ctx, url) {
-  if (request.method !== 'POST') return new Response(null, { status: 405 });
+  if (request.method !== 'POST') return empty(405);
+  if (!sameOrigin(request, url)) return empty(403);
+  const body = await readJson(request);
+  if (!body) return empty(400);
 
-  const origin = request.headers.get('Origin');
-  if (origin && new URL(origin).host !== url.host) return new Response(null, { status: 403 });
+  const name = text(body.name, 80);
+  const phone = text(body.phone, 16);
+  const eventId = text(body.event_id, 80);
+  if (name.length < 2 || !PHONE_RE.test(phone) || !/^[\w-]{1,80}$/.test(eventId)) return empty(400);
 
-  const raw = await request.text();
-  if (raw.length > 4000) return new Response(null, { status: 413 });
-  let body;
-  try {
-    body = JSON.parse(raw);
-  } catch {
-    return new Response(null, { status: 400 });
-  }
-
-  const name = text(body?.name, 80);
-  const phone = text(body?.phone, 16);
-  const eventId = text(body?.event_id, 80);
-  if (name.length < 2 || !/^\+\d{8,15}$/.test(phone) || !/^[\w-]{1,80}$/.test(eventId))
-    return new Response(null, { status: 400 });
-
-  if (!env.META_PIXEL_ID || !env.META_CAPI_TOKEN) {
-    console.log('CAPI sin configurar: falta META_PIXEL_ID o META_CAPI_TOKEN');
-    return new Response(null, { status: 204 });
-  }
-
-  // La URL de la página tiene que ser de este sitio.
-  let pageUrl = `${url.origin}/plan/`;
-  try {
-    const u = new URL(text(body?.url, 2000));
-    if (u.host === url.host) pageUrl = u.href;
-  } catch {}
-
-  const digits = phone.slice(1);
-  // En Argentina WhatsApp usa 54 9 + número; si lo escribieron sin el 9, se
-  // mandan las dos formas para que Meta encuentre a la persona.
-  const phones = [digits];
-  if (/^54(?!9)\d{10}$/.test(digits)) phones.push(`549${digits.slice(2)}`);
-
-  const first = name.toLowerCase().split(/\s+/)[0];
-  const country = request.cf?.country?.toLowerCase();
-  const fbc = text(body?.fbc, 600);
-
-  const user_data = {
-    ph: await Promise.all(phones.map(sha256)),
-    fn: [await sha256(first)],
-    external_id: [await sha256(digits)],
-    client_ip_address: request.headers.get('CF-Connecting-IP') || undefined,
-    client_user_agent: request.headers.get('User-Agent') || undefined,
-  };
-  if (country) user_data.country = [await sha256(country)];
-  if (/^fb\.1\.\d+\.\S+$/.test(fbc)) user_data.fbc = fbc;
-
-  const custom = {};
+  const custom = { content_name: 'Plan de Captación (quiz)' };
   for (const k of ['cuello', 'momento']) {
-    const v = body?.[k];
-    if (QUIZ[k].includes(v)) custom[k] = v;
+    if (QUIZ[k].includes(body[k])) custom[k] = body[k];
   }
 
-  const payload = {
-    data: [
-      {
-        event_name: 'Lead',
-        event_time: Math.floor(Date.now() / 1000),
-        event_id: eventId,
-        action_source: 'website',
-        event_source_url: pageUrl,
-        user_data,
-        custom_data: { content_name: 'Plan de Captación (quiz)', ...custom },
-      },
-    ],
-  };
-  if (env.META_TEST_EVENT_CODE) payload.test_event_code = env.META_TEST_EVENT_CODE;
-
-  ctx.waitUntil(
-    (async () => {
-      try {
-        const res = await fetch(
-          `${GRAPH}/${env.META_PIXEL_ID}/events?access_token=${encodeURIComponent(env.META_CAPI_TOKEN)}`,
-          { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) }
-        );
-        if (!res.ok) console.log(`CAPI ${res.status}: ${await res.text()}`);
-      } catch (err) {
-        console.log(`CAPI error: ${err}`);
-      }
-    })()
-  );
-  return new Response(null, { status: 204 });
+  await metaEvent(env, ctx, request, {
+    eventName: 'Lead',
+    eventId,
+    pageUrl: sitePageUrl(body.url, url, '/plan/'),
+    name,
+    phone,
+    fbc: body.fbc,
+    custom,
+  });
+  return empty(204);
 }

@@ -1,0 +1,296 @@
+---
+import Base from '../../layouts/Base.astro';
+
+/*
+ * Administración del recurso: quién se registró, qué generó y cuánto costó.
+ * Los datos los da /api/recurso/admin/* con la clave ADMIN_KEY, que se pide
+ * una vez y queda guardada en este navegador.
+ */
+---
+
+<Base title="Admin · Recurso" description="Administración del recurso" noindex tracking={false}>
+  <main class="adm" data-admin>
+    <header class="adm__head">
+      <h1>Recurso: médicos registrados</h1>
+      <div class="adm__actions">
+        <input type="search" placeholder="Buscar nombre, teléfono, email o ciudad" data-q />
+        <button type="button" data-csv>Exportar a Excel</button>
+        <button type="button" data-salir>Salir</button>
+      </div>
+    </header>
+
+    <form class="adm__login" data-login hidden>
+      <label>Clave de administración <input type="password" name="key" autocomplete="current-password" required /></label>
+      <button type="submit">Entrar</button>
+      <p data-login-error></p>
+    </form>
+
+    <section class="adm__stats" data-stats></section>
+    <div class="adm__wrap">
+      <table class="adm__table">
+        <thead>
+          <tr>
+            <th>Fecha (UTC)</th><th>Nombre</th><th>WhatsApp</th><th>Email</th><th>Profesión</th>
+            <th>Servicio estrella</th><th>Ciudad</th><th>País</th><th>Fuente</th>
+            <th>Of.</th><th>Av.</th><th>Guiones</th><th>WA</th><th>USD</th>
+          </tr>
+        </thead>
+        <tbody data-rows></tbody>
+      </table>
+    </div>
+
+    <dialog class="adm__detail" data-detail>
+      <button type="button" class="adm__close" data-close>Cerrar</button>
+      <div data-detail-body></div>
+    </dialog>
+  </main>
+</Base>
+
+<style>
+  .adm {
+    padding: var(--g-space-6);
+    font-size: var(--g-text-sm);
+  }
+
+  .adm__head {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--g-space-4);
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .adm__head h1 {
+    font-size: var(--g-text-xl);
+  }
+
+  .adm__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--g-space-2);
+  }
+
+  .adm input,
+  .adm button {
+    padding: var(--g-space-2) var(--g-space-3);
+    border: 1px solid var(--g-border-strong);
+    border-radius: var(--g-radius-sm);
+    background: var(--g-surface);
+    color: var(--g-text-strong);
+    font: inherit;
+  }
+
+  .adm button {
+    cursor: pointer;
+  }
+
+  .adm input[type='search'] {
+    min-width: 18rem;
+  }
+
+  .adm__login {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--g-space-3);
+    align-items: end;
+    margin-top: var(--g-space-6);
+  }
+
+  .adm__login[hidden] {
+    display: none;
+  }
+
+  .adm__login label {
+    display: grid;
+    gap: var(--g-space-1);
+  }
+
+  .adm__stats {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--g-space-3);
+    margin-top: var(--g-space-5);
+  }
+
+  .adm__stats :global(div) {
+    padding: var(--g-space-3) var(--g-space-4);
+    border: 1px solid var(--g-border);
+    border-radius: var(--g-radius-md);
+    background: var(--g-surface);
+  }
+
+  .adm__stats :global(b) {
+    display: block;
+    font-size: var(--g-text-lg);
+    color: var(--g-text-strong);
+  }
+
+  .adm__wrap {
+    margin-top: var(--g-space-5);
+    overflow-x: auto;
+  }
+
+  .adm__table {
+    width: 100%;
+    border-collapse: collapse;
+    white-space: nowrap;
+  }
+
+  .adm__table th,
+  .adm__table :global(td) {
+    padding: var(--g-space-2) var(--g-space-3);
+    border-bottom: 1px solid var(--g-border);
+    text-align: left;
+  }
+
+  .adm__table :global(tbody tr) {
+    cursor: pointer;
+  }
+
+  .adm__table :global(tbody tr:hover) {
+    background: var(--g-surface-hover);
+  }
+
+  .adm__detail {
+    width: min(60rem, calc(100vw - 2rem));
+    max-height: 90vh;
+    margin: auto;
+    padding: var(--g-space-6);
+    border: 1px solid var(--g-border-strong);
+    border-radius: var(--g-radius-lg);
+    background: var(--g-surface);
+    color: var(--g-text);
+  }
+
+  .adm__detail::backdrop {
+    background: var(--g-overlay);
+  }
+
+  .adm__close {
+    float: right;
+  }
+
+  .adm__detail :global(pre) {
+    white-space: pre-wrap;
+    padding: var(--g-space-3);
+    border-radius: var(--g-radius-sm);
+    background: var(--g-bg-subtle);
+    max-height: 22rem;
+    overflow: auto;
+    font-family: var(--g-font-body);
+  }
+
+  .adm__detail :global(h3) {
+    margin-top: var(--g-space-5);
+  }
+</style>
+
+<script>
+  const KEY = 'g_admin_key';
+  const root = document.querySelector<HTMLElement>('[data-admin]')!;
+  const $ = <T extends HTMLElement = HTMLElement>(s: string) => root.querySelector<T>(s)!;
+  const login = $<HTMLFormElement>('[data-login]');
+  const rows = $('[data-rows]');
+  const detail = $<HTMLDialogElement>('[data-detail]');
+
+  let key = '';
+  try {
+    key = localStorage.getItem(KEY) || '';
+  } catch {}
+
+  const esc = (v: unknown) =>
+    String(v ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]!);
+
+  async function get(path: string) {
+    const res = await fetch(`/api/recurso/admin/${path}`, { headers: { 'X-Admin-Key': key } });
+    if (res.status === 401) {
+      login.hidden = false;
+      throw new Error('clave');
+    }
+    if (!res.ok) throw new Error(`Error ${res.status}`);
+    return res;
+  }
+
+  async function cargar() {
+    const q = $<HTMLInputElement>('[data-q]').value.trim();
+    const [resumen, lista] = await Promise.all([
+      get('resumen').then((r) => r.json()),
+      get(`usuarios${q ? `?q=${encodeURIComponent(q)}` : ''}`).then((r) => r.json()),
+    ]);
+    login.hidden = true;
+    const s = (t: string, x: any) =>
+      `<div>${t}<b>${x.usuarios} médicos</b>${x.generaciones} generaciones · USD ${(+x.costo).toFixed(2)}</div>`;
+    $('[data-stats]').innerHTML = s('Hoy', resumen.hoy) + s('Este mes', resumen.mes) + s('Total', resumen.total);
+    rows.innerHTML = lista
+      .map(
+        (u: any) => `<tr data-id="${u.id}">
+          <td>${esc(u.creado)}</td><td>${esc(u.nombre)}</td><td>${esc(u.telefono)}</td><td>${esc(u.email)}</td>
+          <td>${esc(u.profesion)}</td><td>${esc(u.estrella)}</td><td>${esc(u.ciudades)}</td><td>${esc(u.pais)}</td>
+          <td>${esc(u.fuente)}</td><td>${u.ofertas}</td><td>${u.avatares}</td><td>${u.guiones}</td>
+          <td>${u.whatsapp}</td><td>${(+u.costo).toFixed(3)}</td></tr>`
+      )
+      .join('');
+  }
+
+  rows.addEventListener('click', async (e) => {
+    const tr = (e.target as HTMLElement).closest<HTMLElement>('tr[data-id]');
+    if (!tr) return;
+    const d = await (await get(`usuario?id=${tr.dataset.id}`)).json();
+    const u = d.usuario;
+    $('[data-detail-body]').innerHTML = `
+      <h2>${esc(u.nombre)}</h2>
+      <p>${esc(u.telefono)} · ${esc(u.email)} · ${esc(u.profesion)} · ${esc(u.ciudades)}, ${esc(u.pais)} (IP: ${esc(u.pais_ip)})</p>
+      <p><b>Servicios:</b> ${esc(u.serviciosDetalle.map((s: any) => (s.estrella ? '⭐ ' : '') + s.nombre).join(', '))}</p>
+      <p><b>Precio:</b> ${esc(u.precio)} · <b>Diferencial:</b> ${esc(u.diferencial)}</p>
+      <p><b>Link para retomar:</b> ${esc(location.origin)}/recurso/?u=${esc(u.codigo)}</p>
+      ${d.generaciones
+        .map(
+          (g: any) => `<h3>${esc(g.tipo)} ${g.formato ? '· ' + esc(g.formato) + ' · ' + esc(g.servicio) : ''}
+            <small>(${esc(g.creado)} · ${esc(g.estado)} · ${g.tokens_entrada ?? '-'} / ${g.tokens_salida ?? '-'} tokens · USD ${g.costo_usd ?? '-'})</small></h3>
+            <pre>${esc(g.texto)}</pre>`
+        )
+        .join('')}
+      <h3>Log</h3>
+      <pre>${esc(d.eventos.map((e: any) => `${e.creado}  ${e.evento}${e.dato ? '  ' + e.dato : ''}`).join('\n'))}</pre>`;
+    detail.showModal();
+  });
+
+  $('[data-close]').addEventListener('click', () => detail.close());
+
+  let t = 0;
+  $('[data-q]').addEventListener('input', () => {
+    clearTimeout(t);
+    t = window.setTimeout(() => cargar().catch(() => {}), 300);
+  });
+
+  $('[data-csv]').addEventListener('click', async () => {
+    const q = $<HTMLInputElement>('[data-q]').value.trim();
+    const blob = await (await get(`csv${q ? `?q=${encodeURIComponent(q)}` : ''}`)).blob();
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `recurso-medicos-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(a.href);
+  });
+
+  $('[data-salir]').addEventListener('click', () => {
+    try {
+      localStorage.removeItem(KEY);
+    } catch {}
+    key = '';
+    rows.innerHTML = '';
+    login.hidden = false;
+  });
+
+  login.addEventListener('submit', (e) => {
+    e.preventDefault();
+    key = (login.elements.namedItem('key') as HTMLInputElement).value;
+    try {
+      localStorage.setItem(KEY, key);
+    } catch {}
+    cargar().catch((err) => ($('[data-login-error]').textContent = err.message === 'clave' ? 'Clave incorrecta.' : err.message));
+  });
+
+  if (key) cargar().catch(() => {});
+  else login.hidden = false;
+</script>

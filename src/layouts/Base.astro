@@ -7,6 +7,8 @@ interface Props {
   description?: string;
   /** Las variantes /hl1…/hl5 no deben indexarse: son la misma página. */
   noindex?: boolean;
+  /** false = sin GA4, Clarity ni Meta (la página de admin muestra datos de contactos). */
+  tracking?: boolean;
 }
 
 const {
@@ -16,6 +18,7 @@ const {
   // Las variantes de headline lo pasan en true a mano: son casi idénticas a
   // la home y, indexadas, competirían contra ella por las mismas búsquedas.
   noindex = false,
+  tracking = true,
 } = Astro.props;
 
 const canonical = new URL(Astro.url.pathname, site.url).href;
@@ -107,7 +110,7 @@ const canonical = new URL(Astro.url.pathname, site.url).href;
 
     {/* GA4 */}
     {
-      analytics.ga4 && (
+      tracking && analytics.ga4 && (
         <script is:inline define:vars={{ id: analytics.ga4 }}>
           window.dataLayer = window.dataLayer || [];
           function gtag() {
@@ -137,7 +140,7 @@ const canonical = new URL(Astro.url.pathname, site.url).href;
         van como etiquetas, así se ven aunque la persona vuelva sin ellos en
         la URL (el filtro Tráfico de Clarity solo lee la URL de entrada). */}
     {
-      analytics.clarity && (
+      tracking && analytics.clarity && (
         <script is:inline define:vars={{ cid: analytics.clarity }}>
           (function (c, l, a, r, i, t, y) {
             c[a] =
@@ -193,7 +196,7 @@ const canonical = new URL(Astro.url.pathname, site.url).href;
 
     {/* Meta Pixel — se activa solo cuando cargues el ID en src/data/site.ts */}
     {
-      analytics.metaPixel && (
+      tracking && analytics.metaPixel && (
         <script is:inline define:vars={{ pid: analytics.metaPixel }}>
           !(function (f, b, e, v, n, t, s) {
             if (f.fbq) return;
