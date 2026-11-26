@@ -7,7 +7,7 @@ import { asset } from '../utils/asset';
 export const site = {
   title: 'Gravity Studios — Sistema de captación de pacientes con IA',
   description:
-    'Instalamos un sistema con IA que capta, filtra y agenda pacientes para tu clínica estética en menos de 90 días. Sin que grabes más contenido.',
+    'Sistema de captación de pacientes con IA para clínicas de medicina estética y cirugía plástica. Tu clon graba el contenido y un asistente responde y agenda por WhatsApp: 40 consultas agendadas en 90 días.',
   url: 'https://gravity-studios.com',
   ogImage: '/og.jpg',
   locale: 'es_AR',
@@ -142,13 +142,13 @@ export type Headline = {
 export const headlines: Headline[] = [
   {
     slug: 'index',
-    eyebrow: 'Para clínicas estéticas y de cirugía plástica',
+    eyebrow: 'Para clínicas de medicina estética y cirugía plástica',
+    // La promesa de la Oferta Espejo: mínimo 40 consultas agendadas en 90 días.
     parts: [
-      { text: 'Más pacientes calificados en menos de ' },
-      { text: '90 días', accent: true },
-      { text: ' con un sistema que funciona ' },
-      { text: '100% en automático con IA', accent: true },
-      { text: ', descubrí cómo ⭣' },
+      { text: '40 consultas agendadas en 90 días', accent: true },
+      { text: ' con un sistema de IA que atrae, filtra y agenda pacientes ' },
+      { text: 'por vos', accent: true },
+      { text: ', mirá cómo ⭣' },
     ],
   },
   {
@@ -188,10 +188,10 @@ export const headlines: Headline[] = [
  * "¿Por qué elegirnos?"
  * ------------------------------------------------------------------------- */
 export const gravityPoints = [
-  'Diseñamos tu oferta para vender tratamientos, no para sumar "likes"',
-  'Creamos contenido y anuncios con IA sin que grabes 20 videos al mes',
-  'Automatizamos Instagram y WhatsApp para filtrar curiosos y solo agendar pacientes serios',
-  'Conocimiento especializado en tu industria',
+  'Armamos tu oferta antes que los anuncios: qué vendés, a quién y por qué a vos',
+  'Tu clon con IA graba el contenido: no tenés que grabar 20 videos al mes',
+  'El asistente responde en segundos, filtra curiosos y agenda pacientes con intención',
+  'Solo trabajamos con clínicas estéticas y de cirugía plástica',
   // Reemplaza el item de la garantía del 80% que ya no usamos.
   'En menos de 90 días tenés un sistema automático que trae pacientes nuevos todos los días',
 ];
@@ -219,8 +219,8 @@ export type ServiceBot = { kind: 'bot'; slug: string; label: string };
 /** Videos generados con scripts/process-services-media.mjs. */
 export const services: { title: string; text: string; media?: ServiceVideo | ServiceBot }[] = [
   {
-    title: 'Contenido y anuncios con IA',
-    text: 'Diseñamos mensajes y videos con IA para tus anuncios. Vos solo validás el contenido y dedicás más tiempo a lo que te gusta que a grabar.',
+    title: 'Tu clon con IA graba por vos',
+    text: 'Escribimos los guiones, clonamos tu imagen y tu voz y editamos cada pieza. Vos validás el mensaje y salen contenido y anuncios todas las semanas, sin pasarte horas grabando.',
     media: {
       kind: 'video',
       slug: 'clon-caro',
@@ -232,8 +232,8 @@ export const services: { title: string; text: string; media?: ServiceVideo | Ser
     },
   },
   {
-    title: 'Asistente virtual 24/7',
-    text: 'Responde dudas, filtra curiosos y solo lleva a agenda pacientes interesados. Sin quemar a tu secretaria ni tu presupuesto.',
+    title: 'Un asistente que responde y agenda 24/7',
+    text: 'Contesta en segundos por WhatsApp e Instagram, resuelve dudas de precio y miedos, filtra a los curiosos y deja el turno en tu calendario. Si la charla se complica, se la pasa a tu equipo.',
     media: {
       kind: 'bot',
       slug: 'bot-whatsapp',
@@ -282,9 +282,9 @@ export const aboutText = [
 ];
 
 export const agencyPoints = [
-  'Esperan que los anuncios vendan por ellos',
-  'Te piden que inviertas todo lo que ganás en publicidad',
-  'Tienen 30 clientes y ninguno con resultados',
+  'Te venden seguidores y likes, no consultas',
+  'Cuando los anuncios no funcionan, te piden más presupuesto',
+  'Te traen mensajes y se desentienden de quién los responde',
   'Te piden que les pases "fotitos" o "videítos" todo el tiempo',
-  'Subcontratan personas sin experiencia',
+  'Trabajan con cualquier rubro y no conocen a tu paciente',
 ];
