@@ -97,20 +97,19 @@ Instagram, pero sin nombre.
 
 ## 4. Qué medimos
 
-| Lo que hace la persona | Evento en Analytics y Clarity | Etiqueta en Chatwoot | Etiqueta en ManyChat (links viejos) | Evento de Meta* |
+| Lo que hace la persona | Evento en Analytics y Clarity | Etiqueta en Chatwoot | Etiqueta en ManyChat (links viejos) | Evento de Meta |
 |---|---|---|---|---|
 | Entra a cualquier página | `page_view` | — | — | `PageView` |
 | Le da play al video | `vsl_play` | `web_vio_video` | `Web_vio_video` | `ViewContent` |
 | Llega a la mitad del video | `vsl_50` | `web_vio_video_50` | `Web_vio_video_50` | — |
-| Llega al 90% del video | `vsl_90` | `web_vio_video_completo` | `Web_vio_video_completo` | — |
-| Toca un botón de "Agendá tu auditoría" | `calendar_click` | `web_click_agendar` | `Web_click_agendar` | `Lead` |
-| Elige un horario en Calendly | `calendly_time` | `web_eligio_horario` | `Web_eligio_horario` | — |
+| Llega al 90% del video | `vsl_90` | `web_vio_video_completo` | `Web_vio_video_completo` | `VideoCompleto` |
+| Toca un botón de "Agendá tu auditoría" | `calendar_click` | `web_click_agendar` | `Web_click_agendar` | — |
+| Elige un horario en Calendly | `calendly_time` | `web_eligio_horario` | `Web_eligio_horario` | `EligioHorario` |
 | Confirma la reserva en Calendly | `calendly_booked` | `web_agendo` (verde) | `Web_agendo` | `Schedule` |
 | Toca un botón de WhatsApp | `whatsapp_click` | `web_click_whatsapp` | `Web_click_whatsapp` | `Contact` |
 | Abre el caso completo de Guille | `case_click` | `web_vio_caso` | `Web_vio_caso` | — |
 
-\* El Meta Pixel todavía no está activo (falta el ID). Cuando se cargue en
-`src/data/site.ts`, estos eventos empiezan a llegar solos.
+Detalle de Meta (qué va por pixel y qué por la API) en la sección 7.
 
 - Los clics llevan además un dato `source` que dice **qué botón** fue: `hero`,
   `nav`, `agenda`, `flotante`, `cta-final`, etc.
@@ -199,7 +198,52 @@ Navegador ──► gravity-studios.com/api/mc          (Worker de Cloudflare)
 
 ---
 
-## 7. API de ManyChat (sistema anterior)
+## 7. Meta: pixel y API de conversiones (desde el 26/11/2026)
+
+**Un solo conjunto de datos para toda la web:** "Gravity Pixel - 23/11"
+(`4149392285331933`), compartido con la cuenta publicitaria Gravity Studios.
+Lo usan el pixel del navegador (`src/data/site.ts`) y la API de conversiones del
+Worker (`META_PIXEL_ID` en `wrangler.jsonc`, token en el secret
+`META_CAPI_TOKEN`). El conjunto de WhatsApp (`1646784303520550`) es otro: lo
+usa el bot de n8n para eventos de mensajes.
+
+**Un evento distinto por funnel**, así cada campaña se optimiza por lo suyo y
+los informes no se mezclan:
+
+| Funnel | Evento | Cuándo | Por |
+|---|---|---|---|
+| Landing | `Schedule` | Confirmó la auditoría en Calendly | pixel + API, con nombre, email y teléfono de la reserva |
+| Landing | `EligioHorario` (propio) | Eligió día y hora en Calendly | pixel + API |
+| Landing | `VideoCompleto` (propio) | Vio el 90% del video | pixel + API |
+| Landing | `ViewContent` | Le dio play al video | pixel |
+| Landing | `Contact` | Tocó un botón de WhatsApp | pixel |
+| Quiz (`/plan`) | `Lead` | Abrió WhatsApp con su plan | pixel + API |
+| Quiz (`/plan`) | `LeadCaliente` (propio) | Lo anterior + quiere llenar la agenda en 90 días | pixel + API |
+| Recurso (`/recurso`) | `Lead` / `Contact` | Se registró / tocó WhatsApp | API |
+| Todas | `PageView` | Entró a la página | pixel |
+
+- **Pixel + API con el mismo `event_id`:** Meta junta los dos y lo cuenta una
+  vez. Si el navegador bloquea el pixel, igual llega el del servidor.
+- **`Schedule` solo sale con una reserva real:** el Worker lee la reserva en
+  Calendly (secret `CALENDLY_TOKEN`, el mismo token que usa n8n) y descarta las
+  que no existen, no están activas o tienen más de 2 horas.
+- **El Worker manda también las cookies del pixel** (`_fbp`, `_fbc`), la IP y
+  el navegador, para que Meta reconozca a la persona aunque no haya datos.
+
+**Cómo optimizar cada campaña:**
+- **Quiz:** por `Lead` (o una conversión personalizada de `LeadCaliente`).
+- **Landing:** por `Schedule`. Mientras haya pocas reservas (Meta necesita
+  ~50 por semana para salir de aprendizaje), por `EligioHorario`.
+- **Eventos propios** (`EligioHorario`, `VideoCompleto`, `LeadCaliente`):
+  para optimizar por ellos hay que crear una **conversión personalizada** en el
+  Administrador de eventos → Conversiones personalizadas → Crear → origen
+  "Gravity Pixel - 23/11", evento → el evento propio.
+
+**Probar:** con `META_TEST_EVENT_CODE` cargado en `wrangler.jsonc`, los
+eventos de la API van solo a "Probar eventos" y **no cuentan** para las
+campañas. Sacarlo antes de prender anuncios.
+
+## 8. API de ManyChat (sistema anterior)
 
 Desde el 28/10/2026 Cleo ya no corre en ManyChat. La integración sigue activa
 solo para los links viejos con `mc` que todavía anden dando vueltas.
@@ -216,7 +260,7 @@ solo para los links viejos con `mc` que todavía anden dando vueltas.
 
 ---
 
-## 8. Pendientes
+## 9. Pendientes
 
 - [ ] **Bio de Instagram:** cambiar el link por el de la sección 2.
 - [ ] **Clave de ManyChat:** quedó escrita en un chat. Si ManyChat sigue
@@ -227,14 +271,16 @@ solo para los links viejos con `mc` que todavía anden dando vueltas.
       "Origen del clic", alcance *evento*, parámetro `source`.
 - [ ] **Analytics → Retención de datos:** pasar de 2 a 14 meses.
 - [ ] **Clarity → Settings → Setup:** conectar con Google Analytics.
-- [ ] **Meta Pixel (opcional):** cargar el ID en `src/data/site.ts` para
-      remarketing.
+- [ ] **Token de la API de conversiones:** el de `META_CAPI_TOKEN` daba
+      "Bad signature" (26/11/2026). Generar uno nuevo y cargarlo.
+- [ ] **Sacar `META_TEST_EVENT_CODE`** de `wrangler.jsonc` después de probar.
+- [ ] **Conversiones personalizadas** para `EligioHorario` y `LeadCaliente`.
 - [ ] **Bots de Caro y Guille:** si sus mensajes mandan links a sus webs,
       se puede repetir lo mismo (hoy es solo para Gravity).
 
 ---
 
-## 9. Dónde está en el código
+## 10. Dónde está en el código
 
 | Archivo | Qué hace |
 |---|---|
@@ -242,7 +288,9 @@ solo para los links viejos con `mc` que todavía anden dando vueltas.
 | `src/layouts/Base.astro` | Lee `cw`, `mc` y UTMs, carga Clarity y Analytics, define `gTrack()` (el punto único que manda cada evento a todos lados) y escucha los clics con `data-track` |
 | `src/components/Vsl.astro` | Eventos del video: play, 50% y 90% |
 | `src/components/Agenda.astro` | Pasa UTMs y el código a Calendly y escucha cuando eligen horario o reservan |
-| `worker/index.js` | Ruta `/api/mc`: con `cw` reenvía el evento a n8n; con `mc`, pone la etiqueta en ManyChat |
+| `worker/index.js` | Ruta `/api/mc`: con `cw` reenvía el evento a n8n; con `mc`, pone la etiqueta en ManyChat. Ruta `/api/capi-web`: eventos de Meta de la landing |
+| `worker/meta.js` | Envío a la API de conversiones de Meta |
+| `worker/calendly.js` | Lee la reserva de Calendly para el `Schedule` |
 | `wrangler.jsonc` | Configuración del Worker (archivos estáticos + `/api/*`) |
 | `D:\Claude\Bot WhatsApp\servidor\bot\nodos\armar-respuesta.js` | Genera el código y arma el link del mensaje de bienvenida |
 | `D:\Claude\Bot WhatsApp\servidor\bot\nodos\web-evento.js` / `web-etiqueta.js` | Workflow "Eventos web": evento → etiqueta de Chatwoot |
