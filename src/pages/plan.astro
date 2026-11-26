@@ -35,6 +35,7 @@ const year = new Date().getFullYear();
     <p>
       Este sitio no forma parte de Meta ni de Facebook. {recurso.disclaimer}
     </p>
+    <p><a href="/privacidad/">Política de privacidad</a></p>
   </footer>
 </Base>
 
@@ -65,5 +66,11 @@ const year = new Date().getFullYear();
   .plan-foot p {
     max-width: 40rem;
     margin-inline: auto;
+  }
+
+  /* Link a la política de privacidad. */
+  .plan-foot a {
+    color: inherit;
+    text-decoration: underline;
   }
 </style>

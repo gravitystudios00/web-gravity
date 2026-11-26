@@ -84,7 +84,7 @@ const r = recurso;
 
       <p class="rform__error" data-error role="alert"></p>
       <button type="submit" class="btn btn--primary btn--lg rform__submit">{r.gate.submit} <span aria-hidden="true">→</span></button>
-      <p class="rform__note">{r.gate.consent}</p>
+      <p class="rform__note">{r.gate.consent} <a href="/privacidad/" target="_blank">Política de privacidad</a>.</p>
     </form>
 
     {/* --- 2. Encuesta --------------------------------------------------- */}
@@ -1060,6 +1060,12 @@ const r = recurso;
     :global(body.is-printing .rmd *) {
       color: #000 !important;
     }
+  }
+
+  /* Link a la política de privacidad. */
+  .rform__note a {
+    color: inherit;
+    text-decoration: underline;
   }
 </style>
 

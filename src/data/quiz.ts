@@ -140,7 +140,7 @@ export const quiz = {
     instagram: 'El @ de Instagram de tu clínica',
     submit: 'Recibir mi plan',
     consent:
-      'Al enviar tus datos aceptás que Gravity Studios te contacte por WhatsApp para enviarte tu plan. No compartimos tu información con nadie.',
+      'Al enviar tus datos aceptás que Gravity Studios te contacte por WhatsApp para enviarte tu plan. No vendemos tu información.',
   },
 
   /** Prefijos de los países donde trabajamos. "Otro" deja escribir el número entero. */

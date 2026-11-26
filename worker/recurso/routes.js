@@ -21,6 +21,7 @@ import { promptOferta } from './prompts/oferta.js';
 import { promptAvatar } from './prompts/avatar.js';
 import { promptGuion, FORMATOS } from './prompts/guiones.js';
 import { admin } from './admin.js';
+import { identificar, vidDe } from '../tracking.js';
 
 const EMAIL_RE = /^[^\s@]{1,64}@[^\s@]{1,190}\.[a-z]{2,24}$/i;
 const CODIGO_RE = /^[a-z0-9]{16}$/;
@@ -66,7 +67,7 @@ export async function handleRecurso(request, env, ctx, url) {
   const ruta = url.pathname.slice('/api/recurso/'.length);
 
   if (ruta.startsWith('admin/')) return admin(request, env, url, ruta.slice(6));
-  if (ruta === 'estado' && request.method === 'GET') return estado(env, url);
+  if (ruta === 'estado' && request.method === 'GET') return estado(request, env, ctx, url);
 
   if (request.method !== 'POST') return empty(405);
   if (!sameOrigin(request, url)) return empty(403);
@@ -141,6 +142,10 @@ async function registro(request, env, ctx, url) {
     .run();
   const usuarioId = r.meta.last_row_id;
   await log(env, usuarioId, 'registro', utm.source || null);
+  // Panel de visitantes: este navegador pasa a ser esta persona.
+  ctx.waitUntil(
+    identificar(env, vidDe(request, body), { origen: 'recurso', nombre, telefono, email, recursoUsuarioId: usuarioId })
+  );
 
   // Lead a n8n (misma hoja que el quiz) y a Meta.
   ctx.waitUntil(
@@ -216,6 +221,7 @@ async function encuesta(request, env) {
       u.id
     )
     .run();
+  await identificar(env, vidDe(request, body), { origen: 'recurso', recursoUsuarioId: u.id, datos: { profesion } });
   await log(env, u.id, 'encuesta', `${profesion} · ${servicios.filter((s) => s.estrella).map((s) => s.nombre).join(', ')}`);
   return json({ ok: true });
 }
@@ -305,9 +311,11 @@ async function generar(request, env, ctx) {
 
 /* --- Estado (retomar) ----------------------------------------------------- */
 
-async function estado(env, url) {
+async function estado(request, env, ctx, url) {
   const u = await usuarioPorCodigo(env, url.searchParams.get('u'));
   if (!u) return json({ error: 'No encontramos tu sesión.' }, 404);
+  // Retomó (quizás desde otro dispositivo): se une ese navegador a la persona.
+  ctx.waitUntil(identificar(env, vidDe(request, null), { origen: 'recurso', recursoUsuarioId: u.id }));
   const { results } = await env.DB.prepare(
     "SELECT id, tipo, formato, servicio, texto, creado FROM generaciones WHERE usuario_id = ? AND estado = 'ok' ORDER BY id"
   )

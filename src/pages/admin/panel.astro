@@ -1,0 +1,671 @@
+---
+import Base from '../../layouts/Base.astro';
+
+/*
+ * Panel de visitantes: quién entra a cada página de Gravity (landing, quiz,
+ * recurso, casos, videos), qué hace y, cuando deja sus datos, quién es.
+ * Los datos los da /api/panel/* (worker/panel.js) con la clave ADMIN_KEY,
+ * la misma del admin del recurso. Se pide una vez y queda en este navegador.
+ * Las horas se muestran en la hora de este navegador (Argentina).
+ */
+---
+
+<Base title="Panel · Gravity" description="Panel de visitantes" noindex tracking={false}>
+  <main class="pnl" data-panel>
+    <header class="pnl__head">
+      <h1>Panel de visitantes</h1>
+      <div class="pnl__actions">
+        <select data-rango aria-label="Período">
+          <option value="0">Hoy</option>
+          <option value="1">Ayer y hoy</option>
+          <option value="7" selected>Últimos 7 días</option>
+          <option value="30">Últimos 30 días</option>
+          <option value="90">Últimos 90 días</option>
+          <option value="365">Último año</option>
+        </select>
+        <input type="search" placeholder="Fuente, campaña o anuncio" data-fuente aria-label="Filtrar por fuente" />
+        <button type="button" data-recargar>Actualizar</button>
+        <button type="button" data-salir>Salir</button>
+      </div>
+    </header>
+
+    <form class="pnl__login" data-login hidden>
+      <label>Clave de administración <input type="password" name="key" autocomplete="current-password" required /></label>
+      <button type="submit">Entrar</button>
+      <p data-login-error></p>
+    </form>
+
+    <nav class="pnl__tabs" data-tabs>
+      <button type="button" data-tab="resumen" aria-pressed="true">Resumen</button>
+      <button type="button" data-tab="embudos">Embudos</button>
+      <button type="button" data-tab="personas">Personas</button>
+      <button type="button" data-tab="visitas">Visitas en vivo</button>
+    </nav>
+
+    <section data-vista="resumen"></section>
+    <section data-vista="embudos" hidden></section>
+    <section data-vista="personas" hidden>
+      <div class="pnl__bar">
+        <input type="search" placeholder="Buscar nombre, teléfono, email o Instagram" data-q />
+        <select data-filtro aria-label="Filtro">
+          <option value="">Todas las personas</option>
+          <option value="horario_sin_agendar">Eligieron horario y no agendaron</option>
+          <option value="quiz_sin_whatsapp">Dejaron datos en el quiz y no abrieron WhatsApp</option>
+          <option value="video_sin_agendar">Vieron el video completo y no agendaron</option>
+          <option value="recurso_sin_generar">Se registraron en el recurso y no generaron</option>
+          <option value="agendaron">Agendaron</option>
+          <option value="quiz">Hicieron el quiz</option>
+          <option value="recurso">Usaron el recurso</option>
+          <option value="cleo">Vinieron desde Cleo</option>
+        </select>
+        <button type="button" data-csv>Exportar a Excel</button>
+      </div>
+      <div class="pnl__wrap" data-personas></div>
+    </section>
+    <section data-vista="visitas" hidden></section>
+
+    <dialog class="pnl__detail" data-detail>
+      <button type="button" class="pnl__close" data-close>Cerrar</button>
+      <div data-detail-body></div>
+    </dialog>
+  </main>
+</Base>
+
+<style>
+  .pnl {
+    padding: var(--g-space-6);
+    font-size: var(--g-text-sm);
+    max-width: 90rem;
+    margin: 0 auto;
+  }
+
+  .pnl__head {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--g-space-4);
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .pnl__head h1 {
+    font-size: var(--g-text-xl);
+  }
+
+  .pnl__actions,
+  .pnl__bar,
+  .pnl__tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--g-space-2);
+  }
+
+  .pnl input,
+  .pnl select,
+  .pnl button {
+    padding: var(--g-space-2) var(--g-space-3);
+    border: 1px solid var(--g-border-strong);
+    border-radius: var(--g-radius-sm);
+    background: var(--g-surface);
+    color: var(--g-text-strong);
+    font: inherit;
+  }
+
+  .pnl button {
+    cursor: pointer;
+  }
+
+  .pnl input[type='search'] {
+    min-width: 16rem;
+  }
+
+  .pnl__tabs {
+    margin-top: var(--g-space-5);
+    border-bottom: 1px solid var(--g-border);
+    padding-bottom: var(--g-space-3);
+  }
+
+  .pnl__tabs button[aria-pressed='true'] {
+    background: var(--g-accent);
+    color: var(--g-on-accent);
+    border-color: var(--g-accent);
+  }
+
+  .pnl__login {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--g-space-3);
+    align-items: end;
+    margin-top: var(--g-space-6);
+  }
+
+  .pnl__login[hidden],
+  .pnl section[hidden] {
+    display: none;
+  }
+
+  .pnl__login label {
+    display: grid;
+    gap: var(--g-space-1);
+  }
+
+  .pnl section {
+    margin-top: var(--g-space-5);
+  }
+
+  .pnl :global(.stats) {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(10rem, 1fr));
+    gap: var(--g-space-3);
+  }
+
+  .pnl :global(.stat) {
+    padding: var(--g-space-3) var(--g-space-4);
+    border: 1px solid var(--g-border);
+    border-radius: var(--g-radius-md);
+    background: var(--g-surface);
+    color: var(--g-text-subtle);
+  }
+
+  .pnl :global(.stat b) {
+    display: block;
+    font-size: var(--g-text-xl);
+    color: var(--g-text-strong);
+  }
+
+  .pnl :global(.grid2) {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(26rem, 1fr));
+    gap: var(--g-space-5);
+    margin-top: var(--g-space-5);
+  }
+
+  .pnl :global(.card) {
+    padding: var(--g-space-4);
+    border: 1px solid var(--g-border);
+    border-radius: var(--g-radius-md);
+    background: var(--g-surface);
+    overflow-x: auto;
+  }
+
+  .pnl :global(h2) {
+    font-size: var(--g-text-md);
+    color: var(--g-text-strong);
+    margin-bottom: var(--g-space-3);
+  }
+
+  .pnl :global(.nota) {
+    color: var(--g-text-subtle);
+    margin-bottom: var(--g-space-3);
+  }
+
+  .pnl :global(table) {
+    width: 100%;
+    border-collapse: collapse;
+    white-space: nowrap;
+  }
+
+  .pnl :global(th),
+  .pnl :global(td) {
+    padding: var(--g-space-2) var(--g-space-3);
+    border-bottom: 1px solid var(--g-border);
+    text-align: left;
+  }
+
+  .pnl :global(td.n),
+  .pnl :global(th.n) {
+    text-align: right;
+  }
+
+  .pnl :global(tr[data-id]) {
+    cursor: pointer;
+  }
+
+  .pnl :global(tr[data-id]:hover) {
+    background: var(--g-surface-hover);
+  }
+
+  .pnl__wrap {
+    margin-top: var(--g-space-4);
+    overflow-x: auto;
+  }
+
+  /* Barras de embudo y de retención. */
+  .pnl :global(.barra) {
+    display: grid;
+    grid-template-columns: 13rem 1fr 9rem;
+    gap: var(--g-space-3);
+    align-items: center;
+    margin-bottom: var(--g-space-2);
+  }
+
+  .pnl :global(.barra span) {
+    display: block;
+    height: 1.4rem;
+    border-radius: var(--g-radius-sm);
+    background: var(--g-accent);
+    min-width: 2px;
+  }
+
+  .pnl :global(.barra em) {
+    font-style: normal;
+    color: var(--g-text-subtle);
+    text-align: right;
+  }
+
+  .pnl :global(.tag) {
+    display: inline-block;
+    padding: 0 var(--g-space-2);
+    margin: 1px;
+    border-radius: var(--g-radius-sm);
+    background: var(--g-bg-subtle);
+    color: var(--g-text-strong);
+    font-size: var(--g-text-xs);
+  }
+
+  .pnl :global(.tag--ok) {
+    background: var(--g-accent);
+    color: var(--g-on-accent);
+  }
+
+  .pnl :global(.visita) {
+    margin-bottom: var(--g-space-3);
+  }
+
+  .pnl :global(.visita summary) {
+    cursor: pointer;
+  }
+
+  .pnl :global(.linea) {
+    list-style: none;
+    margin: var(--g-space-2) 0 0;
+    padding: 0;
+  }
+
+  .pnl :global(.linea li) {
+    display: grid;
+    grid-template-columns: 9.5rem 8rem 1fr;
+    gap: var(--g-space-3);
+    padding: 2px 0;
+    border-bottom: 1px dashed var(--g-border);
+  }
+
+  .pnl :global(.linea time),
+  .pnl :global(.linea code) {
+    color: var(--g-text-subtle);
+  }
+
+  .pnl :global(.linea .fuerte) {
+    color: var(--g-accent);
+    font-weight: var(--g-weight-bold);
+  }
+
+  .pnl__detail {
+    width: min(70rem, calc(100vw - 2rem));
+    max-height: 92vh;
+    margin: auto;
+    padding: var(--g-space-6);
+    border: 1px solid var(--g-border-strong);
+    border-radius: var(--g-radius-lg);
+    background: var(--g-surface);
+    color: var(--g-text);
+  }
+
+  .pnl__detail::backdrop {
+    background: var(--g-overlay);
+  }
+
+  .pnl__close {
+    float: right;
+  }
+
+  .pnl__detail :global(h3) {
+    margin-top: var(--g-space-5);
+    color: var(--g-text-strong);
+  }
+</style>
+
+<script>
+  const KEY = 'g_admin_key';
+  const root = document.querySelector<HTMLElement>('[data-panel]')!;
+  const $ = <T extends HTMLElement = HTMLElement>(s: string) => root.querySelector<T>(s)!;
+  const login = $<HTMLFormElement>('[data-login]');
+  const detail = $<HTMLDialogElement>('[data-detail]');
+
+  let key = '';
+  try {
+    key = localStorage.getItem(KEY) || '';
+  } catch {}
+
+  /* --- Utilidades ---------------------------------------------------------- */
+
+  const esc = (v: unknown) =>
+    String(v ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]!);
+  const num = (n: unknown) => Number(n || 0).toLocaleString('es-AR');
+  const pct = (a: number, b: number) => (b ? `${Math.round((a / b) * 100)} %` : '—');
+  /** Fecha UTC de la base → hora local. */
+  const hora = (ts: string) =>
+    ts ? new Date(ts.replace(' ', 'T') + 'Z').toLocaleString('es-AR', { dateStyle: 'short', timeStyle: 'short' }) : '';
+  const utc = (d: Date) => d.toISOString().replace('T', ' ').slice(0, 19);
+  const seg = (s: number) => (s >= 60 ? `${Math.floor(s / 60)} min ${Math.round(s % 60)} s` : `${Math.round(s || 0)} s`);
+
+  function params(extra: Record<string, string> = {}) {
+    const dias = Number($<HTMLSelectElement>('[data-rango]').value);
+    const desde = new Date();
+    desde.setHours(0, 0, 0, 0);
+    desde.setDate(desde.getDate() - dias);
+    const p = new URLSearchParams({ desde: utc(desde), hasta: utc(new Date(Date.now() + 60000)), ...extra });
+    const fuente = $<HTMLInputElement>('[data-fuente]').value.trim();
+    if (fuente) p.set('fuente', fuente);
+    return p.toString();
+  }
+
+  async function get(path: string, extra: Record<string, string> = {}) {
+    const res = await fetch(`/api/panel/${path}?${params(extra)}`, { headers: { 'X-Admin-Key': key } });
+    if (res.status === 401) {
+      login.hidden = false;
+      throw new Error('clave');
+    }
+    if (!res.ok) throw new Error(`Error ${res.status}`);
+    return res;
+  }
+
+  /** Cómo se lee cada evento en la línea de tiempo. */
+  function describir(e: any): [string, boolean] {
+    const d = e.dato || {};
+    const m: Record<string, string> = {
+      page_view: `Entró a ${e.pagina}${d.ref ? ` (desde ${d.ref})` : ''}`,
+      page_leave: `Salió de ${e.pagina}: ${seg(d.s)} activo, scroll ${d.scroll ?? 0} %`,
+      section_view: `Vio la sección "${d.id}"`,
+      click: `Clic: "${d.texto || ''}"${d.tipo && d.tipo !== 'interno' && d.tipo !== 'boton' ? ` (${d.tipo})` : ''}`,
+      vsl_play: 'Le dio play al video',
+      vsl_25: 'Vio el 25 % del video',
+      vsl_50: 'Vio el 50 % del video',
+      vsl_75: 'Vio el 75 % del video',
+      vsl_90: 'Vio el 90 % del video',
+      vsl_100: 'Vio el video completo',
+      vsl_pause: `Pausó el video en ${seg(d.seg)}`,
+      calendar_click: `Tocó "Agendá tu auditoría" (${d.source || ''})`,
+      calendly_time: 'Eligió día y hora en Calendly',
+      calendly_booked: 'AGENDÓ la auditoría',
+      whatsapp_click: `Tocó WhatsApp (${d.source || ''})`,
+      case_click: `Abrió el caso ${d.source || ''}`,
+      video_open: `Abrió el video de "${d.source || ''}"`,
+      quiz_start: 'Empezó el quiz',
+      quiz_step: `Quiz, pregunta ${d.step}: ${d.question} = ${d.answer}`,
+      quiz_lead: `DEJÓ SUS DATOS en el quiz (cuello: ${d.cuello}, momento: ${d.momento})`,
+      quiz_cta: 'Tocó el botón de los casos del quiz',
+      recurso_registro: 'SE REGISTRÓ en el recurso',
+      recurso_encuesta: `Completó la encuesta del recurso (${d.profesion || ''})`,
+      recurso_generar: `Pidió generar: ${d.tipo || ''}`,
+    };
+    const fuertes = ['calendly_booked', 'quiz_lead', 'recurso_registro', 'calendly_time', 'vsl_90', 'vsl_100'];
+    const t = m[e.evento] || `${e.evento}${e.dato ? ` ${JSON.stringify(e.dato)}` : ''}`;
+    return [t, fuertes.includes(e.evento)];
+  }
+
+  const linea = (eventos: any[]) =>
+    `<ul class="linea">${eventos
+      .map((e) => {
+        const [t, fuerte] = describir(e);
+        return `<li><time>${hora(e.ts)}</time><code>${esc(e.pagina)}</code><span class="${fuerte ? 'fuerte' : ''}">${esc(t)}</span></li>`;
+      })
+      .join('')}</ul>`;
+
+  const tabla = (cols: [string, string, boolean?][], filas: any[]) =>
+    `<table><thead><tr>${cols.map(([, t, n]) => `<th class="${n ? 'n' : ''}">${t}</th>`).join('')}</tr></thead><tbody>${
+      filas.length
+        ? filas.map((r) => `<tr>${cols.map(([k, , n]) => `<td class="${n ? 'n' : ''}">${esc(r[k])}</td>`).join('')}</tr>`).join('')
+        : `<tr><td colspan="${cols.length}">Sin datos en el período.</td></tr>`
+    }</tbody></table>`;
+
+  const barras = (pasos: { nombre: string; n: number }[]) => {
+    const max = Math.max(1, ...pasos.map((p) => p.n));
+    return pasos
+      .map(
+        (p, i) =>
+          `<div class="barra"><div>${esc(p.nombre)}</div><span style="width:${(p.n / max) * 100}%"></span><em>${num(p.n)} · ${
+            i ? pct(p.n, pasos[0].n) : '100 %'
+          }</em></div>`
+      )
+      .join('');
+  };
+
+  /* --- Vistas -------------------------------------------------------------- */
+
+  async function resumen() {
+    const r = await (await get('resumen')).json();
+    const t = r.totales;
+    const stat = (n: unknown, txt: string) => `<div class="stat"><b>${num(n)}</b>${txt}</div>`;
+    const v = r.video || {};
+    $('[data-vista="resumen"]').innerHTML = `
+      <div class="stats">
+        ${stat(t.visitantes, 'visitantes')}${stat(t.nuevos, 'nuevos')}${stat(t.sesiones, 'visitas')}
+        ${stat(t.identificados, 'con nombre')}${stat(t.video, 'dieron play al video')}${stat(t.horarios, 'eligieron horario')}
+        ${stat(t.reservas, 'agendaron')}${stat(t.leads_quiz, 'leads del quiz')}${stat(t.registros_recurso, 'registros del recurso')}
+        ${stat(t.whatsapp, 'tocaron WhatsApp')}
+        <div class="stat"><b>${seg(t.segundos_por_visita || 0)}</b>activo por visita</div>
+      </div>
+      <div class="grid2">
+        <div class="card"><h2>Fuentes y anuncios (primer contacto)</h2>
+          <p class="nota">Con qué llegó cada visitante la primera vez, y qué hizo después.</p>
+          ${tabla(
+            [
+              ['fuente', 'Fuente'], ['medio', 'Medio'], ['campana', 'Campaña'], ['anuncio', 'Anuncio'],
+              ['visitantes', 'Visit.', true], ['video', 'Video 90 %', true], ['reservas', 'Agendaron', true],
+              ['leads_quiz', 'Quiz', true], ['registros_recurso', 'Recurso', true], ['identificados', 'Con nombre', true],
+            ],
+            r.fuentes
+          )}</div>
+        <div class="card"><h2>Páginas</h2>
+          ${tabla(
+            [['pagina', 'Página'], ['visitantes', 'Visitantes', true], ['vistas', 'Vistas', true], ['segundos_txt', 'Tiempo activo', true], ['scroll_txt', 'Scroll', true]],
+            r.paginas.map((p: any) => ({ ...p, segundos_txt: p.segundos == null ? '—' : seg(p.segundos), scroll_txt: p.scroll == null ? '—' : `${p.scroll} %` }))
+          )}</div>
+        <div class="card"><h2>Video de la landing (retención)</h2>
+          ${barras([
+            { nombre: 'Play', n: v.vsl_play }, { nombre: '25 %', n: v.vsl_25 }, { nombre: '50 %', n: v.vsl_50 },
+            { nombre: '75 %', n: v.vsl_75 }, { nombre: '90 %', n: v.vsl_90 }, { nombre: 'Completo', n: v.vsl_100 },
+          ])}</div>
+        <div class="card"><h2>Secciones de la landing que vieron</h2>
+          ${barras(r.secciones.map((s: any) => ({ nombre: s.seccion, n: s.visitantes })))}</div>
+        <div class="card"><h2>De dónde son</h2>
+          ${tabla([['pais', 'País'], ['ciudad', 'Ciudad'], ['visitantes', 'Visitantes', true]], r.lugares)}</div>
+        <div class="card"><h2>Dispositivos</h2>
+          ${tabla([['dispositivo', 'Dispositivo'], ['navegador', 'Navegador'], ['visitantes', 'Visitantes', true]], r.equipos)}</div>
+      </div>`;
+  }
+
+  async function embudos() {
+    const nombres: Record<string, string> = { landing: 'Landing (video + agenda)', quiz: 'Quiz (/plan)', recurso: 'Recurso (/recurso)' };
+    const partes = await Promise.all(
+      Object.keys(nombres).map(async (f) => [f, (await (await get('embudo', { funnel: f })).json()).pasos])
+    );
+    $('[data-vista="embudos"]').innerHTML = `<p class="nota">Visitantes distintos que llegaron a cada paso, entre los que hicieron el primero en el período. El porcentaje es sobre el primer paso.</p>
+      <div class="grid2">${partes
+        .map(
+          ([f, pasos]: any) =>
+            `<div class="card"><h2>${nombres[f]}</h2>${barras(pasos.map((p: any) => ({ nombre: p.nombre, n: p.visitantes })))}</div>`
+        )
+        .join('')}</div>`;
+  }
+
+  const hitos = (p: any) =>
+    [
+      [p.video, 'Video 90 %'],
+      [p.horario, 'Eligió horario'],
+      [p.agendo, 'Agendó'],
+      [p.quiz, 'Quiz'],
+      [p.quiz_wa, 'WhatsApp del quiz'],
+      [p.recurso_usuario_id, 'Recurso'],
+      [p.genero, 'Generó'],
+    ]
+      .filter(([ok]) => ok)
+      .map(([, t]) => `<span class="tag ${t === 'Agendó' ? 'tag--ok' : ''}">${t}</span>`)
+      .join('');
+
+  let personas: any[] = [];
+  async function listaPersonas() {
+    const extra: Record<string, string> = {};
+    const q = $<HTMLInputElement>('[data-q]').value.trim();
+    const filtro = $<HTMLSelectElement>('[data-filtro]').value;
+    if (q) extra.q = q;
+    if (filtro) extra.filtro = filtro;
+    personas = (await (await get('personas', extra)).json()).personas;
+    $('[data-personas]').innerHTML = `<table><thead><tr>
+        <th>Última actividad</th><th>Nombre</th><th>WhatsApp</th><th>Origen</th><th>Fuente / anuncio</th>
+        <th>Lugar</th><th>Dispositivo</th><th>Hizo</th><th class="n">Páginas</th><th>Temp.</th></tr></thead><tbody>${
+          personas.length
+            ? personas
+                .map(
+                  (p) => `<tr data-id="${p.id}">
+              <td>${hora(p.ultima)}</td><td>${esc(p.nombre || (p.cw ? `Cleo ${p.cw}` : '(sin nombre)'))}</td>
+              <td>${p.telefono ? `<a href="https://wa.me/${esc(p.telefono.slice(1))}" target="_blank" rel="noopener">${esc(p.telefono)}</a>` : ''}</td>
+              <td>${esc(p.origen)}</td><td>${esc([p.fuente, p.campana, p.anuncio].filter(Boolean).join(' · ') || '(directo)')}</td>
+              <td>${esc(p.lugar)}</td><td>${esc(p.equipo)}</td><td>${hitos(p)}</td><td class="n">${p.paginas}</td>
+              <td>${esc(p.datos?.temperatura || '')}</td></tr>`
+                )
+                .join('')
+            : '<tr><td colspan="10">No hay personas con ese filtro en el período.</td></tr>'
+        }</tbody></table>`;
+  }
+
+  async function visitas() {
+    const lista = (await (await get('visitas')).json()).visitas;
+    $('[data-vista="visitas"]').innerHTML = `<p class="nota">Las últimas 100 visitas del período, con o sin nombre. Tocá una para ver el recorrido.</p>${
+      lista.length
+        ? lista
+            .map(
+              (s: any) => `<details class="card visita"><summary>
+            <b>${hora(s.inicio)}</b> · ${esc(s.nombre || 'Anónimo')} · ${esc([s.ciudad, s.pais].filter(Boolean).join(', '))} ·
+            ${esc(s.dispositivo)} ${esc(s.navegador)} · ${esc(s.utm_source || s.first_source || 'directo')}${s.utm_content ? ` · ${esc(s.utm_content)}` : ''} ·
+            ${s.paginas} pág. · ${seg(s.segundos_activos)}${s.visitas > 1 ? ` · ${s.visitas}.ª visita` : ''}
+            ${s.persona_id ? `<button type="button" data-persona="${s.persona_id}">Ver persona</button>` : ''}
+          </summary>${linea(s.eventos)}<p class="nota">vid ${esc(s.vid)} · ${esc(s.isp || '')} · ${esc(s.so || '')} · IP ${esc(s.ip || '')}</p></details>`
+            )
+            .join('')
+        : '<p>Sin visitas en el período.</p>'
+    }`;
+  }
+
+  async function abrirPersona(id: string) {
+    const r = await (await get('persona', { id })).json();
+    const p = r.persona;
+    const datos = p.datos || {};
+    const quiz = datos.quiz
+      ? `<h3>Respuestas del quiz</h3><p>${Object.entries(datos.quiz)
+          .map(([k, v]) => `<span class="tag">${esc(k)}: ${esc(v)}</span>`)
+          .join('')} · temperatura <b>${esc(datos.temperatura)}</b></p>`
+      : '';
+    const recurso = r.recurso
+      ? `<h3>Recurso</h3><p>${esc(r.recurso.usuario?.profesion || '')} · ${esc(r.recurso.usuario?.pais || '')}</p>${tabla(
+          [['creado_txt', 'Fecha'], ['tipo', 'Tipo'], ['formato', 'Formato'], ['servicio', 'Servicio'], ['estado', 'Estado']],
+          r.recurso.generaciones.map((g: any) => ({ ...g, creado_txt: hora(g.creado) }))
+        )}`
+      : '';
+    const disp = tabla(
+      [['primera', 'Primera vez'], ['ultima', 'Última'], ['visitas', 'Visitas', true], ['origen', 'Llegó por'], ['lugar', 'Lugar'], ['equipo', 'Dispositivo'], ['vid', 'vid (Clarity)']],
+      r.visitantes.map((v: any) => ({
+        primera: hora(v.primera_vez),
+        ultima: hora(v.ultima_vez),
+        visitas: v.visitas,
+        origen: [v.first_source || 'directo', v.first_campaign, v.first_content].filter(Boolean).join(' · '),
+        lugar: [v.ciudad, v.region, v.pais].filter(Boolean).join(', '),
+        equipo: [v.dispositivo, v.so, v.navegador].filter(Boolean).join(' · '),
+        vid: v.vid,
+      }))
+    );
+    $('[data-detail-body]').innerHTML = `
+      <h2>${esc(p.nombre || '(sin nombre)')}</h2>
+      <p>${p.telefono ? `<a href="https://wa.me/${esc(p.telefono.slice(1))}" target="_blank" rel="noopener">${esc(p.telefono)}</a> · ` : ''}${esc(p.email || '')}
+        ${p.instagram ? ` · <a href="https://instagram.com/${esc(p.instagram.slice(1))}" target="_blank" rel="noopener">${esc(p.instagram)}</a>` : ''}
+        ${p.cw ? ` · Cleo <code>${esc(p.cw)}</code>` : ''} · origen <b>${esc(p.origen)}</b> · desde ${hora(p.creado)}</p>
+      ${quiz}
+      <h3>Dispositivos</h3>
+      <p class="nota">En Clarity: Filtros → Custom tags → vid = el código de la tabla.</p>
+      ${disp}
+      ${recurso}
+      <h3>Todo lo que hizo (${r.eventos.length} eventos, ${r.sesiones.length} visitas)</h3>
+      ${linea(r.eventos)}`;
+    detail.showModal();
+  }
+
+  /* --- Navegación ---------------------------------------------------------- */
+
+  const vistas: Record<string, () => Promise<void>> = { resumen, embudos, personas: listaPersonas, visitas };
+  let actual = 'resumen';
+
+  async function cargar() {
+    try {
+      await vistas[actual]();
+      login.hidden = true;
+    } catch (err) {
+      if ((err as Error).message !== 'clave') alert(`No se pudo cargar: ${(err as Error).message}`);
+    }
+  }
+
+  $('[data-tabs]').addEventListener('click', (e) => {
+    const b = (e.target as HTMLElement).closest<HTMLButtonElement>('[data-tab]');
+    if (!b) return;
+    actual = b.dataset.tab!;
+    root.querySelectorAll('[data-tab]').forEach((t) => t.setAttribute('aria-pressed', String(t === b)));
+    root.querySelectorAll<HTMLElement>('[data-vista]').forEach((v) => (v.hidden = v.dataset.vista !== actual));
+    cargar();
+  });
+
+  root.addEventListener('click', (e) => {
+    const t = e.target as HTMLElement;
+    const fila = t.closest<HTMLElement>('tr[data-id]');
+    const boton = t.closest<HTMLElement>('[data-persona]');
+    if (t.closest('a')) return;
+    if (boton) {
+      e.preventDefault();
+      abrirPersona(boton.dataset.persona!);
+    } else if (fila) abrirPersona(fila.dataset.id!);
+  });
+
+  let espera = 0;
+  const pronto = () => {
+    clearTimeout(espera);
+    espera = window.setTimeout(cargar, 350);
+  };
+  $('[data-rango]').addEventListener('change', cargar);
+  $('[data-fuente]').addEventListener('input', pronto);
+  $('[data-q]').addEventListener('input', pronto);
+  $('[data-filtro]').addEventListener('change', cargar);
+  $('[data-recargar]').addEventListener('click', cargar);
+  $('[data-close]').addEventListener('click', () => detail.close());
+
+  $('[data-csv]').addEventListener('click', async () => {
+    const extra: Record<string, string> = {};
+    const q = $<HTMLInputElement>('[data-q]').value.trim();
+    const filtro = $<HTMLSelectElement>('[data-filtro]').value;
+    if (q) extra.q = q;
+    if (filtro) extra.filtro = filtro;
+    const blob = await (await get('csv', extra)).blob();
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `personas-gravity-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(a.href);
+  });
+
+  $('[data-salir]').addEventListener('click', () => {
+    key = '';
+    try {
+      localStorage.removeItem(KEY);
+    } catch {}
+    login.hidden = false;
+  });
+
+  login.addEventListener('submit', (e) => {
+    e.preventDefault();
+    key = (login.elements.namedItem('key') as HTMLInputElement).value.trim();
+    try {
+      localStorage.setItem(KEY, key);
+    } catch {}
+    cargar();
+  });
+
+  if (key) cargar();
+  else login.hidden = false;
+</script>

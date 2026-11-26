@@ -10,7 +10,7 @@
 import { empty, json } from '../util.js';
 
 /** Comparación en tiempo constante, para no filtrar la clave por timing. */
-function mismaClave(a, b) {
+export function mismaClave(a, b) {
   if (!a || !b || a.length !== b.length) return false;
   let diff = 0;
   for (let i = 0; i < a.length; i++) diff |= a.charCodeAt(i) ^ b.charCodeAt(i);

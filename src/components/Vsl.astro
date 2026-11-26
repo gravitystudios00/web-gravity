@@ -130,15 +130,24 @@ const { kicker = vsl.kicker } = Astro.props;
         const track = (window as any).gTrack as (e: string, p?: object) => void;
         track('vsl_play', { source: 'hero' });
 
-        // Hasta dónde lo miró: cada hito se registra una sola vez.
+        // Hasta dónde lo miró: cada hito se registra una sola vez. Con los
+        // cinco, el panel propio arma la curva de retención del video.
         const marks: [number, string][] = [
+          [0.25, 'vsl_25'],
           [0.5, 'vsl_50'],
+          [0.75, 'vsl_75'],
           [0.9, 'vsl_90'],
+          [0.99, 'vsl_100'],
         ];
         video.addEventListener('timeupdate', () => {
           if (!video.duration || !marks.length) return;
           while (marks.length && video.currentTime / video.duration >= marks[0][0])
             track(marks.shift()![1], { source: 'hero' });
+        });
+        // Dónde lo pausa (solo al panel propio, no a Analytics ni a Meta).
+        const log = (window as any).gLog as ((e: string, d?: object) => void) | undefined;
+        video.addEventListener('pause', () => {
+          if (!video.ended) log?.('vsl_pause', { seg: Math.round(video.currentTime) });
         });
       },
       { once: true }

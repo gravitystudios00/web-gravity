@@ -24,7 +24,7 @@ const year = new Date().getFullYear();
     <p class="rec-foot__legal">{recurso.disclaimer}</p>
     <p>
       © {year} Gravity Studios. Este sitio no forma parte de Meta ni de Facebook. El contenido se genera con
-      inteligencia artificial (OpenAI).
+      inteligencia artificial (OpenAI). <a href="/privacidad/">Política de privacidad</a>.
     </p>
   </footer>
 </Base>
@@ -55,5 +55,11 @@ const year = new Date().getFullYear();
 
   .rec-foot__legal {
     color: var(--g-text-muted);
+  }
+
+  /* Link a la política de privacidad. */
+  .rec-foot a {
+    color: inherit;
+    text-decoration: underline;
   }
 </style>

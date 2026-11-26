@@ -73,6 +73,8 @@ const canonical = new URL(Astro.url.pathname, site.url).href;
         la persona siga identificada si navega o vuelve otro día. El código se
         borra de la barra de direcciones: si reenvía el link, el que lo abra
         no queda registrado como ella. Va antes de GA4 para pasarle el user_id. */}
+    {/* Las páginas de administración no se registran en el panel. */}
+    {!tracking && <script is:inline>window.gNoTrack = true;</script>}
     <script is:inline>
       (function () {
         var KEY = 'g_visitor';
@@ -95,6 +97,85 @@ const canonical = new URL(Astro.url.pathname, site.url).href;
             if (q.get(k)) v[k] = q.get(k);
           }
         );
+        /* Panel propio de visitantes (worker/tracking.js):
+           - vid: un id por navegador. Va en localStorage y en una cookie
+             propia (1 año) para que el Worker lo lea en el quiz, el recurso
+             y Calendly, y para recuperarlo si se borra el localStorage.
+           - sid: la visita. Se renueva tras 30 minutos sin actividad.
+           - first_*: con qué llegó la primera vez (no se pisa nunca). */
+        var rid = function () {
+          var abc = 'abcdefghijklmnopqrstuvwxyz0123456789';
+          var b = new Uint8Array(16);
+          if (window.crypto && crypto.getRandomValues) crypto.getRandomValues(b);
+          else for (var i = 0; i < 16; i++) b[i] = Math.random() * 256;
+          var s = '';
+          for (var j = 0; j < 16; j++) s += abc[b[j] % 36];
+          return s;
+        };
+        var ID = /^[a-z0-9]{16}$/;
+        var vid = '';
+        try {
+          vid = localStorage.getItem('g_vid') || '';
+        } catch (e) {}
+        var nuevo = false;
+        if (!ID.test(vid)) {
+          var ck = document.cookie.match(/(?:^|;\s*)g_vid=([a-z0-9]{16})/);
+          vid = ck ? ck[1] : rid();
+          nuevo = !ck;
+        }
+        try {
+          localStorage.setItem('g_vid', vid);
+        } catch (e) {}
+        document.cookie = 'g_vid=' + vid + '; Max-Age=31536000; Path=/; SameSite=Lax' + (location.protocol === 'https:' ? '; Secure' : '');
+        v.vid = vid;
+
+        // Referrer externo (de otro sitio), si hay.
+        var ref = '';
+        try {
+          if (document.referrer && new URL(document.referrer).host !== location.host) ref = document.referrer.slice(0, 500);
+        } catch (e) {}
+        var ahora = Date.now();
+        var ses = null;
+        try {
+          ses = JSON.parse(localStorage.getItem('g_sid') || 'null');
+        } catch (e) {}
+        // Visita nueva: pasaron 30 minutos, o llegó desde otro sitio con UTM nuevos.
+        var conUtm = q.get('utm_source') || q.get('fbclid');
+        // La visita es de este navegador (vid): si el vid cambió, es otra.
+        if (!ses || !ID.test(ses.id || '') || ses.vid !== vid || ahora - ses.t > 30 * 60 * 1000 || (conUtm && ref)) {
+          ses = {
+            id: rid(),
+            vid: vid,
+            nueva: true,
+            src: {
+              s_source: q.get('utm_source') || (q.get('fbclid') ? 'meta' : ''),
+              s_medium: q.get('utm_medium') || '',
+              s_campaign: q.get('utm_campaign') || '',
+              s_content: q.get('utm_content') || '',
+              s_term: q.get('utm_term') || '',
+              s_referrer: ref,
+            },
+          };
+        } else ses.nueva = false;
+        ses.t = ahora;
+        try {
+          localStorage.setItem('g_sid', JSON.stringify(ses));
+        } catch (e) {}
+        window.gSesion = ses;
+
+        if (!v.first_at) {
+          v.first_at = ahora;
+          v.first_source = q.get('utm_source') || (q.get('fbclid') ? 'meta' : '');
+          v.first_medium = q.get('utm_medium') || '';
+          v.first_campaign = q.get('utm_campaign') || '';
+          v.first_content = q.get('utm_content') || '';
+          v.first_term = q.get('utm_term') || '';
+          v.first_fbclid = q.get('fbclid') || '';
+          v.first_referrer = ref;
+          v.first_pagina = location.pathname;
+          v.nuevo = nuevo;
+        } else v.nuevo = false;
+
         try {
           localStorage.setItem(KEY, JSON.stringify(v));
         } catch (e) {}
@@ -167,6 +248,8 @@ const canonical = new URL(Astro.url.pathname, site.url).href;
           ['utm_source', 'utm_medium', 'utm_campaign'].forEach(function (k) {
             if (v[k]) clarity('set', k, v[k]);
           });
+          // Para saltar del panel propio a las grabaciones de este visitante.
+          if (v.vid) clarity('set', 'vid', v.vid);
         </script>
       )
     }
@@ -200,6 +283,8 @@ const canonical = new URL(Astro.url.pathname, site.url).href;
         props = props || {};
         if (window.gtag) window.gtag('event', event, props);
         if (window.clarity) window.clarity('event', event);
+        // Panel propio: todo evento queda registrado (ver el script de abajo).
+        if (window.gLog) window.gLog(event, props);
         var m = window.gMetaEvents[event];
         // En /recurso el clic a WhatsApp ya lo manda el servidor como Contact.
         if (m && !(event === 'whatsapp_click' && location.pathname.indexOf('/recurso') === 0)) {
@@ -215,6 +300,7 @@ const canonical = new URL(Astro.url.pathname, site.url).href;
                 event_id: id,
                 url: location.href.split('#')[0],
                 cw: (window.gVisitor || {}).cw,
+                vid: (window.gVisitor || {}).vid,
                 invitee: extra && extra.invitee,
               }),
             }).catch(function () {});
@@ -223,6 +309,57 @@ const canonical = new URL(Astro.url.pathname, site.url).href;
         if ((v.cw || v.mc) && navigator.sendBeacon)
           navigator.sendBeacon('/api/mc', JSON.stringify({ cw: v.cw, mc: v.mc, e: event }));
       };
+
+      /* Panel propio (worker/tracking.js): los eventos se juntan y se mandan
+         en tandas a /api/t cada 10 segundos y al salir de la página. Es del
+         mismo dominio, así que los bloqueadores no lo cortan. */
+      (function () {
+        if (window.gNoTrack) return;
+        var cola = [];
+        var enviar = function () {
+          if (!cola.length) return;
+          var v = window.gVisitor || {};
+          var s = window.gSesion || {};
+          while (cola.length) {
+            var tanda = cola.splice(0, 25);
+            var info = {
+              utm_source: v.utm_source, utm_medium: v.utm_medium, utm_campaign: v.utm_campaign,
+              utm_content: v.utm_content, utm_term: v.utm_term,
+              first_source: v.first_source, first_medium: v.first_medium, first_campaign: v.first_campaign,
+              first_content: v.first_content, first_term: v.first_term, first_fbclid: v.first_fbclid,
+              first_referrer: v.first_referrer, first_pagina: v.first_pagina,
+              cw: v.cw, mc: v.mc,
+              idioma: navigator.language,
+              pantalla: screen.width + 'x' + screen.height,
+            };
+            try {
+              info.tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+            } catch (e) {}
+            for (var k in s.src || {}) info[k] = s.src[k];
+            var body = JSON.stringify({ vid: v.vid, sid: s.id, v: info, ev: tanda });
+            var ok = navigator.sendBeacon && navigator.sendBeacon('/api/t', body);
+            if (!ok)
+              fetch('/api/t', { method: 'POST', body: body, keepalive: true, headers: { 'Content-Type': 'text/plain' } }).catch(
+                function () {}
+              );
+          }
+          // La visita sigue viva mientras haya actividad.
+          try {
+            s.t = Date.now();
+            localStorage.setItem('g_sid', JSON.stringify({ id: s.id, vid: s.vid, t: s.t, src: s.src }));
+          } catch (e) {}
+        };
+        window.gLog = function (evento, dato) {
+          cola.push({ e: evento, t: Date.now(), p: location.pathname, d: dato && Object.keys(dato).length ? dato : undefined });
+          if (cola.length >= 25) enviar();
+        };
+        window.gLogFlush = enviar;
+        setInterval(enviar, 10000);
+        addEventListener('pagehide', enviar);
+        document.addEventListener('visibilitychange', function () {
+          if (document.visibilityState === 'hidden') enviar();
+        });
+      })();
     </script>
 
     {/* Meta Pixel — se activa solo cuando cargues el ID en src/data/site.ts */}
@@ -354,6 +491,105 @@ const canonical = new URL(Astro.url.pathname, site.url).href;
         const [event, source] = a.dataset.track.split(':');
         window.gTrack(event, { source });
       });
+    </script>
+
+    {/* Panel propio: entrada y salida de cada página (tiempo activo y scroll),
+        qué secciones vio y en qué hizo clic. Solo va a /api/t (gLog), no a
+        Analytics ni a Meta. */}
+    <script is:inline>
+      (function () {
+        if (!window.gLog) return;
+        var log = window.gLog;
+        var v = window.gVisitor || {};
+        var s = window.gSesion || {};
+
+        log('page_view', {
+          titulo: document.title.slice(0, 120),
+          ref: (s.nueva && s.src && s.src.s_referrer) || undefined,
+          nueva_visita: s.nueva || undefined,
+          visitante_nuevo: v.nuevo || undefined,
+          q: location.search.slice(0, 300) || undefined,
+        });
+
+        // Tiempo activo: solo cuenta con la pestaña visible.
+        var activo = 0;
+        var desde = document.visibilityState === 'visible' ? Date.now() : 0;
+        var scrollMax = 0;
+        var scrollEnviado = -1;
+        var medirScroll = function () {
+          var alto = document.documentElement.scrollHeight - innerHeight;
+          var pct = alto > 0 ? Math.round((scrollY / alto) * 100) : 100;
+          if (pct > scrollMax) scrollMax = Math.min(pct, 100);
+        };
+        addEventListener('scroll', medirScroll, { passive: true });
+        medirScroll();
+        var salir = function () {
+          if (desde) activo += Date.now() - desde;
+          desde = 0;
+          var seg = Math.round(activo / 1000);
+          // Se manda lo acumulado desde la última salida (al volver a la
+          // pestaña sigue contando), así el total por página es la suma.
+          if (seg > 0 || scrollMax > scrollEnviado) log('page_leave', { s: seg, scroll: scrollMax });
+          scrollEnviado = scrollMax;
+          activo = 0;
+          if (window.gLogFlush) window.gLogFlush();
+        };
+        document.addEventListener('visibilitychange', function () {
+          if (document.visibilityState === 'hidden') salir();
+          else desde = Date.now();
+        });
+        addEventListener('pagehide', salir);
+
+        // Secciones vistas: al menos el 40 % en pantalla (o media pantalla
+        // llena, para las secciones más altas que la pantalla). Una vez cada una.
+        if ('IntersectionObserver' in window) {
+          var vistas = {};
+          var io = new IntersectionObserver(
+            function (entries) {
+              entries.forEach(function (e) {
+                var id = e.target.id;
+                if (!e.isIntersecting || vistas[id]) return;
+                if (e.intersectionRatio >= 0.4 || e.intersectionRect.height >= innerHeight * 0.5) {
+                  vistas[id] = 1;
+                  log('section_view', { id: id });
+                  io.unobserve(e.target);
+                }
+              });
+            },
+            { threshold: [0, 0.2, 0.4, 0.6] }
+          );
+          document.querySelectorAll('section[id]').forEach(function (el) {
+            io.observe(el);
+          });
+        }
+
+        // Clics en cualquier link o botón: texto y destino.
+        document.addEventListener(
+          'click',
+          function (e) {
+            var el = e.target.closest && e.target.closest('a, button');
+            if (!el) return;
+            var texto = (el.getAttribute('aria-label') || el.innerText || '').replace(/\s+/g, ' ').trim().slice(0, 60);
+            var d = { texto: texto };
+            if (el.tagName === 'A') {
+              var href = el.getAttribute('href') || '';
+              d.destino = href.slice(0, 200);
+              d.tipo = /wa\.me|whatsapp/i.test(href)
+                ? 'whatsapp'
+                : /calendly/i.test(href)
+                  ? 'calendly'
+                  : href.charAt(0) === '#' || href.indexOf('/#') === 0
+                    ? 'ancla'
+                    : /^https?:/i.test(href) && el.host !== location.host
+                      ? 'externo'
+                      : 'interno';
+            } else d.tipo = 'boton';
+            if (el.id) d.id = el.id.slice(0, 40);
+            log('click', d);
+          },
+          true
+        );
+      })();
     </script>
   </body>
 </html>

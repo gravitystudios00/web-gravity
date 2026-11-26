@@ -52,6 +52,11 @@
       "migrations_dir": "migrations"
     }
   ],
+  // Limpieza diaria del panel de visitantes: borra lo anónimo de más de 180
+  // días (worker/tracking.js, limpiar). 07:00 UTC = 04:00 en Argentina.
+  "triggers": {
+    "crons": ["0 7 * * *"]
+  },
   "observability": {
     "enabled": true
   }

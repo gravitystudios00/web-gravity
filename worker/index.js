@@ -25,11 +25,17 @@
  * evento por el pixel con el mismo event_id, y Meta lo cuenta una vez.
  *
  * Y /api/recurso/*: el recurso con IA de /recurso (worker/recurso/).
+ *
+ * Y POST /api/t + GET /api/panel/*: el registro propio de visitantes y el panel
+ * /admin/panel (worker/tracking.js y worker/panel.js). El quiz, el recurso y
+ * Calendly además identifican al visitante (identificar) cuando deja datos.
  */
 import { empty, readJson, sameOrigin, text, PHONE_RE, N8N_LEADS } from './util.js';
 import { metaEvent, sitePageUrl } from './meta.js';
 import { readInvitee } from './calendly.js';
 import { handleRecurso } from './recurso/routes.js';
+import { recibirEventos, identificar, vidDe, limpiar } from './tracking.js';
+import { panel } from './panel.js';
 
 const TAGS = {
   vsl_play: 'Web_vio_video',
@@ -49,11 +55,18 @@ export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
     if (url.pathname === '/api/mc') return trackEvent(request, env, ctx, url);
-    if (url.pathname === '/api/lead') return saveLead(request, ctx, url);
+    if (url.pathname === '/api/lead') return saveLead(request, env, ctx, url);
     if (url.pathname === '/api/capi') return sendConversion(request, env, ctx, url);
     if (url.pathname === '/api/capi-web') return sendWebConversion(request, env, ctx, url);
     if (url.pathname.startsWith('/api/recurso/')) return handleRecurso(request, env, ctx, url);
+    if (url.pathname === '/api/t') return recibirEventos(request, env, url);
+    if (url.pathname.startsWith('/api/panel/')) return panel(request, env, url);
     return env.ASSETS.fetch(request);
+  },
+
+  // Cron diario (wrangler.jsonc): borra lo anónimo de más de 180 días.
+  async scheduled(_event, env, ctx) {
+    ctx.waitUntil(limpiar(env));
   },
 };
 
@@ -128,7 +141,7 @@ const QUIZ = {
 };
 
 
-async function saveLead(request, ctx, url) {
+async function saveLead(request, env, ctx, url) {
   if (request.method !== 'POST') return new Response(null, { status: 405 });
 
   const origin = request.headers.get('Origin');
@@ -180,13 +193,23 @@ async function saveLead(request, ctx, url) {
     country: request.cf?.country,
   };
 
-  ctx.waitUntil(sendLead(lead));
+  ctx.waitUntil(sendLead(env, lead));
+  // Panel: este visitante ahora tiene nombre (y sus visitas anteriores también).
+  ctx.waitUntil(
+    identificar(env, vidDe(request, body), {
+      origen: 'quiz',
+      nombre: name,
+      telefono: phone,
+      instagram,
+      datos: { quiz: answers, temperatura: lead.temperature, ref: lead.ref, quiz_at: lead.received_at },
+    })
+  );
   return new Response(null, { status: 204 });
 }
 
-async function sendLead(lead) {
+async function sendLead(env, lead) {
   try {
-    const res = await fetch(N8N_LEADS, {
+    const res = await fetch(env.N8N_LEADS_URL || N8N_LEADS, { // N8N_LEADS_URL solo para pruebas locales
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(lead),
@@ -278,6 +301,15 @@ async function sendWebConversion(request, env, ctx, url) {
       return empty(204);
     }
     Object.assign(evento, { name: inv.name, lastName: inv.lastName, email: inv.email, phone: inv.phone || undefined });
+    ctx.waitUntil(
+      identificar(env, vidDe(request, body), {
+        origen: 'calendly',
+        nombre: [inv.name, inv.lastName].filter(Boolean).join(' '),
+        telefono: inv.phone || undefined,
+        email: inv.email,
+        datos: { reserva: new Date().toISOString() },
+      })
+    );
   }
 
   await metaEvent(env, ctx, request, evento);

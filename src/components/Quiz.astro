@@ -165,7 +165,7 @@ const avatars = [guillermo, carolina].filter((c) => c.photo);
         <button type="submit" class="btn btn--primary btn--lg qform__submit">
           {quiz.form.submit} <span aria-hidden="true">→</span>
         </button>
-        <p class="qform__consent">{quiz.form.consent}</p>
+        <p class="qform__consent">{quiz.form.consent} <a href="/privacidad/" target="_blank">Política de privacidad</a>.</p>
       </form>
 
       <div class="qstep qfinal" data-step={total + 1} data-final hidden>
@@ -900,6 +900,12 @@ const avatars = [guillermo, carolina].filter((c) => c.photo);
     .qcard__bar span {
       transition: none;
     }
+  }
+
+  /* Link a la política de privacidad. */
+  .qform__consent a {
+    color: inherit;
+    text-decoration: underline;
   }
 </style>
 

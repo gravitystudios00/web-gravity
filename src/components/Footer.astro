@@ -1,5 +1,6 @@
 ---
 import Logo from './Logo.astro';
+import { waLink } from '../data/site';
 const year = new Date().getFullYear();
 ---
 
@@ -10,8 +11,8 @@ const year = new Date().getFullYear();
       Studios
     </p>
     <nav class="foot__links" aria-label="Enlaces del pie">
-      <a href="/contacto">Contacto</a>
-      <a href="/legal">Legal</a>
+      <a href={waLink('footer')} target="_blank" rel="noopener" data-track="whatsapp_click:footer">Contacto</a>
+      <a href="/privacidad/">Privacidad</a>
     </nav>
     <p class="foot__copy">© {year} Gravity Studios</p>
   </div>

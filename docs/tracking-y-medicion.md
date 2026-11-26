@@ -245,7 +245,62 @@ muestra ahí, publicar y probar. Mientras está cargado, los eventos de la API
 **no cuentan** para las campañas: dejarlo vacío al terminar. Un código de una
 sesión vieja no sirve (Meta los toma como prueba y no aparecen en ningún lado).
 
-## 8. API de ManyChat (sistema anterior)
+## 8. Panel propio de visitantes (desde el 26/11/2026)
+
+**Dónde:** `gravity-studios.com/admin/panel/`. Pide la clave `ADMIN_KEY` (la
+misma del admin del recurso, `/admin/recurso/`), que se carga con
+`npx wrangler secret put ADMIN_KEY`.
+
+**Qué es:** un registro propio de cada visitante de todas las páginas (landing,
+`/hl1`–`/hl3`, `/plan`, `/recurso`, casos, `/video-j`, `/video-t`,
+`/privacidad`), guardado en la base D1 `gravity-recurso`. Al ser de nuestro
+dominio, los bloqueadores de anuncios no lo cortan.
+
+**Cómo identifica:**
+- Cada navegador tiene un `vid` (16 caracteres, localStorage `g_vid` + cookie
+  `g_vid` de 1 año) y cada visita un `sid` (se renueva tras 30 min sin
+  actividad).
+- Guarda con qué llegó **la primera vez** (UTM, `fbclid`, referrer y página de
+  entrada) y con qué llegó en cada visita.
+- **Se convierte en persona** cuando deja datos: quiz (`/api/lead`), recurso
+  (registro, encuesta o cuando retoma), Calendly (al agendar) o cuando llega
+  desde Cleo con `cw`. Si el teléfono o el email ya existen, se une a la misma
+  persona aunque sea otro dispositivo.
+
+**Qué registra:** todos los eventos de `gTrack` (video, Calendly, WhatsApp,
+quiz, recurso…), más `page_view`, `page_leave` (tiempo activo y scroll máximo),
+`section_view` (secciones con `id` vistas al 40 %), `click` (texto y destino de
+cada link o botón), `vsl_25`/`vsl_75`/`vsl_100` y `vsl_pause`. El Worker suma
+IP, país, región, ciudad, proveedor de internet, dispositivo, sistema y
+navegador (detecta el navegador interno de Instagram y Facebook).
+
+**Qué muestra el panel:**
+- **Resumen:** visitantes, nuevos, visitas, con nombre, reservas, leads,
+  fuentes y anuncios (primer contacto) con lo que hizo cada uno, páginas con
+  tiempo y scroll, retención del video, secciones vistas, lugares y
+  dispositivos.
+- **Embudos:** landing (entró → casos → play → 50 % → 90 % → agenda → horario →
+  agendó), quiz (entró → empezó → preguntas 1–6 → datos → WhatsApp) y recurso.
+- **Personas:** con filtros para recontactar ("eligió horario y no agendó",
+  "dejó datos en el quiz y no abrió WhatsApp", "vio el video y no agendó", "se
+  registró en el recurso y no generó"), link directo a WhatsApp, detalle con la
+  línea de tiempo completa en todos sus dispositivos y exportación a Excel.
+- **Visitas en vivo:** las últimas 100 visitas, con o sin nombre, con su
+  recorrido.
+
+**Retención:** lo anónimo se borra a los 180 días (cron diario del Worker,
+07:00 UTC). Lo de personas identificadas queda.
+
+**Ir a Clarity desde el panel:** en Clarity, Filtros → Custom tags → `vid` = el
+código que muestra el detalle de la persona.
+
+**Para saber qué anuncio trajo a cada persona,** usar en los anuncios de Meta:
+`?utm_source=meta&utm_medium=paid&utm_campaign={{campaign.name}}&utm_term={{adset.name}}&utm_content={{ad.name}}`
+
+**Privacidad:** `/privacidad` describe todo esto. Está enlazada en el pie de
+todas las páginas y en los formularios del quiz y del recurso.
+
+## 9. API de ManyChat (sistema anterior)
 
 Desde el 28/10/2026 Cleo ya no corre en ManyChat. La integración sigue activa
 solo para los links viejos con `mc` que todavía anden dando vueltas.
@@ -262,7 +317,7 @@ solo para los links viejos con `mc` que todavía anden dando vueltas.
 
 ---
 
-## 9. Pendientes
+## 10. Pendientes
 
 - [ ] **Bio de Instagram:** cambiar el link por el de la sección 2.
 - [ ] **Clave de ManyChat:** quedó escrita en un chat. Si ManyChat sigue
@@ -286,7 +341,7 @@ solo para los links viejos con `mc` que todavía anden dando vueltas.
 
 ---
 
-## 10. Dónde está en el código
+## 11. Dónde está en el código
 
 | Archivo | Qué hace |
 |---|---|
@@ -297,6 +352,10 @@ solo para los links viejos con `mc` que todavía anden dando vueltas.
 | `worker/index.js` | Ruta `/api/mc`: con `cw` reenvía el evento a n8n; con `mc`, pone la etiqueta en ManyChat. Ruta `/api/capi-web`: eventos de Meta de la landing |
 | `worker/meta.js` | Envío a la API de conversiones de Meta |
 | `worker/calendly.js` | Lee la reserva de Calendly para el `Schedule` |
+| `worker/tracking.js` | `/api/t` (eventos del panel), `identificar` (visitante → persona) y la limpieza diaria |
+| `worker/panel.js` | API del panel (`/api/panel/*`) |
+| `src/pages/admin/panel.astro` | El panel |
+| `migrations/0002_panel.sql` | Tablas `personas`, `visitantes`, `sesiones` y `eventos_web` |
 | `wrangler.jsonc` | Configuración del Worker (archivos estáticos + `/api/*`) |
 | `D:\Claude\Bot WhatsApp\servidor\bot\nodos\armar-respuesta.js` | Genera el código y arma el link del mensaje de bienvenida |
 | `D:\Claude\Bot WhatsApp\servidor\bot\nodos\web-evento.js` / `web-etiqueta.js` | Workflow "Eventos web": evento → etiqueta de Chatwoot |
