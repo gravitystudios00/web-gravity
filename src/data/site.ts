@@ -143,12 +143,12 @@ export const headlines: Headline[] = [
   {
     slug: 'index',
     eyebrow: 'Para clínicas de medicina estética y cirugía plástica',
-    // La promesa de la Oferta Espejo: mínimo 40 consultas agendadas en 90 días.
     parts: [
-      { text: '40 consultas agendadas en 90 días', accent: true },
-      { text: ' con un sistema de IA que atrae, filtra y agenda pacientes ' },
-      { text: 'por vos', accent: true },
-      { text: ', mirá cómo ⭣' },
+      { text: 'Más pacientes calificados en menos de ' },
+      { text: '90 días', accent: true },
+      { text: ' con un sistema que funciona ' },
+      { text: '100% en automático con IA', accent: true },
+      { text: ', descubrí cómo ⭣' },
     ],
   },
   {
