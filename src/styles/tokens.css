@@ -59,7 +59,9 @@
 
   /* --- Typography -------------------------------------------------------- */
   --g-font-display: 'Baloo Da 2', 'Baloo Bhaina 2', system-ui, sans-serif;
-  --g-font-body: 'Baloo Bhaina 2', 'Baloo Da 2', system-ui, sans-serif;
+  /* Texto: Inter (la más parecida a SF Pro de Apple). Los títulos siguen en
+     Baloo Da 2. Si Inter no cargó, -apple-system muestra SF Pro en Apple. */
+  --g-font-body: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
   --g-font-mono: ui-monospace, monospace;
 
   --g-text-2xs: 0.6875rem;

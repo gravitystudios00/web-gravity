@@ -24,6 +24,11 @@ const FAMILIES = [
   // Solo la usa la animación del bot (BotWhatsAppScroll): es la letra de la
   // interfaz de WhatsApp dentro del teléfono.
   { name: 'Figtree', slug: 'figtree', axis: 'wght@400;500;600;700' },
+  // Texto de todo el sitio (los títulos siguen en Baloo Da 2). Es la más
+  // parecida a SF Pro de Apple, que no se puede usar en la web. Variable:
+  // un solo archivo con todos los pesos y tamaño óptico (opsz), que ajusta
+  // el dibujo de la letra según el tamaño, como hace Apple.
+  { name: 'Inter', slug: 'inter', axis: 'opsz,wght@14..32,400..700' },
 ];
 
 await mkdir(OUT, { recursive: true });

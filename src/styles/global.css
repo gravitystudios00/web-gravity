@@ -43,8 +43,20 @@ body {
   font-family: var(--g-font-body);
   font-size: var(--g-text-md);
   line-height: var(--g-leading-normal);
+  /* Inter, como SF Pro, se cierra apenas a tamaño de texto (Apple: tracking
+     según el tamaño) y ajusta su dibujo con el tamaño óptico. */
+  letter-spacing: -0.006em;
+  font-optical-sizing: auto;
   -webkit-font-smoothing: antialiased;
   overflow-x: hidden;
+}
+
+/* Los campos de formulario toman la letra del sitio, no la del sistema. */
+input,
+select,
+textarea,
+button {
+  font-family: inherit;
 }
 
 img,
