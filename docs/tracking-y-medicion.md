@@ -239,9 +239,11 @@ los informes no se mezclan:
   Administrador de eventos → Conversiones personalizadas → Crear → origen
   "Gravity Pixel - 23/11", evento → el evento propio.
 
-**Probar:** con `META_TEST_EVENT_CODE` cargado en `wrangler.jsonc`, los
-eventos de la API van solo a "Probar eventos" y **no cuentan** para las
-campañas. Sacarlo antes de prender anuncios.
+**Probar:** abrir "Probar eventos" en el Administrador de eventos (origen
+Sitio web), pegar en `META_TEST_EVENT_CODE` (`wrangler.jsonc`) el código que
+muestra ahí, publicar y probar. Mientras está cargado, los eventos de la API
+**no cuentan** para las campañas: dejarlo vacío al terminar. Un código de una
+sesión vieja no sirve (Meta los toma como prueba y no aparecen en ningún lado).
 
 ## 8. API de ManyChat (sistema anterior)
 
@@ -271,9 +273,13 @@ solo para los links viejos con `mc` que todavía anden dando vueltas.
       "Origen del clic", alcance *evento*, parámetro `source`.
 - [ ] **Analytics → Retención de datos:** pasar de 2 a 14 meses.
 - [ ] **Clarity → Settings → Setup:** conectar con Google Analytics.
-- [ ] **Token de la API de conversiones:** el de `META_CAPI_TOKEN` daba
-      "Bad signature" (26/11/2026). Generar uno nuevo y cargarlo.
-- [ ] **Sacar `META_TEST_EVENT_CODE`** de `wrangler.jsonc` después de probar.
+- [x] ~~Token de la API de conversiones~~: el anterior daba "Bad signature";
+      se cargó uno nuevo el 26/11/2026 y Meta acepta los eventos.
+- [x] ~~Sacar `META_TEST_EVENT_CODE`~~: vacío desde el 26/11/2026.
+- [ ] **Prueba real del `Schedule`:** hacer una reserva de prueba en la web y
+      ver que llegue (Administrador de eventos → Resumen, ~20 min).
+- [ ] **Coincidencia avanzada automática** del pixel: activarla en la
+      configuración del conjunto de datos.
 - [ ] **Conversiones personalizadas** para `EligioHorario` y `LeadCaliente`.
 - [ ] **Bots de Caro y Guille:** si sus mensajes mandan links a sus webs,
       se puede repetir lo mismo (hoy es solo para Gravity).

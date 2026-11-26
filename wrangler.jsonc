@@ -22,14 +22,18 @@
     "binding": "ASSETS",
     "run_worker_first": ["/api/*"]
   },
-  // API de conversiones de Meta (worker/index.js, /api/capi). El token va como
-  // secret: npx wrangler secret put META_CAPI_TOKEN
-  // META_TEST_EVENT_CODE: solo para probar en "Probar eventos"; dejarlo vacío.
+  // API de conversiones de Meta (worker/meta.js: /api/capi del quiz y
+  // /api/capi-web de la landing). Secrets: META_CAPI_TOKEN (token del conjunto
+  // de datos) y CALENDLY_TOKEN (para leer las reservas del Schedule).
   "vars": {
     // Conjunto de datos "Gravity Pixel - 23/11" (portfolio Gravity Studios,
     // compartido con la cuenta publicitaria Gravity Studios 440300779171266).
     "META_PIXEL_ID": "4149392285331933",
-    "META_TEST_EVENT_CODE": "TEST34971",
+    // Vacío en producción. Para probar: abrir "Probar eventos" en el
+    // Administrador de eventos (origen: Sitio web), pegar el código que muestra
+    // ahí, publicar, probar y volver a dejarlo vacío. Un código viejo no sirve:
+    // Meta trata los eventos como prueba y no aparecen en ningún lado.
+    "META_TEST_EVENT_CODE": "",
     // Recurso de /recurso (worker/recurso). Secrets: OPENAI_API_KEY y ADMIN_KEY.
     "OPENAI_MODEL": "gpt-6.1-terra",
     // Tope de generaciones por día para todo el sitio: si se llega, el recurso
