@@ -1,0 +1,127 @@
+---
+import { faq } from '../data/site';
+
+/*
+ * Preguntas frecuentes en <details>: cerradas, la sección entra en una
+ * pantalla de teléfono; se abre solo la que interesa. Funciona sin JS y con
+ * teclado. El script solo cierra la anterior al abrir otra.
+ */
+---
+
+<section class="section" id="preguntas">
+  <div class="container container--md">
+    <h2 class="h2 center" data-reveal>Preguntas frecuentes</h2>
+
+    <div class="faq">
+      {
+        faq.map((f, i) => (
+          <details class="faq__item surface" data-reveal style={`--reveal-i:${i}`}>
+            <summary>
+              <span>{f.q}</span>
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6" /></svg>
+            </summary>
+            <p>{f.a}</p>
+          </details>
+        ))
+      }
+    </div>
+  </div>
+</section>
+
+<style>
+  .faq {
+    display: flex;
+    flex-direction: column;
+    gap: var(--g-space-3);
+    margin-top: var(--g-space-10);
+  }
+
+  .faq__item {
+    border-radius: var(--g-radius-lg);
+    transition: border-color var(--g-duration-base) var(--g-ease-out);
+  }
+
+  .faq__item[open] {
+    border-color: var(--g-accent-border);
+  }
+
+  summary {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--g-space-4);
+    padding: var(--g-space-4) var(--g-space-5);
+    cursor: pointer;
+    list-style: none;
+    font-family: var(--g-font-display);
+    font-size: var(--g-text-md);
+    font-weight: var(--g-weight-semibold);
+    color: var(--g-text-strong);
+  }
+
+  summary::-webkit-details-marker {
+    display: none;
+  }
+
+  summary:focus-visible {
+    outline: 2px solid var(--g-accent);
+    outline-offset: 2px;
+    border-radius: var(--g-radius-lg);
+  }
+
+  summary svg {
+    width: 1.2rem;
+    height: 1.2rem;
+    flex: none;
+    fill: none;
+    stroke: var(--g-accent);
+    stroke-width: 2.2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    transition: transform var(--g-duration-base) var(--g-ease-out);
+  }
+
+  .faq__item[open] summary svg {
+    transform: rotate(180deg);
+  }
+
+  .faq__item p {
+    padding: 0 var(--g-space-5) var(--g-space-5);
+    color: var(--g-text-muted);
+    line-height: var(--g-leading-normal);
+    text-wrap: pretty;
+  }
+
+  @media (max-width: 768px) {
+    .faq {
+      gap: var(--g-space-2);
+      margin-top: var(--g-space-6);
+    }
+
+    summary {
+      padding: var(--g-space-3) var(--g-space-4);
+      font-size: var(--g-text-sm);
+    }
+
+    .faq__item p {
+      padding: 0 var(--g-space-4) var(--g-space-4);
+      font-size: var(--g-text-sm);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    summary svg {
+      transition: none;
+    }
+  }
+</style>
+
+<script>
+  // Una abierta por vez: así la sección no crece de más en el teléfono.
+  const items = document.querySelectorAll<HTMLDetailsElement>('#preguntas details');
+  items.forEach((d) =>
+    d.addEventListener('toggle', () => {
+      if (d.open) items.forEach((o) => o !== d && (o.open = false));
+    })
+  );
+</script>

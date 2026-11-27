@@ -1,0 +1,134 @@
+---
+import { process } from '../data/site';
+
+/*
+ * Los 90 días en tres pasos. Es una secuencia real (mes 1 → 2 → 3), así que
+ * la línea que los une y el orden dicen algo: qué pasa después de agendar.
+ */
+---
+
+<section class="section" id="como-trabajamos">
+  <div class="container">
+    <div class="center stack" style="gap: var(--g-space-3)">
+      <p class="eyebrow" data-reveal>Cómo trabajamos</p>
+      <h2 class="h2" data-reveal style="--reveal-i:1">Tus primeros 90 días con Gravity</h2>
+    </div>
+
+    <ol class="steps">
+      {
+        process.map((s, i) => (
+          <li class="step surface spot" data-reveal style={`--reveal-i:${i}`}>
+            <div class="step__head">
+              <span class="step__when">{s.when}</span>
+              <span class="step__pillar">{s.pillar}</span>
+            </div>
+            <h3 class="step__title">{s.title}</h3>
+            <p class="step__text">{s.text}</p>
+          </li>
+        ))
+      }
+    </ol>
+  </div>
+</section>
+
+<style>
+  .steps {
+    position: relative;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--g-space-6);
+    margin-top: var(--g-space-12);
+    padding: 0;
+    list-style: none;
+  }
+
+  /* La línea que une los tres meses, por detrás de las tarjetas. */
+  .steps::before {
+    content: '';
+    position: absolute;
+    left: 8%;
+    right: 8%;
+    top: 2.6rem;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--g-accent-border), transparent);
+  }
+
+  .step {
+    display: flex;
+    flex-direction: column;
+    gap: var(--g-space-3);
+    padding: var(--g-space-8);
+    border-radius: var(--g-radius-xl);
+  }
+
+  .step__head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--g-space-2) var(--g-space-3);
+  }
+
+  .step__when {
+    padding: var(--g-space-1) var(--g-space-3);
+    border-radius: var(--g-radius-full);
+    background: var(--g-accent);
+    color: var(--g-bg);
+    font-family: var(--g-font-display);
+    font-size: var(--g-text-xs);
+    font-weight: var(--g-weight-bold);
+    letter-spacing: var(--g-tracking-wide);
+    text-transform: uppercase;
+  }
+
+  .step__pillar {
+    font-size: var(--g-text-sm);
+    font-weight: var(--g-weight-semibold);
+    color: var(--g-text-accent);
+  }
+
+  .step__title {
+    font-family: var(--g-font-display);
+    font-size: var(--g-text-xl);
+    line-height: var(--g-leading-snug);
+    color: var(--g-text-strong);
+    text-wrap: balance;
+  }
+
+  .step__text {
+    color: var(--g-text-muted);
+    line-height: var(--g-leading-normal);
+    text-wrap: pretty;
+  }
+
+  @media (max-width: 900px) {
+    .steps {
+      grid-template-columns: 1fr;
+      gap: var(--g-space-3);
+      margin-top: var(--g-space-6);
+    }
+
+    /* Apiladas, la línea pasa a ser vertical por el costado. */
+    .steps::before {
+      left: 1.75rem;
+      right: auto;
+      top: 0;
+      bottom: 0;
+      width: 1px;
+      height: auto;
+      background: linear-gradient(180deg, transparent, var(--g-accent-border), transparent);
+    }
+
+    .step {
+      gap: var(--g-space-2);
+      padding: var(--g-space-4) var(--g-space-5);
+    }
+
+    .step__title {
+      font-size: var(--g-text-lg);
+    }
+
+    .step__text {
+      font-size: var(--g-text-sm);
+    }
+  }
+</style>

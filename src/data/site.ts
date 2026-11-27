@@ -288,3 +288,72 @@ export const agencyPoints = [
   'Te piden que les pases "fotitos" o "videítos" todo el tiempo',
   'Trabajan con cualquier rubro y no conocen a tu paciente',
 ];
+
+/* ---------------------------------------------------------------------------
+ * Cómo trabajamos — los 90 días, con los pilares de la Oferta Espejo
+ * ------------------------------------------------------------------------- */
+export const process = [
+  {
+    when: 'Mes 1',
+    pillar: 'Oferta y puesta a punto',
+    title: 'Armamos la base antes de invertir en anuncios',
+    text: 'Definimos qué tratamiento ofrecer, a quién y por qué elegirte a vos. Grabamos el material para tu clon y entrenamos al asistente con tus precios y preguntas reales. Antes de que hable con un paciente, lo probás vos.',
+  },
+  {
+    when: 'Mes 2',
+    pillar: 'Avatar Estético + Cleo',
+    title: 'Empiezan a entrar las consultas',
+    text: 'Tu clon publica contenido y anuncios todas las semanas. Cleo, el asistente, responde en segundos por WhatsApp e Instagram, filtra a los curiosos y deja el turno en tu calendario.',
+  },
+  {
+    when: 'Mes 3',
+    pillar: 'Torre de Control',
+    title: 'Medimos y ajustamos',
+    text: 'Todas las agendas en un solo lugar, recordatorios para que el paciente no falte y un tablero con cuántos escriben, cuántos agendan y cuántos llegan. Ajustamos lo que no rinde y reforzamos lo que funciona.',
+  },
+];
+
+/* ---------------------------------------------------------------------------
+ * Para quién es / para quién no es
+ * ------------------------------------------------------------------------- */
+export const fitYes = [
+  'Sos especialista certificado en medicina estética o cirugía plástica',
+  'Te escriben por redes, pero pocos terminan agendando',
+  'Querés un flujo de pacientes constante, sin estar encima todos los días',
+];
+
+export const fitNo = [
+  'No tenés el título o la habilitación para los tratamientos que ofrecés',
+  'Buscás resultados sin involucrarte: validar guiones y revisar el sistema es parte del trabajo',
+  'Creés que las redes no pueden ser tu principal fuente de pacientes',
+];
+
+/* ---------------------------------------------------------------------------
+ * Preguntas frecuentes — las objeciones resueltas en la Oferta Espejo
+ * ------------------------------------------------------------------------- */
+export const faq = [
+  {
+    q: '¿Y si el asistente le responde mal a un paciente?',
+    a: 'Antes de hablar con pacientes pasa por fases de prueba con tus preguntas reales, y lo podés testear vos como quieras. Si una conversación se complica, se la pasa a una persona de tu equipo.',
+  },
+  {
+    q: 'Me da vergüenza grabarme. ¿Igual funciona?',
+    a: 'Sí. Tenés una llamada con nosotros para grabar el material base con buena calidad y, a partir de ahí, tu clon con IA graba los videos con los guiones que escribimos. La edición la hace nuestro equipo.',
+  },
+  {
+    q: '¿Se me van a chocar los turnos?',
+    a: 'No. Usamos Calendly conectado a Google Calendar: todas las agendas quedan en un solo lugar, separadas por profesional o área, y nadie puede reservar un horario ocupado. Al paciente le llegan recordatorios y puede reprogramar en un toque.',
+  },
+  {
+    q: '¿Y si invierto en anuncios y no sirve?',
+    a: 'Por eso no arrancamos por los anuncios. Pagarle a Meta solo no alcanza: lo que trae pacientes es el recorrido completo, desde la oferta hasta el turno. Primero armamos eso y recién después invertimos en pauta. Lo hacemos todos los días desde 2023.',
+  },
+  {
+    q: '¿En cuánto tiempo empiezo a ver consultas?',
+    a: 'El primer mes armamos la oferta y el sistema. Las consultas empiezan a entrar en el segundo mes, y en el tercero el sistema ya corre a pleno.',
+  },
+  {
+    q: '¿Mi secretaria sigue haciendo falta?',
+    a: 'Sí, y con menos carga: el asistente responde y filtra, y ella se ocupa de los pacientes que ya agendaron. Si querés, también la asesoramos en cómo responder por chat.',
+  },
+];

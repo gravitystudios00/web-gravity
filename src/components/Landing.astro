@@ -5,6 +5,9 @@ import Cases from './Cases.astro';
 import Services from './Services.astro';
 import About from './About.astro';
 import Comparison from './Comparison.astro';
+import Process from './Process.astro';
+import Fit from './Fit.astro';
+import Faq from './Faq.astro';
 import Agenda from './Agenda.astro';
 import FinalCta from './FinalCta.astro';
 import Footer from './Footer.astro';
@@ -30,8 +33,13 @@ const { headline, short = false } = Astro.props;
       reseñas: es lo primero que ve alguien que ya viene decidido del anuncio. */}
   <Agenda />
   {!short && <Services />}
+  {/* Qué pasa después de agendar: los 90 días con los pilares de la oferta. */}
+  {!short && <Process />}
   {!short && <About />}
   <Comparison />
+  {!short && <Fit />}
+  {/* Las objeciones de la Oferta Espejo, justo antes del último llamado. */}
+  {!short && <Faq />}
   <FinalCta />
 </main>
 <Footer />
