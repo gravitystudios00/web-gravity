@@ -188,8 +188,10 @@ a {
     transform var(--g-duration-fast) var(--g-ease-out);
 }
 
+/* Al apoyar el dedo se hunde apenas (Apple: respuesta inmediata al tocar). */
 .btn:active {
-  transform: translateY(1px);
+  transform: scale(var(--g-press-scale));
+  transition-duration: 60ms;
 }
 
 .btn--primary {

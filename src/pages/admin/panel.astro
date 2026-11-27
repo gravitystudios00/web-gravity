@@ -72,62 +72,118 @@ import Base from '../../layouts/Base.astro';
 </Base>
 
 <style>
+  /* Estilo Apple con los colores de Gravity: superficies con bordes finos,
+     rellenos en vez de cajas con borde, números de ancho fijo y respuesta
+     inmediata al tocar. Tokens --g-hairline / --g-fill* en tokens.css. */
   .pnl {
-    padding: var(--g-space-6);
+    padding: 0 var(--g-space-6) var(--g-space-12);
     font-size: var(--g-text-sm);
     max-width: 90rem;
     margin: 0 auto;
+    font-variant-numeric: tabular-nums;
   }
 
+  /* Encabezado translúcido: el contenido pasa por debajo. */
   .pnl__head {
+    position: sticky;
+    top: 0;
+    z-index: 10;
     display: flex;
     flex-wrap: wrap;
-    gap: var(--g-space-4);
+    gap: var(--g-space-3) var(--g-space-4);
     align-items: center;
     justify-content: space-between;
+    margin: 0 calc(var(--g-space-6) * -1);
+    padding: var(--g-space-4) var(--g-space-6);
+    background: var(--g-material);
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    border-bottom: var(--g-border-width) solid var(--g-hairline);
   }
 
   .pnl__head h1 {
     font-size: var(--g-text-xl);
+    letter-spacing: -0.01em;
   }
 
   .pnl__actions,
-  .pnl__bar,
-  .pnl__tabs {
+  .pnl__bar {
     display: flex;
     flex-wrap: wrap;
     gap: var(--g-space-2);
+    align-items: center;
   }
 
   .pnl input,
   .pnl select,
   .pnl button {
-    padding: var(--g-space-2) var(--g-space-3);
-    border: 1px solid var(--g-border-strong);
-    border-radius: var(--g-radius-sm);
-    background: var(--g-surface);
+    min-height: 2.25rem;
+    padding: var(--g-space-2) var(--g-space-4);
+    border: 0;
+    border-radius: var(--g-radius-full);
+    background: var(--g-fill);
     color: var(--g-text-strong);
     font: inherit;
+    transition:
+      background var(--g-duration-fast) var(--g-ease-out),
+      box-shadow var(--g-duration-fast) var(--g-ease-out),
+      transform var(--g-duration-fast) var(--g-ease-out);
+  }
+
+  .pnl input::placeholder {
+    color: var(--g-text-subtle);
+  }
+
+  .pnl input:focus,
+  .pnl select:focus {
+    outline: none;
+    background: var(--g-fill-hover);
+    box-shadow: 0 0 0 2px var(--g-accent);
   }
 
   .pnl button {
     cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  @media (hover: hover) {
+    .pnl button:hover {
+      background: var(--g-fill-hover);
+    }
+  }
+
+  .pnl button:active {
+    transform: scale(var(--g-press-scale));
+    transition-duration: 60ms;
   }
 
   .pnl input[type='search'] {
     min-width: 16rem;
   }
 
+  /* Pestañas: selector segmentado de iOS. */
   .pnl__tabs {
+    display: inline-flex;
+    flex-wrap: wrap;
+    gap: 2px;
     margin-top: var(--g-space-5);
-    border-bottom: 1px solid var(--g-border);
-    padding-bottom: var(--g-space-3);
+    padding: 3px;
+    border-radius: var(--g-radius-full);
+    background: var(--g-fill);
   }
 
-  .pnl__tabs button[aria-pressed='true'] {
-    background: var(--g-accent);
-    color: var(--g-on-accent);
-    border-color: var(--g-accent);
+  .pnl .pnl__tabs button {
+    background: transparent;
+    color: var(--g-text-muted);
+    font-weight: var(--g-weight-medium);
+  }
+
+  .pnl .pnl__tabs button[aria-pressed='true'] {
+    background: var(--g-surface-raised);
+    color: var(--g-text-strong);
+    box-shadow:
+      0 1px 2px rgba(0, 0, 0, 0.3),
+      inset 0 1px 0 rgba(255, 255, 255, 0.06);
   }
 
   .pnl__login {
@@ -135,7 +191,7 @@ import Base from '../../layouts/Base.astro';
     flex-wrap: wrap;
     gap: var(--g-space-3);
     align-items: end;
-    margin-top: var(--g-space-6);
+    margin-top: var(--g-space-8);
   }
 
   .pnl__login[hidden],
@@ -145,12 +201,21 @@ import Base from '../../layouts/Base.astro';
 
   .pnl__login label {
     display: grid;
-    gap: var(--g-space-1);
+    gap: var(--g-space-2);
+    color: var(--g-text-muted);
+  }
+
+  .pnl .pnl__login button {
+    background: var(--g-accent);
+    color: var(--g-on-accent);
+    font-weight: var(--g-weight-semibold);
   }
 
   .pnl section {
-    margin-top: var(--g-space-5);
+    margin-top: var(--g-space-6);
   }
+
+  /* --- Números --------------------------------------------------------- */
 
   .pnl :global(.stats) {
     display: grid;
@@ -159,31 +224,38 @@ import Base from '../../layouts/Base.astro';
   }
 
   .pnl :global(.stat) {
-    padding: var(--g-space-3) var(--g-space-4);
-    border: 1px solid var(--g-border);
-    border-radius: var(--g-radius-md);
+    padding: var(--g-space-4);
+    border: var(--g-border-width) solid var(--g-hairline);
+    border-radius: var(--g-radius-lg);
     background: var(--g-surface);
     color: var(--g-text-subtle);
   }
 
   .pnl :global(.stat b) {
     display: block;
-    font-size: var(--g-text-xl);
+    margin-bottom: var(--g-space-1);
+    font-size: var(--g-text-2xl);
+    font-weight: var(--g-weight-semibold);
+    letter-spacing: -0.025em;
+    line-height: 1.1;
     color: var(--g-text-strong);
   }
+
+  /* --- Tarjetas y tablas ------------------------------------------------ */
 
   .pnl :global(.grid2) {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(26rem, 1fr));
-    gap: var(--g-space-5);
-    margin-top: var(--g-space-5);
+    gap: var(--g-space-4);
+    margin-top: var(--g-space-4);
   }
 
   .pnl :global(.card) {
-    padding: var(--g-space-4);
-    border: 1px solid var(--g-border);
-    border-radius: var(--g-radius-md);
+    padding: var(--g-space-5);
+    border: var(--g-border-width) solid var(--g-hairline);
+    border-radius: var(--g-radius-xl);
     background: var(--g-surface);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
     overflow-x: auto;
   }
 
@@ -204,10 +276,17 @@ import Base from '../../layouts/Base.astro';
     white-space: nowrap;
   }
 
-  .pnl :global(th),
-  .pnl :global(td) {
+  .pnl :global(th) {
     padding: var(--g-space-2) var(--g-space-3);
-    border-bottom: 1px solid var(--g-border);
+    font-weight: var(--g-weight-medium);
+    color: var(--g-text-subtle);
+    text-align: left;
+  }
+
+  .pnl :global(td) {
+    padding: var(--g-space-3);
+    border-top: var(--g-border-width) solid var(--g-hairline);
+    color: var(--g-text);
     text-align: left;
   }
 
@@ -216,34 +295,51 @@ import Base from '../../layouts/Base.astro';
     text-align: right;
   }
 
+  .pnl :global(td a) {
+    color: var(--g-text-accent);
+    text-decoration: none;
+  }
+
   .pnl :global(tr[data-id]) {
     cursor: pointer;
+    transition: background var(--g-duration-fast) var(--g-ease-out);
   }
 
   .pnl :global(tr[data-id]:hover) {
-    background: var(--g-surface-hover);
+    background: var(--g-fill);
+  }
+
+  .pnl :global(tr[data-id]:active) {
+    background: var(--g-fill-press);
+    transition-duration: 0ms;
   }
 
   .pnl__wrap {
     margin-top: var(--g-space-4);
+    padding: var(--g-space-2) var(--g-space-3);
+    border: var(--g-border-width) solid var(--g-hairline);
+    border-radius: var(--g-radius-xl);
+    background: var(--g-surface);
     overflow-x: auto;
   }
 
-  /* Barras de embudo y de retención. */
+  /* --- Barras de embudo y de retención ---------------------------------- */
+
   .pnl :global(.barra) {
     display: grid;
-    grid-template-columns: 13rem 1fr 9rem;
+    grid-template-columns: 12rem 1fr 8rem;
     gap: var(--g-space-3);
     align-items: center;
     margin-bottom: var(--g-space-2);
+    color: var(--g-text);
   }
 
   .pnl :global(.barra span) {
     display: block;
-    height: 1.4rem;
-    border-radius: var(--g-radius-sm);
-    background: var(--g-accent);
-    min-width: 2px;
+    height: 0.75rem;
+    min-width: 3px;
+    border-radius: var(--g-radius-full);
+    background: linear-gradient(90deg, var(--g-accent-active), var(--g-accent));
   }
 
   .pnl :global(.barra em) {
@@ -254,12 +350,13 @@ import Base from '../../layouts/Base.astro';
 
   .pnl :global(.tag) {
     display: inline-block;
-    padding: 0 var(--g-space-2);
+    padding: 1px var(--g-space-2);
     margin: 1px;
-    border-radius: var(--g-radius-sm);
-    background: var(--g-bg-subtle);
+    border-radius: var(--g-radius-full);
+    background: var(--g-fill-hover);
     color: var(--g-text-strong);
     font-size: var(--g-text-xs);
+    font-weight: var(--g-weight-medium);
   }
 
   .pnl :global(.tag--ok) {
@@ -267,17 +364,29 @@ import Base from '../../layouts/Base.astro';
     color: var(--g-on-accent);
   }
 
+  /* --- Visitas ---------------------------------------------------------- */
+
   .pnl :global(.visita) {
-    margin-bottom: var(--g-space-3);
+    margin-bottom: var(--g-space-2);
+    padding: var(--g-space-3) var(--g-space-4);
   }
 
   .pnl :global(.visita summary) {
     cursor: pointer;
+    color: var(--g-text);
+    line-height: 2;
+  }
+
+  .pnl :global(.visita summary button) {
+    margin-left: var(--g-space-2);
+    min-height: 0;
+    padding: 2px var(--g-space-3);
+    font-size: var(--g-text-xs);
   }
 
   .pnl :global(.linea) {
     list-style: none;
-    margin: var(--g-space-2) 0 0;
+    margin: var(--g-space-3) 0 0;
     padding: 0;
   }
 
@@ -285,8 +394,8 @@ import Base from '../../layouts/Base.astro';
     display: grid;
     grid-template-columns: 9.5rem 8rem 1fr;
     gap: var(--g-space-3);
-    padding: 2px 0;
-    border-bottom: 1px dashed var(--g-border);
+    padding: var(--g-space-1) 0;
+    border-top: var(--g-border-width) solid var(--g-hairline);
   }
 
   .pnl :global(.linea time),
@@ -296,31 +405,99 @@ import Base from '../../layouts/Base.astro';
 
   .pnl :global(.linea .fuerte) {
     color: var(--g-accent);
-    font-weight: var(--g-weight-bold);
+    font-weight: var(--g-weight-semibold);
   }
+
+  /* --- Detalle de una persona: hoja sobre fondo atenuado ----------------- */
 
   .pnl__detail {
     width: min(70rem, calc(100vw - 2rem));
-    max-height: 92vh;
+    max-height: 90vh;
     margin: auto;
-    padding: var(--g-space-6);
-    border: 1px solid var(--g-border-strong);
-    border-radius: var(--g-radius-lg);
+    padding: var(--g-space-6) var(--g-space-8);
+    border: var(--g-border-width) solid var(--g-hairline);
+    border-radius: var(--g-radius-2xl);
     background: var(--g-surface);
     color: var(--g-text);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.06),
+      var(--g-shadow-xl);
+  }
+
+  .pnl__detail[open] {
+    animation: pnl-hoja var(--g-duration-slow) var(--g-ease-out);
   }
 
   .pnl__detail::backdrop {
-    background: var(--g-overlay);
+    background: rgba(0, 0, 0, 0.55);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+  }
+
+  /* Aparece como una superficie que llega (posición + escala + opacidad). */
+  @keyframes pnl-hoja {
+    from {
+      opacity: 0;
+      transform: translateY(12px) scale(0.98);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .pnl__detail[open] {
+      animation: none;
+    }
+  }
+
+  @media (prefers-reduced-transparency: reduce) {
+    .pnl__head {
+      background: var(--g-surface);
+      backdrop-filter: none;
+      -webkit-backdrop-filter: none;
+    }
   }
 
   .pnl__close {
     float: right;
   }
 
+  .pnl__detail :global(h2) {
+    font-size: var(--g-text-2xl);
+    letter-spacing: -0.015em;
+    margin-bottom: var(--g-space-2);
+  }
+
   .pnl__detail :global(h3) {
-    margin-top: var(--g-space-5);
+    margin: var(--g-space-6) 0 var(--g-space-3);
+    font-size: var(--g-text-md);
     color: var(--g-text-strong);
+  }
+
+  @media (max-width: 768px) {
+    .pnl {
+      padding: 0 var(--g-space-4) var(--g-space-10);
+    }
+
+    .pnl__head {
+      margin: 0 calc(var(--g-space-4) * -1);
+      padding: var(--g-space-3) var(--g-space-4);
+    }
+
+    .pnl input[type='search'] {
+      min-width: 0;
+      flex: 1 1 12rem;
+    }
+
+    .pnl :global(.grid2) {
+      grid-template-columns: 1fr;
+    }
+
+    .pnl :global(.barra) {
+      grid-template-columns: 8rem 1fr 6rem;
+    }
+
+    .pnl__detail {
+      padding: var(--g-space-5);
+    }
   }
 </style>
 

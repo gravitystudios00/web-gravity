@@ -325,9 +325,10 @@ const r = recurso;
 
   .rpasos__item {
     padding: var(--g-space-5);
-    border: var(--g-border-width) solid var(--g-border-strong);
-    border-radius: var(--g-radius-lg);
+    border: var(--g-border-width) solid var(--g-hairline);
+    border-radius: var(--g-radius-xl);
     background: var(--g-surface);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
   }
 
   .rpasos__n {
@@ -389,10 +390,13 @@ const r = recurso;
   .rcard,
   .rstep {
     padding: var(--g-space-6);
-    border: var(--g-border-width) solid var(--g-border-strong);
-    border-radius: var(--g-radius-xl);
+    border: var(--g-border-width) solid var(--g-hairline);
+    border-radius: var(--g-radius-2xl);
     background: var(--g-surface);
-    box-shadow: var(--g-shadow-lg);
+    /* Luz que entra por el borde de arriba, como en las superficies de Apple. */
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.06),
+      var(--g-shadow-lg);
   }
 
   .rcard {
@@ -429,10 +433,9 @@ const r = recurso;
   .rfield > label,
   .rgroup legend,
   .rgen__label {
-    font-size: var(--g-text-xs);
-    font-weight: var(--g-weight-semibold);
-    letter-spacing: var(--g-tracking-wide);
-    text-transform: uppercase;
+    padding-left: var(--g-space-1);
+    font-size: var(--g-text-sm);
+    font-weight: var(--g-weight-medium);
     color: var(--g-text-muted);
   }
 
@@ -441,14 +444,22 @@ const r = recurso;
   .rfield textarea,
   .rrow input {
     width: 100%;
-    min-height: 3rem;
+    min-height: 3.25rem;
     padding: var(--g-space-2) var(--g-space-4);
-    border: var(--g-border-width) solid var(--g-border-strong);
+    border: 0;
     border-radius: var(--g-radius-md);
-    background: var(--g-bg-subtle);
+    background: var(--g-fill);
     color: var(--g-text-strong);
     font: inherit;
     font-size: var(--g-text-md);
+    transition:
+      background var(--g-duration-fast) var(--g-ease-out),
+      box-shadow var(--g-duration-fast) var(--g-ease-out);
+  }
+
+  .rfield :is(input, textarea)::placeholder,
+  .rrow input::placeholder {
+    color: var(--g-text-subtle);
   }
 
   .rfield textarea {
@@ -459,12 +470,12 @@ const r = recurso;
   .rfield :is(input, select, textarea):focus,
   .rrow input:focus {
     outline: none;
-    border-color: var(--g-accent);
-    box-shadow: 0 0 0 var(--g-focus-width) var(--g-focus-ring);
+    background: var(--g-fill-hover);
+    box-shadow: 0 0 0 2px var(--g-accent);
   }
 
   [aria-invalid='true'] {
-    border-color: var(--g-danger) !important;
+    box-shadow: 0 0 0 2px var(--g-danger) !important;
   }
 
   .rfield__phone {
@@ -540,16 +551,26 @@ const r = recurso;
   .rchip span {
     display: block;
     padding: var(--g-space-2) var(--g-space-4);
-    border: var(--g-border-width) solid var(--g-border-strong);
     border-radius: var(--g-radius-full);
-    background: var(--g-bg-subtle);
+    background: var(--g-fill);
+    color: var(--g-text-strong);
     transition:
-      background var(--g-duration-fast),
-      border-color var(--g-duration-fast);
+      background var(--g-duration-fast) var(--g-ease-out),
+      color var(--g-duration-fast) var(--g-ease-out),
+      transform var(--g-duration-fast) var(--g-ease-out);
+  }
+
+  @media (hover: hover) {
+    .rchip:hover span {
+      background: var(--g-fill-hover);
+    }
+  }
+
+  .rchip:active span {
+    transform: scale(var(--g-press-scale));
   }
 
   .rchip input:checked + span {
-    border-color: var(--g-accent);
     background: var(--g-accent);
     color: var(--g-on-accent);
   }

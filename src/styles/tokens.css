@@ -183,6 +183,16 @@
 
   --g-focus-ring: rgba(234, 190, 63, 0.55);
 
+  /* Estilo Apple (formularios, listas agrupadas y paneles del quiz, el
+     recurso y el admin): rellenos en vez de bordes, bordes finos como
+     separadores y un leve hundimiento al tocar. */
+  --g-hairline: rgba(255, 255, 255, 0.08);
+  --g-fill: rgba(255, 255, 255, 0.06);
+  --g-fill-hover: rgba(255, 255, 255, 0.09);
+  --g-fill-press: rgba(255, 255, 255, 0.13);
+  --g-material: rgba(23, 22, 20, 0.72);
+  --g-press-scale: 0.97;
+
   --g-success: var(--g-green-400);
   --g-success-bg: rgba(63, 163, 107, 0.16);
   --g-success-border: rgba(63, 163, 107, 0.42);
